@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Zeral, 全栈工程师一枚。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Zeral&#39;s Blog">
+<meta property="og:url" content="https://www.zeral.cn/page/2/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Zeral, 全栈工程师一枚。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="Zeral">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.zeral.cn/page/2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/data-structure/Map.merge()/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/data-structure/Map.merge()/" class="post-title-link" itemprop="url">Map.merge()</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-29 12:32:00" itemprop="dateCreated datePublished" datetime="2020-06-29T12:32:00+08:00">2020-06-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-07-01 10:44:59" itemprop="dateModified" datetime="2020-07-01T10:44:59+08:00">2020-07-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/data-structure/Map.merge()/" class="post-meta-item leancloud_visitors" data-flag-title="Map.merge()" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="mapmerge"><a class="markdownIt-Anchor" href="#mapmerge"></a> Map.merge()</h1>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html#merge(K,V,java.util.function.BiFunction)">Map.merge()</a> 在键值范围中可能是功能最丰富的操作。而且还比较晦涩，很少使用。 merge() 可以解释如下：如果键值不存在（if absent），将新值放在给定键下；否则使用给定值更新现有键（UPSERT）。让我们从最基本的示例开始：计算唯一单词的出现次数。Java 8 之前的实现比较麻烦：</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/data-structure/Map.merge()/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/" class="post-title-link" itemprop="url">Java Object 由内及外</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-28 14:40:00" itemprop="dateCreated datePublished" datetime="2020-06-28T14:40:00+08:00">2020-06-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:39:48" itemprop="dateModified" datetime="2020-11-17T16:39:48+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/" class="post-meta-item leancloud_visitors" data-flag-title="Java Object 由内及外" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="java-object-由内及外"><a class="markdownIt-Anchor" href="#java-object-由内及外"></a> Java Object 由内及外</h1>
+<h2 id="1-引言"><a class="markdownIt-Anchor" href="#1-引言"></a> 1. 引言</h2>
+<p>Java 对象需要占用多少内存，这是一个经常被提及的问题。在缺少 <code>sizeof</code> 运算符的情况下，人们不禁想知道代码对其占用空间的影响。在本文中，我们将尝试窥视 Java 对象内部并查看其背后的内容。</p>
+<h2 id="2-探讨更深入的设计与实现方面的问题"><a class="markdownIt-Anchor" href="#2-探讨更深入的设计与实现方面的问题"></a> 2. 探讨更深入的设计与实现方面的问题</h2>
+<p>Deeper Design and Implementation Questions (DDIQ)，在某些章节中，您可能会看到其中包含有关设计/实现问题的更多讨论。这些并不能保证回答所有问题，但他们确实尝试回答最常见的问题。答案基于个人的理解，因此可能是不准确，不完整或两者兼而有之。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" class="post-title-link" itemprop="url">Java 中的 lambda 表达式如何工作？</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-28 14:40:00" itemprop="dateCreated datePublished" datetime="2020-06-28T14:40:00+08:00">2020-06-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 12:36:49" itemprop="dateModified" datetime="2020-11-17T12:36:49+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" class="post-meta-item leancloud_visitors" data-flag-title="Java 中的 lambda 表达式如何工作？" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>lambda 表达式在 Java 代码和 JVM 内部是什么样的？显然，它是某种类型的值，而 Java 只允许两种类型的值：原始类型和对象引用。lambda 显然不是原始类型，因此 Lambda 表达式必须是某种返回对象引用的表达式。</p>
+<p>让我们看一个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LambdaExample</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String HELLO = <span class="string">&quot;Hello World!&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        Runnable r = () -&gt; System.out.println(HELLO);</span><br><span class="line">        Thread t = <span class="keyword">new</span> Thread(r);</span><br><span class="line">        t.start();</span><br><span class="line">        t.join();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>熟悉内部类的程序员可能会猜测 lambda 实际上只是 <code>Runnable</code> 匿名内部类的语法糖。但是，编译以上类将生成一个文件：<code>LambdaExample.class</code>。该类中并没有其他类文件。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Kafka%20%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/middleware/Kafka%20%E5%85%A5%E9%97%A8/" class="post-title-link" itemprop="url">Kafka 入门</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-20 09:51:25" itemprop="dateCreated datePublished" datetime="2020-06-20T09:51:25+08:00">2020-06-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-17 16:12:37" itemprop="dateModified" datetime="2021-05-17T16:12:37+08:00">2021-05-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/middleware/Kafka%20%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Kafka 入门" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><img src="../../images/message/kafka/kafka.png" alt="Kafka" /></p>
+<blockquote>
+<p><code>Kafka</code> 是为了解决 <code>LinkedIn</code> 数据管道问题应用而生的，它的设计目的是提供一个高性能的消息<br />
+系统，可以处理多种数据类型，并能够实时提供纯净且结构化的用户活动数据和系统度量指标。</p>
+</blockquote>
+<p>数据为我们所做的每一件事都提供了动力。<em>—— Jeff Weiner, LinkedIn CEO</em></p>
+<h2 id="一-基础环境搭建可选"><a class="markdownIt-Anchor" href="#一-基础环境搭建可选"></a> 一、基础环境搭建（可选）</h2>
+<h3 id="手动安装"><a class="markdownIt-Anchor" href="#手动安装"></a> 手动安装</h3>
+<p><code>Kafka</code> 依赖于 <code>Zookeeper</code> 的分布式节点选举功能，安装 <code>Kafka</code> 需安装 <code>Jdk</code>、<code>Zookeeper</code>、<code>Scala</code> 组件。(<a target="_blank" rel="noopener" href="https://www.confluent.io/blog/removing-zookeeper-dependency-in-kafka/">Kafka 正在逐渐削弱对 Zookeeper 的依赖，逐渐演变为自管理互相发现的模式</a>)</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/middleware/Kafka%20%E5%85%A5%E9%97%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Elasticsearch%20%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/middleware/Elasticsearch%20%E5%85%A5%E9%97%A8/" class="post-title-link" itemprop="url">Elasticsearch 入门</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-20 09:51:25" itemprop="dateCreated datePublished" datetime="2020-06-20T09:51:25+08:00">2020-06-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-20 09:36:38" itemprop="dateModified" datetime="2021-02-20T09:36:38+08:00">2021-02-20</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/middleware/Elasticsearch%20%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Elasticsearch 入门" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><img src="../../images/middleware/elasticsearch/1280px-Elasticsearch_logo.svg.png" alt="Elasticsearch logo" /></p>
+<p>ElasticSearch 是基于 Apache Lucene 的分布式搜索和分析引擎，为所有类型的数据提供近乎实时的搜索和分析。</p>
+<h1 id="什么是-elasticsearch"><a class="markdownIt-Anchor" href="#什么是-elasticsearch"></a> 什么是 Elasticsearch？</h1>
+<h2 id="数据输入文档和索引"><a class="markdownIt-Anchor" href="#数据输入文档和索引"></a> 数据输入：文档和索引</h2>
+<p>Elasticsearch 是一个分布式文档存储。 Elasticsearch 不会将信息存储为列数据的行，而是存储已序列化为 JSON 文档的复杂数据结构。当集群中有多个 Elasticsearch 节点时，存储的文档会分布在整个集群中，并且可以从任何节点立即访问。</p>
+<p>存储文档后，将在 1 秒钟内几乎实时地对其进行索引并可搜索。 Elasticsearch 使用称为倒排索引的数据结构，该结构支持非常快速的全文本搜索。倒排索引列出了出现在任何文档中的每个唯一单词，并标识了每个单词出现的所有文档。</p>
+<p>索引可以认为是文档的优化集合，每个文档都是字段 (<code>field</code>) 的集合，这些字段是包含数据的键值对。默认情况下，Elasticsearch 对每个字段中的所有数据建立索引，并且每个索引字段都具有专用的优化数据结构。例如，文本字段存储在倒排索引中，数字字段和地理字段存储在 BKD 树中。使用按字段数据结构组合并返回搜索结果的能力使 Elasticsearch 如此之快。</p>
+<p>Elasticsearch 还具有无模式的能力，这意味着无需显式指定如何处理文档中可能出现的每个不同字段即可对文档建立索引。启用动态映射后，Elasticsearch 自动检测并向索引添加新字段。这种默认行为使索引和浏览数据变得容易-只需开始建立索引文档，Elasticsearch 就会检测布尔值，浮点数和整数值，日期和字符串并将其映射到适当的 Elasticsearch 数据类型。</p>
+<p>但是，最终，您比Elasticsearch更了解您的数据以及如何使用它们。您可以定义规则来控制动态映射，也可以显式定义映射以完全控制字段的存储和索引方式。</p>
+<p>定义自己的映射使您能够：</p>
+<ul>
+<li>区分全文字符串字段和精确值字符串字段</li>
+<li>执行特定于语言的文本分析</li>
+<li>优化字段以进行部分匹配</li>
+<li>使用自定义日期格式</li>
+<li>使用无法自动检测到的数据类型，例如 <code>geo_point</code> 和 <code>geo_shape</code></li>
+</ul>
+<p>为不同的目的以不同的方式对同一字段建立索引通常很有用。例如，您可能希望将一个字符串字段索引为全文搜索的文本字段和索引关键字，以便对数据进行排序或汇总(定义映射时对字段使用 <code>fields</code> 定义额外的类型)。或者，您可能选择使用多个语言分析器来处理包含用户输入的字符串字段的内容。</p>
+<h2 id="数据输出搜索和分析"><a class="markdownIt-Anchor" href="#数据输出搜索和分析"></a> 数据输出：搜索和分析</h2>
+<p>尽管您可以将 Elasticsearch 用作文档存储并检索文档及其元数据，但真正的强大之处在于能够轻松访问基于 Apache Lucene 搜索引擎库构建的全套搜索功能。</p>
+<p>Elasticsearch 提供了一个简单，一致的 REST API，用于管理您的集群以及索引和搜索数据。为了进行测试，您可以轻松地直接从命令行或通过 Kibana 中的开发者控制台提交请求。在您的应用程序中，您可以使用 <a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/client/index.html">Elasticsearch客户端</a> 作为您选择的语言：Java，JavaScript，Go，.NET，PHP，Perl，Python 或 Ruby。</p>
+<h3 id="搜索数据"><a class="markdownIt-Anchor" href="#搜索数据"></a> 搜索数据</h3>
+<p>Elasticsearch REST API 支持<strong>结构化查询</strong>，<strong>全文查询</strong>和<strong>结合了两者的复杂查询</strong>。结构化查询类似于您可以在 SQL 中构造的查询类型。例如，您可以搜索索引中的 <code>gender</code> 和 <code>age</code> 字段，<code>employee</code> 然后按 <code>hire_date</code> 字段对匹配项进行排序。全文查询会找到所有与查询字符串匹配的文档，并按***相关性***对它们进行返回（它们与您的搜索词的匹配程度如何）。</p>
+<p>除了搜索单个词项（<code>term</code>）外，您还可以执行短语搜索（<code>phrase searches</code>），相似性搜索（<code>similarity searches</code>）和前缀搜索（<code>prefix searches</code>），并获得自动完成建议。</p>
+<p>是否要搜索地理空间或其他数字数据？Elasticsearch 在支持高性能地理和数字查询的优化数据结构中索引非文本数据。</p>
+<p>您可以使用 Elasticsearch 全面的 JSON 样式查询语言（<a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html">Query DSL</a>）访问所有这些搜索功能。您还可以构造 <a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/sql-overview.html">SQL样式的查询</a> 以在 Elasticsearch 内部本地搜索和聚合数据，并且 JDBC 和 ODBC 驱动程序使范围广泛的第三方应用程序可以通过 SQL 与 Elasticsearch 进行交互。</p>
+<h1 id="分析数据"><a class="markdownIt-Anchor" href="#分析数据"></a> 分析数据</h1>
+<p>文本分析是将非结构化文本（例如电子邮件的正文或产品说明）转换为针对搜索优化的结构化格式的过程。当索引或搜索文本（<code>text</code>）字段类型时，Elasticsearch 执行文本分析，然后将其添加到倒排索引中以便进行搜索。</p>
+<p>Elasticsearch 对每个分析的文本字段都要经过许多步骤，该过程由 <a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analyzer-anatomy.html"><em>分析器（analyzer）</em></a> 执行，经历以下步骤：</p>
+<ul>
+<li>
+<p><em>字符过滤</em> — 使用字符过滤器（<code>Character filters</code>）转换或过滤字符，<strong>单词过滤器有零个或多个，按顺序处理。</strong></p>
+</li>
+<li>
+<p><em>分词</em> — 使用分词器（<code>Tokenizer</code>）将文本分成一个或多个词元（<code>token</code>），<strong>将这些令牌存储到索引中</strong>。</p>
+</li>
+<li>
+<p><em>词元过滤</em> — 词元过滤器（<code>Token filters</code>）接收词元流，并可以添加，删除或更改词元。例如，小写（<a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lowercase-tokenfilter.html"><code>lowercase</code></a>）词元过滤器会将所有词元转换为小写，停顿词（<a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html"><code>stop</code></a>）元过滤器会从词元流中删除常见的词（停顿词），同义词（<a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html"><code>synonym</code></a>）词元过滤器将同义词引入词元流，<strong>可以有零个或多个，按顺序处理</strong>。</p>
+</li>
+<li>
+<p><em>词元索引</em> — 将这些词元存储到倒排索引中。</p>
+</li>
+</ul>
+<p><img src="../../images/middleware/elasticsearch/elasticsearch-analyzer.png" alt="elasticsearch-analyzer" /></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/" class="post-title-link" itemprop="url">Java 日期类</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-10 09:51:25" itemprop="dateCreated datePublished" datetime="2020-05-10T09:51:25+08:00">2020-05-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:38:53" itemprop="dateModified" datetime="2020-11-17T16:38:53+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/Java8/" itemprop="url" rel="index"><span itemprop="name">Java8</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/" class="post-meta-item leancloud_visitors" data-flag-title="Java 日期类" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Java 的 API 提供了很多有用的组件，能帮我们构建复杂的应用。比如日期处理，Java 从 1.0，就提供了 <code>java.util.Date</code> 类用于支持日期和时间的处理，不过由于该 API 设计的缺陷，产生了糟糕的易用性。随着 1.0 退出舞台，Date 类中的很多方法都被废弃了，Java 1.1 使用 <code>java.util.Calendar</code> 类取而代之，很不幸，Calendar 类也有类似的问题和设计缺陷，导致使用这些方法写出的代码非常容易出错。</p>
+<p>所有这些缺陷和不一致导致用户们转投第三方的日期和时间库，比如 <code>Joda-Time</code>。为了解决这些问题，Oracle 决定在原生的 Java API 中提供高质量的日期和时间支持。你会看到 Java 8 在 <code>java.time</code> 包中整合了很多 Joda-Time 的特性。</p>
+<p>在开始介绍日期类之前，我们先陈述几个经常出现的名次：</p>
+<p><em><strong>UTC</strong></em></p>
+<p><strong>协调世界时</strong>，是最主要的<strong>世界时间标准</strong>，基于原子钟。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/spring/Spring-Security-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/spring/Spring-Security-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/" class="post-title-link" itemprop="url">Spring Security 架构初谈</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-07 15:00:00" itemprop="dateCreated datePublished" datetime="2020-03-07T15:00:00+08:00">2020-03-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:33:14" itemprop="dateModified" datetime="2020-11-17T16:33:14+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/spring/Spring-Security-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/" class="post-meta-item leancloud_visitors" data-flag-title="Spring Security 架构初谈" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="身份验证和访问控制"><a class="markdownIt-Anchor" href="#身份验证和访问控制"></a> 身份验证和访问控制</h2>
+<p>应用程序安全性归结为或多或少的两个独立问题：</p>
+<p><code>authentication/认证</code>（你是谁？）和 <code>authorization/授权</code>（你可以做什么？）。</p>
+<p>有时人们会说“访问控制”而不是“授权”，这可能会造成混淆，但是以这种方式思考可能会有所帮助，因为“授权”在其他地方可能有点言过其重。Spring Security 的体系结构旨在将认证与授权分开，并各自具有策略和扩展点。</p>
+<h3 id="authentication身份验证认证"><a class="markdownIt-Anchor" href="#authentication身份验证认证"></a> Authentication（身份验证/认证）</h3>
+<p>身份验证的主要策略接口是 <code>AuthenticationManager</code>，它只有一个方法：</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/spring/Spring-Security-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/cloud-native/%E5%85%B3%E4%BA%8E-Docker-%E7%9A%84%E7%BD%91%E7%BB%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/cloud-native/%E5%85%B3%E4%BA%8E-Docker-%E7%9A%84%E7%BD%91%E7%BB%9C/" class="post-title-link" itemprop="url">关于 Docker 的网络</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-07 15:00:00" itemprop="dateCreated datePublished" datetime="2020-03-07T15:00:00+08:00">2020-03-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 17:04:08" itemprop="dateModified" datetime="2020-11-17T17:04:08+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Devops/" itemprop="url" rel="index"><span itemprop="name">Devops</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/cloud-native/%E5%85%B3%E4%BA%8E-Docker-%E7%9A%84%E7%BD%91%E7%BB%9C/" class="post-meta-item leancloud_visitors" data-flag-title="关于 Docker 的网络" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="docker-容器网络"><a class="markdownIt-Anchor" href="#docker-容器网络"></a> <code>Docker</code> 容器网络</h2>
+<p><code>Docker</code> 从容器中提取了基础的主机连接网络。 这样做为应用程序提供了一定程度的运行时环境不可知性，并允许基础结构管理器调整实现以适合操作环境。 连接到 <code>Docker</code> 网络的容器将获得一个唯一的 IP 地址，该 IP 地址可以为连接到同一 <code>Docker</code> 网络的其他容器进行路由。</p>
+<p>但这种方法的主要问题是，在容器内运行的任何软件都没有简洁的方法来确定依赖的宿主机的 IP 地址，这阻止了容器将其服务端点通告给容器网络外部的其他服务。</p>
+<p><code>Docker</code> 还将网络视为第一类实体。 这意味着它们具有自己的生命周期，并且不受任何其他对象的约束。 您可以使用 <code>docker network</code> 子命令直接定义和管理它们。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/cloud-native/%E5%85%B3%E4%BA%8E-Docker-%E7%9A%84%E7%BD%91%E7%BB%9C/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/network/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E4%B8%8EgRPC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/network/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E4%B8%8EgRPC/" class="post-title-link" itemprop="url">gRPC 与进程间通信</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-20 17:40:00" itemprop="dateCreated datePublished" datetime="2019-10-20T17:40:00+08:00">2019-10-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:34:39" itemprop="dateModified" datetime="2020-11-17T16:34:39+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/network/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E4%B8%8EgRPC/" class="post-meta-item leancloud_visitors" data-flag-title="gRPC 与进程间通信" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>随着时间的流逝，进程间通信技术已经发生了巨大的发展。出现了各种这样的技术来满足现代需求并提供更好和更有效的开发体验。让我们看一些最常用的进程间通信技术，并与 gprc 做个比较。</p>
+<h2 id="常规-rpc"><a class="markdownIt-Anchor" href="#常规-rpc"></a> 常规 RPC</h2>
+<p>RPC 是用于构建客户服务应用程序的流行的进程间通信技术。使用 RPC，客户端可以远程调用方法，就像调用本地方法一样。早期有流行的 RPC 实现，例如通用对象请求代理体系结构（CORBA）和 Java 远程方法调用（RMI），它们用于构建和连接服务或应用程序。但是，大多数此类常规 RPC 实现极其复杂，因为它们建立在诸如 TCP 之类的通信协议之上，这阻碍了不同程序间的交互，而且各自的规范很臃肿。</p>
+<p>RPC（Remote Procedure Call）—远程过程调用，是指计算机程序使过程（子程序）在不同的地址空间（通常在共享网络的另一台计算机上）执行时，其编码就像是普通的（本地）过程调用，无需程序员为远程交互明确编码细节。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/network/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E4%B8%8EgRPC/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/jvm/Java-Class-Loaders/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/java/jvm/Java-Class-Loaders/" class="post-title-link" itemprop="url">Java 类加载器</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-04-22 23:32:25" itemprop="dateCreated datePublished" datetime="2019-04-22T23:32:25+08:00">2019-04-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:40:09" itemprop="dateModified" datetime="2020-11-17T16:40:09+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/jvm/Java-Class-Loaders/" class="post-meta-item leancloud_visitors" data-flag-title="Java 类加载器" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="类加载"><a class="markdownIt-Anchor" href="#类加载"></a> 类加载</h2>
+<p>在 Java 类或接口编译为 Class 二进制字节码后，当我们用到该类或接口时，虚拟机就会将描述类的数据加载到<strong>方法区内存</strong>中，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的 Java 类型，这就是虚拟机的类加载机制。</p>
+<p><strong>类型的加载、连接和初始化过程发生在程序运行期间。</strong></p>
+<p>Java 虚拟机中类加载的全过程包含：加载、验证、准备、解析和初始化，这里我们只介绍加载一个阶段。</p>
+<p><img src="../../../images/java/java_execute.gif" alt="字节码验证器" /></p>
+<h2 id="加载"><a class="markdownIt-Anchor" href="#加载"></a> 加载</h2>
+<p>加载阶段，虚拟机规范要求虚拟机主要完成一下 3 件事情：</p>
+<ol>
+<li>通过一个类的完全限定名称来获取定义此类的二进制字节流。</li>
+<li>将这个字节流所代表的静态存储结构转化为<strong>方法区</strong>的运行时数据结构。</li>
+<li>在内存中生成一个代表类的 <code>java.lang.Class</code> 对象，作为方法区的这个类的各种数据的访问入口。</li>
+</ol>
+<blockquote>
+<p><strong>HotSpot 虚拟机是将生成的该 Class 对象放在了方法区中，而不是堆中。</strong></p>
+</blockquote>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/jvm/Java-Class-Loaders/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

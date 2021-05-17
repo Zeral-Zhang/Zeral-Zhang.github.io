@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="流的创建  空流 如果创建空流，则应使用 Stream.empty() 方法。 通常情况下创建空流的目的是避免返回 null： 123public Stream&lt;String&gt; streamOf(List&lt;String&gt; list) &amp;#123;    return list &#x3D;&#x3D; null || list.isEmpty() ? Stream.empty() : lis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java8 Stream 使用">
+<meta property="og:url" content="https://www.zeral.cn/java/Java8-Stream%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="流的创建  空流 如果创建空流，则应使用 Stream.empty() 方法。 通常情况下创建空流的目的是避免返回 null： 123public Stream&lt;String&gt; streamOf(List&lt;String&gt; list) &amp;#123;    return list &#x3D;&#x3D; null || list.isEmpty() ? Stream.empty() : lis">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-11-18T09:03:45.000Z">
+<meta property="article:modified_time" content="2020-08-04T01:27:19.706Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Stream">
+<meta property="article:tag" content="Java8">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.zeral.cn/java/Java8-Stream%E4%BD%BF%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java8 Stream 使用 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java8-Stream%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java8 Stream 使用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-11-18 17:03:45" itemprop="dateCreated datePublished" datetime="2018-11-18T17:03:45+08:00">2018-11-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-08-04 09:27:19" itemprop="dateModified" datetime="2020-08-04T09:27:19+08:00">2020-08-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/Java8-Stream%E4%BD%BF%E7%94%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Java8 Stream 使用" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="流的创建"><a class="markdownIt-Anchor" href="#流的创建"></a> 流的创建</h2>
+<h3 id="空流"><a class="markdownIt-Anchor" href="#空流"></a> 空流</h3>
+<p>如果创建空流，则应使用 <code>Stream.empty()</code> 方法。</p>
+<p>通常情况下创建空流的目的是避免返回 null：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Stream&lt;String&gt; <span class="title">streamOf</span><span class="params">(List&lt;String&gt; list)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> list == <span class="keyword">null</span> || list.isEmpty() ? Stream.empty() : list.stream();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="从数组或集合创建流"><a class="markdownIt-Anchor" href="#从数组或集合创建流"></a> 从数组或集合创建流</h3>
+<p>我们可以从数组使用 <code>stream()</code> 或者 <code>of()</code> 方法来创建流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Stream&lt;T&gt; <span class="title">stream</span><span class="params">(T[] array)</span></span></span><br></pre></td></tr></table></figure>
+<p>返回以指定数组作为源的顺序Stream。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> &lt;T&gt; <span class="function">Stream&lt;T&gt; <span class="title">of</span><span class="params">(T... values)</span></span></span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>返回其元素为指定值的顺序有序流。</p>
+<blockquote>
+<p>Stream 的 <code>of</code> 方法内部还是使用 Arrays <code>stream</code> 方法</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String[] arr = <span class="keyword">new</span> String[]&#123;<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>&#125;;</span><br><span class="line">Stream&lt;String&gt; stream = Arrays.stream(arr);</span><br><span class="line">stream = Stream.of(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>在集合的接口上 java8 添加了默认的 <code>stream()</code> 方法允许使用任何集合作为元素源创建 Stream <T>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;String&gt; stream = list.stream();</span><br></pre></td></tr></table></figure>
+<p>如果想要多个流合并成单个流，可以使用流的 <code>concat</code> 方法：</p>
+<blockquote>
+<p>可以在里面嵌套使用方法，但是注意 java8 的流不能复用。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;Object&gt; concatStream = Stream.concat(Stream.concat(collection1.stream(), collection2.stream()), collection3.stram());</span><br></pre></td></tr></table></figure>
+<h3 id="静态工厂方法创建流"><a class="markdownIt-Anchor" href="#静态工厂方法创建流"></a> 静态工厂方法创建流</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> IntStream <span class="title">range</span><span class="params">(<span class="keyword">int</span> startInclusive, <span class="keyword">int</span> endExclusive)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>从 startInclusive（包括）到 endExclusive（不包括）的递增步长返回顺序排序的 IntStream。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> &lt;T&gt; <span class="function">Stream&lt;T&gt; <span class="title">iterate</span><span class="params">(T seed, UnaryOperator&lt;T&gt; f)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>返回通过将函数 f 迭代应用于初始元素种子而生成的无限顺序有序流，生成由种子，f(seed)，f(f(seed)) 等组成的流。</p>
+<h3 id="构建器-生成器-迭代器生成流"><a class="markdownIt-Anchor" href="#构建器-生成器-迭代器生成流"></a> 构建器、生成器、迭代器生成流</h3>
+<ul>
+<li>
+<p>构建器</p>
+<p>使用构建器时，应在语句的右侧部分另外指定所需类型，否则 build() 方法将创建 Stream <Object> 的实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;String&gt; streamBuilder =</span><br><span class="line">  Stream.&lt;String&gt;builder().add(<span class="string">&quot;a&quot;</span>).add(<span class="string">&quot;b&quot;</span>).add(<span class="string">&quot;c&quot;</span>).build();</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>生成器 - 可用于生成无限流</p>
+<p>generate() 方法接受 Supplier <T> 以生成元素。由于结果流是无限的，开发人员应指定所需的大小，否则 generate() 方法将一直有效，直到达到内存限制：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;String&gt; streamGenerated =</span><br><span class="line">  Stream.generate(() -&gt; <span class="string">&quot;element&quot;</span>).limit(<span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>迭代器 - 可用于生成无限流</p>
+<p>iterate() 方法有两个参数：种子和函数。 种子是流的第一个元素。通过将函数应用于第一元素来生成第二元素。通过在第二个元素上应用函数来生成第三个元素。</p>
+<p>因此，元素是：<code>seed, f(seed), f(f(seed)), f(f(f(seed)))....</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    Stream.iterate(<span class="number">2L</span>, n  -&gt;  n  + <span class="number">1</span>)</span><br><span class="line">    .filter(Main::isOdd)</span><br><span class="line">    .limit(<span class="number">5</span>)</span><br><span class="line">    .forEach(System.out::printf);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isOdd</span><span class="params">(<span class="keyword">long</span> number)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (number % <span class="number">2</span> == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码返回以下执行结果：</p>
+<p>3 5 7 9 11</p>
+</li>
+</ul>
+<h3 id="创建无尽流"><a class="markdownIt-Anchor" href="#创建无尽流"></a> 创建无尽流</h3>
+<p>我们已经知道了流可以分为中间和终端操作。我们也可以利用流的惰性话来创建一个无尽流。<br />
+我们创建一个从 0 开始每次加 2 的无限流，在调用终端操作前限制它的长度。<br />
+**在调用终端操作前执行 limit 操作是至关重要的。**不然程序将无限制的运行：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// given</span></span><br><span class="line">Stream&lt;Integer&gt; infiniteStream = Stream.iterate(<span class="number">0</span>, i -&gt; i + <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// when</span></span><br><span class="line">List&lt;Integer&gt; collect = infiniteStream</span><br><span class="line">  .limit(<span class="number">10</span>)</span><br><span class="line">  .collect(Collectors.toList());</span><br><span class="line"></span><br><span class="line"><span class="comment">// then</span></span><br><span class="line">assertEquals(collect, Arrays.asList(<span class="number">0</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">10</span>, <span class="number">12</span>, <span class="number">14</span>, <span class="number">16</span>, <span class="number">18</span>));</span><br></pre></td></tr></table></figure>
+<p>我们使用 iterate() 方法创建一个无限流。然后调用 limit() 转换和 collect() 终端操作。由于 Stream 的惰性，我们将拥有无限序列的前 10 个元素组成的集合。</p>
+<h4 id="创建自定义元素的无限流"><a class="markdownIt-Anchor" href="#创建自定义元素的无限流"></a> 创建自定义元素的无限流</h4>
+<p>假设我们想创建一个无限的随机 UUID 流。<br />
+使用 Stream API 实现此目的的第一步是创建这些随机值的供应商（Supplier）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Supplier&lt;UUID&gt; randomUUIDSupplier = UUID::randomUUID;</span><br></pre></td></tr></table></figure>
+<p>当我们定义好供应商时，我们可以使用 generate() 方法创建无限流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;UUID&gt; infiniteStreamOfRandomUUID = Stream.generate(randomUUIDSupplier);</span><br></pre></td></tr></table></figure>
+<p>然后我们可以从流中获取一些元素。如果你希望程序在有限时间内完成，请记得使用 limit() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">List&lt;UUID&gt; randomInts = infiniteStreamOfRandomUUID</span><br><span class="line">.skip(<span class="number">10</span>)</span><br><span class="line">.limit(<span class="number">10</span>)</span><br><span class="line">.collect(Collectors.toList());</span><br></pre></td></tr></table></figure>
+<p>我们使用 skip() 转换来丢弃前 10 个结果并采用接下来的 10 个元素。我们可以通过将 Supplier 接口的函数传递给 Stream 上的 generate() 方法来创建任何自定义类型元素的无限流。</p>
+<h3 id="字符串流"><a class="markdownIt-Anchor" href="#字符串流"></a> 字符串流</h3>
+<p>String 也可以用作创建流的源。</p>
+<p>借助 String 类的 chars() 方法。由于 JDK 中没有接口 CharStream，因此 IntStream 用于表示字符流。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">IntStream streamOfChars = <span class="string">&quot;abc&quot;</span>.chars();</span><br></pre></td></tr></table></figure>
+<p>以下示例根据指定的 RegEx 将 String 拆分为子字符串：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;String&gt; streamOfString =</span><br><span class="line">  Pattern.compile(<span class="string">&quot;, &quot;</span>).splitAsStream(<span class="string">&quot;a, b, c&quot;</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="文件流"><a class="markdownIt-Anchor" href="#文件流"></a> 文件流</h3>
+<p>Java NIO 类 Files 允许通过 lines() 方法生成文本文件的 Stream <String>。文本的每一行都成为流的一个元素：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Path path = Paths.get(<span class="string">&quot;C:\\file.txt&quot;</span>);</span><br><span class="line">Stream&lt;String&gt; streamOfStrings = Files.lines(path);</span><br><span class="line">Stream&lt;String&gt; streamWithCharset = </span><br><span class="line">  Files.lines(path, Charset.forName(<span class="string">&quot;UTF-8&quot;</span>));</span><br></pre></td></tr></table></figure>
+<p>可以将 Charset 指定为 lines() 方法的参数。</p>
+<blockquote>
+<p>Java 8 流不能重用。</p>
+<p>流管道，是源流，中间操作和终端操作组成的链。</p>
+<p>每个流只能使用一个终端操作。</p>
+<p>中间操作是惰性的。这意味着只有在执行终端操作时才会调用它们。</p>
+<p>减少流大小的中间操作应放在应用于每个元素的操作之前。因此，在流管道的顶部保留skip()，filter()，distinct() 等方法。</p>
+</blockquote>
+<h2 id="流的归约"><a class="markdownIt-Anchor" href="#流的归约"></a> 流的归约</h2>
+<p>API 有许多终端操作，它们将流聚合到类型或原始类型，例如 <code>count()</code>，<code>max()</code>，<code>min()</code>，<code>sum()</code>，但这些操作根据预定义的实现工作。如果开发人员需要定制 Stream 的归约机制呢？有两种方法可以实现这一点 - <code>reduce()</code> 和 <code>collect()</code>方法。</p>
+<h3 id="reduce-方法"><a class="markdownIt-Anchor" href="#reduce-方法"></a> reduce 方法</h3>
+<p>这种方法有三种变体，它们的传参和返回类型不同。它们可以具有以下参数：</p>
+<p><strong>identity(标识)</strong> - 累加器的初始值或者如果流为空且没有任何可累积的默认值;</p>
+<p><strong>accumulator(累加器)</strong> - 一个指定元素聚合逻辑的函数。累加器为每个减少步骤创建一个新值。</p>
+<p><strong>combiner(结合器)</strong> - 聚合累加器结果的函数。仅在并行模式下从不同线程归约累加器结果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> reducedParams = Stream.of(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span><br><span class="line">  .reduce(<span class="number">10</span>, (a, b) -&gt; a + b, (a, b) -&gt; &#123;</span><br><span class="line">     log.info(<span class="string">&quot;combiner was called&quot;</span>);</span><br><span class="line">     <span class="keyword">return</span> a + b;</span><br><span class="line">  &#125;);</span><br></pre></td></tr></table></figure>
+<p>相当于：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">U result = identity;</span><br><span class="line"><span class="keyword">for</span> (T element : <span class="keyword">this</span> stream)</span><br><span class="line">    result = accumulator.apply(result, element)</span><br><span class="line"><span class="keyword">return</span> result;</span><br></pre></td></tr></table></figure>
+<p>结果与未使用结合器中的结果相同，都为 16 (10 + 1 + 2 +3)，并且没有日志，这意味着没有调用该组合器。要使组合器工作，流应该是并行的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> reducedParallel = Arrays.asList(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).parallelStream()</span><br><span class="line">    .reduce(<span class="number">10</span>, (a, b) -&gt; a + b, (a, b) -&gt; &#123;</span><br><span class="line">       log.info(<span class="string">&quot;combiner was called&quot;</span>);</span><br><span class="line">       <span class="keyword">return</span> a + b;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+<p>这里的结果是不同的（36），并且组合器被调用两次。操作并行进行。首先（10 + 1 = 11; 10 + 2 = 12; 10 + 3 = 13;）。现在组合器可以合并这三个结果。它需要两次迭代（12 + 13 = 25; 25 + 11 = 36）。</p>
+<h3 id="collect-方法"><a class="markdownIt-Anchor" href="#collect-方法"></a> collect 方法</h3>
+<blockquote>
+<p>参考 java8-stream 学习</p>
+</blockquote>
+<p>Collector <code>toMap</code> 方法，可以允许将流转换为 Map 类型，并提供了 key 相同时的合并方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">toMap(keyMapper, valueMapper, mergeFunction)</span><br></pre></td></tr></table></figure>
+<h2 id="并行流"><a class="markdownIt-Anchor" href="#并行流"></a> 并行流</h2>
+<p>在 Java 8 之前，并行化很复杂。 <code>ExecutorService</code> 和 <code>ForkJoin</code> 的出现简化了开发人员的生活，但是他们仍然应该记住如何创建一个特定的执行器，如何运行它，使用 <code>fork/join</code> 框架，您必须指定问题的细分方式（分区）等等。Java 8 引入了一种函数风格的新方式来实现并行机制。</p>
+<p>在使用集合的应用程序中实现并行性的一个难点是集合不是线程安全的，这意味着多线程无法在不<strong>引入线程干扰</strong>或<strong>内存一致性错误</strong>的情况下操作集合。 <code>Collections</code> 框架提供了同步包装器，它将自动同步添加到任意集合，使其成为线程安全的。 但是，同步会引入线程争用。 您希望避免线程争用，因为它会阻止线程并行运行。 聚合操作和并行流使您可以实现与非线程安全集合的并行性，前提是您在操作集合时不要修改集合。</p>
+<p>API 允许创建并行流，以并行模式执行操作。当流的源是 <code>Collection</code> 或数组时，可以在<code>parallelStream()</code> 方法的帮助下实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;Product&gt; streamOfCollection = productList.parallelStream();</span><br><span class="line"><span class="keyword">boolean</span> isParallel = streamOfCollection.isParallel();</span><br><span class="line"><span class="keyword">boolean</span> bigPrice = streamOfCollection</span><br><span class="line">  .map(product -&gt; product.getPrice() * <span class="number">12</span>)</span><br><span class="line">  .anyMatch(price -&gt; price &gt; <span class="number">200</span>);</span><br></pre></td></tr></table></figure>
+<p>如果流的源不同于 <code>Collection</code> 或数组，则应使用 <code>parallel()</code> 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IntStream intStreamParallel = IntStream.range(<span class="number">1</span>, <span class="number">150</span>).parallel();</span><br><span class="line"><span class="keyword">boolean</span> isParallel = intStreamParallel.isParallel();</span><br></pre></td></tr></table></figure>
+<p>内部，<code>Stream API</code> 自动使用 <code>ForkJoin</code> 框架并行执行操作。默认情况下，将使用公共线程池，并且没有办法（至少现在）为它分配一些自定义线程池。</p>
+<blockquote>
+<p>并行流内部使用了默认的 <code>ForkJoinPool</code>，它默认的线程数量就是你的处理器数量，这个值是由 <code>Runtime.getRuntime().availableProcessors()</code> 得到的。<br />
+但是你可以通过系统属性 <code>java.util.concurrent.ForkJoinPool.common.parallelism</code> 来改变线程池大小，如下所示: <code>System.setProperty(&quot;java.util.concurrent.ForkJoinPool.common.parallelism&quot;, &quot;12&quot;);</code> 这是一个全局设置，因此它将印象代码中所有的并行流。反过来说，目前还无法专为某个并行流指定这个值。一般而言，让 <code>ForkJoinPool</code> 的大小等于处理器数量是个不错的默认值，除非你有很好的理由，否则我们强烈建议不要修改它。</p>
+</blockquote>
+<p>在并行模式下使用流时，避免阻塞操作并在任务需要相同的执行时间时使用并行模式（如果一个任务比另一个任务持续时间长，则可能会减慢整个应用程序的工作流程）。</p>
+<p>可以使用 <code>sequential()</code> 方法将并行模式的流转换回顺序模式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IntStream intStreamSequential = intStreamParallel.sequential();</span><br><span class="line"><span class="keyword">boolean</span> isParallel = intStreamSequential.isParallel();</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>⚠️ 并行流的顺序是由流来源的 <code>Spliterator</code> 的属性决定的，比如 <code>List</code>、<code>LinkedHashSet</code> 实现的 <code>Spliterator</code> 就包含 <code>Spliterator.ORDERED</code> 属性，我们可以通过调用 <code>Stream.unordered()</code> 无序处理以加快并行速度。</p>
+<p><code>Stream forEach</code> 在并行流下不保证顺序，但是我们可以使用 <code>forEachOrdered</code>  使具有顺序的流顺序输出。</p>
+</blockquote>
+<h2 id="新的流式写法"><a class="markdownIt-Anchor" href="#新的流式写法"></a> 新的流式写法</h2>
+<h3 id="do-while"><a class="markdownIt-Anchor" href="#do-while"></a> Do-While</h3>
+<p>假设在我们的代码里有这样一个简单的 do…while 循环：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">while</span> (i &lt; <span class="number">10</span>) &#123;</span><br><span class="line">    System.out.println(i);</span><br><span class="line">    i++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当我们想要实现类似于标准 do-while 循环的功能时，我们需要使用 <code>limit()</code> 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;Integer&gt; integers = Stream</span><br><span class="line">  .iterate(<span class="number">0</span>, i -&gt; i + <span class="number">1</span>);</span><br><span class="line">integers</span><br><span class="line">  .limit(<span class="number">10</span>)</span><br><span class="line">  .forEach(System.out::println);</span><br></pre></td></tr></table></figure>
+<p>我们用较少的代码实现了相同功能，但是使用 limit() 函数并没有 doWhile 那样容易阅读。</p>
+<h3 id="ifelse"><a class="markdownIt-Anchor" href="#ifelse"></a> if/else</h3>
+<h4 id="在-foreach-中使用-ifelse"><a class="markdownIt-Anchor" href="#在-foreach-中使用-ifelse"></a> 在 forEach() 中使用 if/else</h4>
+<p>首先，让我们创建一个 Integer 数组，然后在 Integer 流的 forEach() 方法中使用传统的 if / else 逻辑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; ints = Arrays.asList(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">ints.stream()</span><br><span class="line">   .forEach(i -&gt; &#123;</span><br><span class="line">       <span class="keyword">if</span> (i.intValue() % <span class="number">2</span> == <span class="number">0</span>) &#123;</span><br><span class="line">           Assert.assertTrue(i.intValue() % <span class="number">2</span> == <span class="number">0</span>);</span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">           Assert.assertTrue(i.intValue() % <span class="number">2</span> != <span class="number">0</span>);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;);</span><br></pre></td></tr></table></figure>
+<p>我们的 forEach 方法包含 if-else 逻辑，它使用 Java 模运算符验证 Integer 是奇数还是偶数。</p>
+<h4 id="使用-filter-作为-ifelse"><a class="markdownIt-Anchor" href="#使用-filter-作为-ifelse"></a> 使用 filter 作为 if/else</h4>
+<p>其次，让我们看一下使用 Stream filter() 方法的更优雅的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;Integer&gt; evenIntegers = ints.stream()</span><br><span class="line">    .filter(i -&gt; i.intValue() % <span class="number">2</span> == <span class="number">0</span>);</span><br><span class="line">Stream&lt;Integer&gt; oddIntegers = ints.stream()</span><br><span class="line">    .filter(i -&gt; i.intValue() % <span class="number">2</span> != <span class="number">0</span>);</span><br><span class="line"> </span><br><span class="line">evenIntegers.forEach(i -&gt; Assert.assertTrue(i.intValue() % <span class="number">2</span> == <span class="number">0</span>));</span><br><span class="line">oddIntegers.forEach(i -&gt; Assert.assertTrue(i.intValue() % <span class="number">2</span> != <span class="number">0</span>));</span><br></pre></td></tr></table></figure>
+<p>上面我们使用 Stream filter() 方法实现了 if / else 逻辑，将整数列表分成两个 Streams，一个用于偶数整数，另一个用于奇数整数。</p>
+<h4 id="使用-partitioningby-分割为两部分"><a class="markdownIt-Anchor" href="#使用-partitioningby-分割为两部分"></a> 使用 partitioningBy 分割为两部分</h4>
+<p>我们也可以使用约减操作的 <code>partitioningBy</code> 分割将结果分割成两部分：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;Boolean, List&lt;Integer&gt;&gt; integerMap = </span><br><span class="line">  ints.stream().collect(Collectors.partitioningBy(i -&gt; i.intValue() % <span class="number">2</span> == <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<p>这样我们会得到 true 的 偶数数组和 false 的奇数数组。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Stream/" rel="tag"># Stream</a>
+              <a href="/tags/Java8/" rel="tag"># Java8</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/persistence/Hibernate-%E7%BB%A7%E6%89%BF%E6%98%A0%E5%B0%84/" rel="prev" title="Hibernate 继承映射">
+      <i class="fa fa-chevron-left"></i> Hibernate 继承映射
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/concurrency/ForkJoin-%E6%A1%86%E6%9E%B6%E5%85%A5%E9%97%A8/" rel="next" title="Fork/Join 框架入门">
+      Fork/Join 框架入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E7%9A%84%E5%88%9B%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text"> 流的创建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A9%BA%E6%B5%81"><span class="nav-number">1.1.</span> <span class="nav-text"> 空流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E%E6%95%B0%E7%BB%84%E6%88%96%E9%9B%86%E5%90%88%E5%88%9B%E5%BB%BA%E6%B5%81"><span class="nav-number">1.2.</span> <span class="nav-text"> 从数组或集合创建流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95%E5%88%9B%E5%BB%BA%E6%B5%81"><span class="nav-number">1.3.</span> <span class="nav-text"> 静态工厂方法创建流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA%E5%99%A8-%E7%94%9F%E6%88%90%E5%99%A8-%E8%BF%AD%E4%BB%A3%E5%99%A8%E7%94%9F%E6%88%90%E6%B5%81"><span class="nav-number">1.4.</span> <span class="nav-text"> 构建器、生成器、迭代器生成流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%97%A0%E5%B0%BD%E6%B5%81"><span class="nav-number">1.5.</span> <span class="nav-text"> 创建无尽流</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E5%85%83%E7%B4%A0%E7%9A%84%E6%97%A0%E9%99%90%E6%B5%81"><span class="nav-number">1.5.1.</span> <span class="nav-text"> 创建自定义元素的无限流</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%B5%81"><span class="nav-number">1.6.</span> <span class="nav-text"> 字符串流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E6%B5%81"><span class="nav-number">1.7.</span> <span class="nav-text"> 文件流</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E7%9A%84%E5%BD%92%E7%BA%A6"><span class="nav-number">2.</span> <span class="nav-text"> 流的归约</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#reduce-%E6%96%B9%E6%B3%95"><span class="nav-number">2.1.</span> <span class="nav-text"> reduce 方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#collect-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text"> collect 方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E6%B5%81"><span class="nav-number">3.</span> <span class="nav-text"> 并行流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E7%9A%84%E6%B5%81%E5%BC%8F%E5%86%99%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text"> 新的流式写法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#do-while"><span class="nav-number">4.1.</span> <span class="nav-text"> Do-While</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ifelse"><span class="nav-number">4.2.</span> <span class="nav-text"> if&#x2F;else</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8-foreach-%E4%B8%AD%E4%BD%BF%E7%94%A8-ifelse"><span class="nav-number">4.2.1.</span> <span class="nav-text"> 在 forEach() 中使用 if&#x2F;else</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-filter-%E4%BD%9C%E4%B8%BA-ifelse"><span class="nav-number">4.2.2.</span> <span class="nav-text"> 使用 filter 作为 if&#x2F;else</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-partitioningby-%E5%88%86%E5%89%B2%E4%B8%BA%E4%B8%A4%E9%83%A8%E5%88%86"><span class="nav-number">4.2.3.</span> <span class="nav-text"> 使用 partitioningBy 分割为两部分</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : '793796f92713b360dc9917c5b859686f',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

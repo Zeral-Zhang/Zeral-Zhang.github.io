@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是缓存 术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。 在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。  JSR107(JCache)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java Cache 入门">
+<meta property="og:url" content="https://www.zeral.cn/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="什么是缓存 术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。 在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。  JSR107(JCache)">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/cache/layered_architecture.png">
+<meta property="og:image" content="https://www.zeral.cn/images/cache/EhcacheTerminology.png">
+<meta property="article:published_time" content="2019-04-06T14:10:00.000Z">
+<meta property="article:modified_time" content="2021-05-17T11:38:13.027Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Hibernate">
+<meta property="article:tag" content="Cache">
+<meta property="article:tag" content="EhCache">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/cache/layered_architecture.png">
+
+<link rel="canonical" href="https://www.zeral.cn/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java Cache 入门 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java Cache 入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-04-06 22:10:00" itemprop="dateCreated datePublished" datetime="2019-04-06T22:10:00+08:00">2019-04-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-17 19:38:13" itemprop="dateModified" datetime="2021-05-17T19:38:13+08:00">2021-05-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Cache/" itemprop="url" rel="index"><span itemprop="name">Cache</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Java Cache 入门" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="什么是缓存"><a class="markdownIt-Anchor" href="#什么是缓存"></a> 什么是缓存</h2>
+<p>术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。</p>
+<p>在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。</p>
+<h3 id="jsr107jcache"><a class="markdownIt-Anchor" href="#jsr107jcache"></a> JSR107(JCache)</h3>
+<p>JCache 是 Java 的缓存 API。它由 JSR107 定义。它定义了供开发人员使用的标准 Java 缓存 API 和供实现者使用的标准 SPI（“服务提供者接口”）。</p>
+<p><a target="_blank" rel="noopener" href="https://docs.google.com/document/d/1ijduF_tmHvBaUS7VBBU2ZN8_eEBiFaXXg9OI0_ZxCrA/edit">标准定义文档</a></p>
+<span id="more"></span>
+<h2 id="jcache-核心概念"><a class="markdownIt-Anchor" href="#jcache-核心概念"></a> JCache 核心概念</h2>
+<p>Java 的缓存 API 定义了五个核心接口：<code>CachingProvider</code>，<code>CacheManager</code>，<code>Cache</code>，<code>Entry</code>  和 <code>ExpiryPolicy</code>。</p>
+<p><em><strong><code>CachingProvider</code></strong></em></p>
+<p>定义了建立，配置，获取，管理和控制零个或多个 <code>CacheManager</code> 的机制。应用程序可以在运行期间访问和使用零个或多个 CacheProvider。</p>
+<p><em><strong><code>CacheManager</code></strong></em><br />
+定义在上下文中了建立，配置，获取，管理和控制零个或多个唯一命名的缓存的机制。 CacheManager 被单个 <code>CachingProvider</code> 拥有。</p>
+<p><em><strong><code>Cache</code></strong></em><br />
+是一个像 Map 一样的数据结构，它允许基于 Key 的临时储存。缓存被单个 <code>CacheManager</code> 拥有。</p>
+<p><em><strong><code>Entry</code></strong></em><br />
+是被 <code>Cache</code> 存储的单个 key-value 对，JCache 允许我们定义按值或按引用来存储条目。</p>
+<p><em><strong><code>ExpiryPolicy</code></strong></em></p>
+<p>每一个被 Cache 存储的 entry 都定义了存活时间，被称作过期持续时间，在这个时间内他们可以访问、更新和删除。一旦这个过期时间到达，该条目就被认为是过期了。一旦过期，就会从缓存中驱逐出去，不能再访问，更新和删除条目。</p>
+<h3 id="按值存储和按引用存储"><a class="markdownIt-Anchor" href="#按值存储和按引用存储"></a> 按值存储和按引用存储</h3>
+<p>条目由每个缓存使用两种机制之一存储。</p>
+<p><em><strong>默认的机制，称为值存储。</strong></em></p>
+<p>指示实现使副本应用程序在将它们储存在 Cache 中之前提供键和值，之后在访问缓存时再返回新的条目副本。复制条目的目的是存储在缓存和从缓存中再次返回时应用程序继续变异键和值的状态，不会对缓存持有的条目造成副作用。</p>
+<p>一个简单的方法实现可用于制作键和值的副本是 Java 序列化。</p>
+<p><em><strong>替代和可选机制，称为引用存储。</strong></em></p>
+<p>指示 Cache 实现简单地存储和返回对应用程序提供的键和值的引用，而不是按照按值存储方法的要求制作副本。如果应用程序稍后使用引用存储语义来改变提供给缓存的键或值，则突变的副作用对于从缓存访问条目的人来说是可见的，而应用程序不必更新缓存。</p>
+<p>对于在 Java 堆上实现的缓存，引用存储是最快的存储技术。</p>
+<h3 id="其它"><a class="markdownIt-Anchor" href="#其它"></a> 其它</h3>
+<p>除了定义核心接口， JCache 还为我们定义了：</p>
+<ul>
+<li>
+<p>缓存条目监听器接口</p>
+<p>我们可以注册条目不同事件的监听器在运行期或配置阶段，通过 <code>CacheEntryListenerConfiguration</code> 注册 <code>CacheEntryListener</code>。</p>
+</li>
+<li>
+<p>缓存注解，为用户提供与缓存交互的类的方法拦截器处理，类定义在 <code>javax.cache.annotation</code> 包中</p>
+<ul>
+<li>@CacheDefaults - 类级别注解，定义类中使用的所有缓存相关注解的默认属性值，如缓存名称、缓存处理器、key 生成器</li>
+<li>@CacheResult - 方法级别注解，标记方法使用参数生成的键缓存自身返回的结果。</li>
+<li>@CachePut</li>
+<li>@CacheRemove</li>
+<li>@CacheRemoveAll</li>
+</ul>
+</li>
+<li>
+<p>监控管理</p>
+<p><code>javax.cache.management</code> 包提供了用于缓存管理和统计的 <code>MXBean</code> 接口</p>
+<p>默认情况下，管理和统计信息均处于禁用状态。 要在配置时将其打开，可以在 <code>MutableConfiguration</code> 上使用以下方法：</p>
+<ul>
+<li>setManagementEnabled(boolean enabled) 启用管理</li>
+<li>setStatisticsEnabled(boolean enabled)  启用统计</li>
+</ul>
+</li>
+</ul>
+<h2 id="从-jcache-到-ehcache"><a class="markdownIt-Anchor" href="#从-jcache-到-ehcache"></a> 从 JCache 到 EhCache</h2>
+<p>使用 JCache 可以完成大部分的缓存操作，但是如果需要使用到 EhCache 的特性，则必须使用提供给程序的特定 API。比如需要用到持久化目录等。下图是 EhCache 的架构图：</p>
+<p><img src="../../images/cache/layered_architecture.png" alt="Image result for ehcache architecture diagram" /></p>
+<h3 id="使用-ehcache-作为-jcache-供应商"><a class="markdownIt-Anchor" href="#使用-ehcache-作为-jcache-供应商"></a> 使用 EhCache 作为 JCache 供应商</h3>
+<p>JCache 作为标准有很多的实现，我们这里主要以 EhCache 来展开学习，要想使用 EhCache 作为 JCache 的供应商很简单，我们只要将 EhCache 的 jar 包和 JCache 放在一起便可以使用。</p>
+<p>通过 JCache 的接口，我们便可以操控缓存：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">CachingProvider provider = Caching.getCachingProvider();  </span><br><span class="line">CacheManager cacheManager = provider.getCacheManager();   </span><br><span class="line">MutableConfiguration&lt;Long, String&gt; configuration =</span><br><span class="line">    <span class="keyword">new</span> MutableConfiguration&lt;Long, String&gt;()  </span><br><span class="line">        .setTypes(Long.class, String.class)   </span><br><span class="line">        .setStoreByValue(<span class="keyword">false</span>)   </span><br><span class="line">        .setExpiryPolicyFactory(CreatedExpiryPolicy.factoryOf(Duration.ONE_MINUTE));  </span><br><span class="line">Cache&lt;Long, String&gt; cache = cacheManager.createCache(<span class="string">&quot;jCache&quot;</span>, configuration); </span><br><span class="line">cache.put(<span class="number">1L</span>, <span class="string">&quot;one&quot;</span>); </span><br><span class="line">String value = cache.get(<span class="number">1L</span>); </span><br></pre></td></tr></table></figure>
+<p>JCache 会从应用程序的类路径中检索默认的 CachingProvider 实现。但这必须保证类路径上只有一个 JCache 实现，否则必须指定具体的供应商名称，可以使用设置系统变量 <code>javax.cache.spi.CachingProvider</code> 或通过调用 <code>Caching.getCachingProvider(String)</code> 静态方法指定完整的类名称。</p>
+<p>上述代码中，我们获取到缓存的供应器，并从中得到一个默认的 CacheManager 实例，使用不可用的配置类设置了键和值的类型，条目的存储类型，以及过期方案来生成一个名称为 JCache 的缓存对象，并向缓存中添加了一组数据，并使用键获取值。</p>
+<p>JCache 提供了一组最小配置，非常适合内存缓存。但是 EhCache 在拓扑和功能方面提供了更强大的实现。</p>
+<h3 id="从-jcache-配置访问基础-ehcache-配置"><a class="markdownIt-Anchor" href="#从-jcache-配置访问基础-ehcache-配置"></a> 从 JCache 配置访问基础 Ehcache 配置</h3>
+<p>当以使用 JCache 创建了配置时，你任然可以访问底层的 EhCache CacheRuntimeConfiguration。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">MutableConfiguration&lt;Long, String&gt; configuration = <span class="keyword">new</span> MutableConfiguration&lt;&gt;();</span><br><span class="line">configuration.setTypes(Long.class, String.class);</span><br><span class="line">Cache&lt;Long, String&gt; cache = cacheManager.createCache(<span class="string">&quot;someCache&quot;</span>, configuration); </span><br><span class="line"></span><br><span class="line">CompleteConfiguration&lt;Long, String&gt; completeConfiguration = cache.getConfiguration(CompleteConfiguration.class); </span><br><span class="line"></span><br><span class="line">Eh107Configuration&lt;Long, String&gt; eh107Configuration = cache.getConfiguration(Eh107Configuration.class); </span><br><span class="line"></span><br><span class="line">CacheRuntimeConfiguration&lt;Long, String&gt; runtimeConfiguration = eh107Configuration.unwrap(CacheRuntimeConfiguration.class);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>我们还可以使用 Ehcache CacheConfiguration 创建 JCache 缓存。</p>
+<p>EhCache 不总是同意 JCache 的默认行为。两者在默认值上存在一定的差异。</p>
+</blockquote>
+<h3 id="使用编程的方式配置-ehcache"><a class="markdownIt-Anchor" href="#使用编程的方式配置-ehcache"></a> 使用编程的方式配置 EhCache</h3>
+<p>我们可以使用编程配置或 XML 来配置 EhCache，个人比较喜欢以编程的形式配置大多数不是很容易变动的配置，通过使用提供流畅 API 的构建器我们可以很容易完成配置。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder() </span><br><span class="line">    .withCache(<span class="string">&quot;preConfigured&quot;</span>,</span><br><span class="line">        CacheConfigurationBuilder.newCacheConfigurationBuilder(Long.class, String.class, ResourcePoolsBuilder.heap(<span class="number">10</span>))) </span><br><span class="line">    .build(); </span><br><span class="line">cacheManager.init(); </span><br><span class="line"></span><br><span class="line">Cache&lt;Long, String&gt; preConfigured =</span><br><span class="line">    cacheManager.getCache(<span class="string">&quot;preConfigured&quot;</span>, Long.class, String.class); </span><br><span class="line"></span><br><span class="line">Cache&lt;Long, String&gt; myCache = cacheManager.createCache(<span class="string">&quot;myCache&quot;</span>, </span><br><span class="line">    CacheConfigurationBuilder.newCacheConfigurationBuilder(Long.class, String.class, ResourcePoolsBuilder.heap(<span class="number">10</span>)));</span><br><span class="line"></span><br><span class="line">myCache.put(<span class="number">1L</span>, <span class="string">&quot;da one!&quot;</span>); </span><br><span class="line">String value = myCache.get(<span class="number">1L</span>); </span><br><span class="line"></span><br><span class="line">cacheManager.removeCache(<span class="string">&quot;preConfigured&quot;</span>); </span><br><span class="line"></span><br><span class="line">cacheManager.close(); </span><br></pre></td></tr></table></figure>
+<p>这里的配置很清晰明了，具体配置我们可以查看配置参数查看。</p>
+<h3 id="ehcache-存储层"><a class="markdownIt-Anchor" href="#ehcache-存储层"></a> EhCache 存储层</h3>
+<p>我们可以配置 Ehcache 以使用各种数据存储区域。当缓存配置为使用多个存储区域时，这些区域将按层排列和管理。它们按层次结构组织，最低层（更远）称为权限层，其他层则是缓存层的一部分（更近，也称为近缓存）。缓存层本身可以由多个存储区域组成。最热门的数据保存在缓存层中，这通常不如权限级别那么丰富但速度更快。所有数据都保存在权限层中，这更慢但更丰富。</p>
+<p>Ehcache 支持的数据存储包括：</p>
+<p><em><strong>堆内存储</strong></em></p>
+<p>利用 Java 的堆内 RAM 内存来存储缓存条目。此层使用与 Java 应用程序相同的堆内存，所有这些都必须由 JVM 垃圾收集器扫描。JVM 使用的堆空间越多，应用程序性能就越会受到垃圾收集暂停的影响。这个存储非常快，但通常是您最有限的存储资源。</p>
+<p><em><strong>堆外存储</strong></em></p>
+<p>大小受限于可用的 RAM 内存。不受 Java 垃圾收集（GC）的限制。速度非常快，但比堆内存储慢，因为数据必须在存储和重新访问时移入和移出 JVM 堆，移入移出对象可能涉及到对象的序列化和反序列化。</p>
+<p><em><strong>磁盘存储</strong></em></p>
+<p>利用磁盘（文件系统）来存储缓存条目。这种类型的存储资源通常非常丰富，但比基于 RAM 的存储要慢得多。对于使用磁盘存储的所有应用程序，建议使用快速专用磁盘来优化吞吐量。</p>
+<p><em><strong>集群存储</strong></em></p>
+<p>此数据存储是远程服务器上的缓存。远程服务器可以可选地提供具有高可用性的故障转移服务器。由于集群存储会因网络延迟以及建立客户端/服务器一致性等因素而导致性能下降，这个层本质上比本地堆外存储慢。</p>
+<p><img src="../../images/cache/EhcacheTerminology.png" alt="EhcacheTerminology" /></p>
+<h3 id="用户管理的缓存"><a class="markdownIt-Anchor" href="#用户管理的缓存"></a> 用户管理的缓存</h3>
+<p>用户管理的缓存为我们提供了一种直接配置缓存的简单方法，而无需设置或使用 CacheManager 的复杂性。是否使用 <code>UserManagedCache</code> 而不是 CacheManager 的选择通常取决于我们是否需要 CacheManager 的所有内置功能。如果缓存要求相对简单，并且不需要 CacheManager 的全部功能，则可以考虑使用 UserManagedCache。</p>
+<p>使用 UserManagedCache 的典型方案有：方法本地缓存，线程本地缓存或缓存生命周期短于应用程序生命周期的任何其他位置。</p>
+<p><a target="_blank" rel="noopener" href="http://www.ehcache.org/documentation/3.5/usermanaged.html">使用介绍</a></p>
+<h2 id="hibernate-缓存"><a class="markdownIt-Anchor" href="#hibernate-缓存"></a> Hibernate 缓存</h2>
+<p>数据库抽象层（如ORM（对象 - 关系映射）框架）的一个优点是它们能够透明地缓存从底层存储中检索的数据。这有助于消除频繁访问数据的数据库访问成本。</p>
+<p>在运行时，Hibernate 处理将数据移入和移出二级缓存以响应 Session 执行的操作，该操作充当持久数据的事务级缓存。<strong>一旦实体被管理，该对象就会被添加到当前持久化上下文（EntityManager 或 Session）的内部缓存中。持久化上下文也称为第一级缓存，默认情况下已启用。</strong></p>
+<p>但由于 Hibernate 会话（session）绑定到当前正在运行的逻辑事务，所以一旦事务结束，该会话也将被销毁，会话中持有的上下文也会消耗。</p>
+<p>适当的缓存解决方案必须跨越多个 Hibernate 会话，这就是 Hibernate 也支持附加的二级缓存的原因。 **二级缓存是绑定到 SessionFactory 域的生命周期，意味着它由使用相同会话工厂创建的所有会话共享，仅在关闭 SessionFactory 时（通常是在应用程序关闭时）才销毁。**二级缓存主要基于实体，也支持可选的查询缓存解决方案。</p>
+<blockquote>
+<p>Hibernate 缓存不了解其他应用程序对持久性存储所做的更改。比如 EhCache 管理的缓存。要解决此限制，可以在二级缓存区域级别配置 TTL（生存时间）保留策略，以便底层缓存条目定期到期。</p>
+</blockquote>
+<h3 id="配置二级缓存"><a class="markdownIt-Anchor" href="#配置二级缓存"></a> 配置二级缓存</h3>
+<p>Hibernate 可以与各种缓存提供程序集成，以便在特定会话的上下文 (session) 之外缓存数据。要配置启用二级缓存，则需提供 RegionFactory 的实现类。</p>
+<h4 id="regionfactory"><a class="markdownIt-Anchor" href="#regionfactory"></a> RegionFactory</h4>
+<p><code>org.hibernate.cache.spi.RegionFactory</code> 定义了 Hibernate 与可插拔缓存提供程序之间的集成。Hibernate 二级缓存设计为让我们感觉不到所使用的实际缓存，SPI（服务提供者接口）为缓存实现者定义了接口，Hibernate 只需要提供 org.hibernate.cache.spi.RegionFactory 接口的实现，该接口封装了特定于实际缓存提供者的所有细节。基本上，它充当 Hibernate 和缓存提供者之间的桥梁。Hibernate 内置支持 Java 缓存标准 <code>JCache</code> 以及两个流行的缓存库：<code>Ehcache</code> 和 <code>Infinispan</code>。</p>
+<h4 id="缓存配置属性"><a class="markdownIt-Anchor" href="#缓存配置属性"></a> 缓存配置属性</h4>
+<p>除了提供程序特定的配置之外，集成的 Hibernate 端还有许多配置选项可控制各种缓存行为：</p>
+<p><em><strong><code>hibernate.cache.use_second_level_cache</code></strong></em></p>
+<p>整体启用或禁用二级缓存。默认情况下，如果当前配置的 RegionFactory 不是 <code>NoCachingRegionFactory</code>，则将启用第二级缓存。否则，将禁用二级缓存。</p>
+<p><em><strong><code>hibernate.cache.use_query_cache</code></strong></em></p>
+<p>启用或禁用查询结果的二级缓存。默认值为 false。</p>
+<p><em><strong><code>hibernate.cache.query_cache_factory</code></strong></em></p>
+<p>查询结果缓存由特殊的规则处理，该规则定义了数据的实效策略。默认实现是不失效，适合用于对数据要求松散的应用。或者我们可以指定自己的规则。自定义的规则只需要实现  <a target="_blank" rel="noopener" href="https://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/cache/spi/QueryCacheFactory.html"><code>QueryCacheFactory</code></a> 接口。hibernate 默认内置的是 <code>StandardQueryCacheFactory</code>。</p>
+<p><em><strong><code>hibernate.cache.auto_evict_collection_cache</code></strong></em></p>
+<p>当关联仅从拥有方改变时，启用或禁用双向关联的集合缓存条目的自动驱逐。默认情况下禁用该选项，因为它会跟踪关联状态并对性能产生影响。但是，如果您的应用程序不管理高速缓存集合端的双向关联的双方，则替代方法是在该集合缓存中保留陈旧数据。</p>
+<blockquote>
+<p>使用陈旧数据时很可能会出现数据不一致的情况，比如实体存在于缓存中但不存在于数据库中，在做级联删除时，会报 <code>EntityNotFoundException</code> 异常，可以在级联删除的集合上配置 <code>@NotFound(action = NotFoundAction.IGNORE)</code> 忽略该异常或者启用该选项。</p>
+</blockquote>
+<p><em><strong><code>hibernate.cache.use_reference_entries</code></strong></em></p>
+<p>允许将实体引用直接存储到二级缓存中，以用于只读或不可变实体。使用引用存储缓存的好处是我们不用显式的维护缓存，缓存更新时直接反映给调用者。缺点是该缓存只可用于只读状态，否则对象逸出，会很难控制。</p>
+<p><em><strong><code>hibernate.cache.default_cache_concurrency_strategy</code></strong></em></p>
+<p>在 hibernate 二级缓存中，可以对所有区域进行不同的配置，包括在访问特定区域时要使用的并发策略。此设置允许定义要使用的默认策略。有效值包括：</p>
+<ul>
+<li>read-only</li>
+<li>read-write</li>
+<li>nonstrict-read-write</li>
+<li>transactional</li>
+</ul>
+<p><em><strong><code>hibernate.cache.keys_factory</code></strong></em></p>
+<p>当将条目 (entries) 作为键值对存储到二级缓存中时，标识符可以包装为元组 &lt;实体类型，租户，标识符&gt; 以确保唯一性，以防第二级缓存将所有实体存储在单个空间中。这些元组然后用作高速缓存中的键。当前，仅当 <code>Infinispan</code> 配置为第二级缓存实现时才支持此属性。有效值为：</p>
+<ul>
+<li>default（将标识符包装在元组中）</li>
+<li>simple（使用标识符作为键，无需任何包装）</li>
+<li>实现 <code>org.hibernate.cache.spi.CacheKeysFactory</code> 的完全限定的类名</li>
+</ul>
+<p><em><strong><code>hibernate.cache.use_structured_entries</code></strong></em></p>
+<p>如果为 <code>true</code>，则强制 Hibernate 以更人性化的格式将数据存储在二级缓存中。如果希望能够直接在缓存中“浏览”数据，则可能会很有用，但确实会对性能产生影响。</p>
+<h3 id="配置二级缓存映射"><a class="markdownIt-Anchor" href="#配置二级缓存映射"></a> 配置二级缓存映射</h3>
+<p>可以通过 JPA 注解或 XML 描述符或使用特定于 Hibernate 的映射文件来配置缓存映射。默认情况下，实体不是二级缓存的一部分，我们可以通过配置 <code>javax.persistence.sharedCache.mode</code> 来映射缓存。该配置有四个选项：</p>
+<p><em><strong><code>ENABLE_SELECTIVE</code></strong></em></p>
+<p>默认也是推荐的选项。除非明确标记为可缓存（使用 <code>@Cacheable</code> 注解），否则不会缓存实体。</p>
+<p><em><strong><code>DISABLE_SELECTIVE</code></strong></em></p>
+<p>除非明确标记为不可缓存 <code>@Cachable</code> 注解 value 设置为 false，否则实体将被缓存。</p>
+<p><em><strong><code>ALL</code></strong></em></p>
+<p>即使标记为不可缓存，实体也始终被缓存。</p>
+<p><em><strong><code>NONE</code></strong></em></p>
+<p>即使标记为可缓存，也不会缓存任何实体。此选项可以完全禁用二级缓存。</p>
+<p>默认情况下使用的缓存并发策略可以通过以下方式全局设置 <code>hibernate.cache.default_cache_concurrency_strategy</code> 来配置属性，配置选项如下：</p>
+<p><em>read-only</em></p>
+<p>如果您的应用程序需要读取但不修改持久化类的实例，则只读缓存是最佳选择。应用程序仍然可以删除实体，这些更改应该反映在二级缓存中，以便缓存不提供过时的实体。实现可以基于实体的不变性来使用性能优化。</p>
+<p><em>read-write</em></p>
+<p>如果应用程序需要更新数据，则读写缓存可能是合适的。此策略提供对单个实体的一致访问，但不提供可序列化的事务隔离级别；实现可以基于实体的不变性来使用性能优化。</p>
+<p><em>nonstrict-read-write</em></p>
+<p>与读写策略类似，但在并发访问实体时可能偶尔会出现过时读取。如果应用程序很少同时更新相同的数据并且不需要严格的事务隔离，则可以选择此策略。实现可以使用利用宽松一致性保证的性能优化。</p>
+<p><em>transactional</em></p>
+<p>提供可序列化的事务隔离级别。</p>
+<blockquote>
+<p>建议不要使用全局设置，而是基于每个实体、方法或集合字段上定义缓存并发策略。为此，请使用 <code>@ org.hibernate.annotations.Cache</code> 注解。</p>
+</blockquote>
+<p>该注解有三个属性：</p>
+<p><em>usage</em></p>
+<p>定义 <code>CacheConcurrencyStrategy</code>。</p>
+<p><em>region</em></p>
+<p>定义存储条目的缓存区域。对于每个实体类，Hibernate 将使用单独的缓存区域来存储该类的实例状态。区域名称是完全限定的类名。</p>
+<p><em>include</em></p>
+<p>是否（lazy）延迟加载属性应包含在二级缓存中。默认值是所有延迟属性都可缓存。另一个可能的值是非延迟，因此延迟属性不可缓存。</p>
+<h3 id="实体继承和二级缓存映射"><a class="markdownIt-Anchor" href="#实体继承和二级缓存映射"></a> 实体继承和二级缓存映射</h3>
+<p>传统上，当使用实体继承时，Hibernate 要求实体层次结构完全缓存或根本不缓存。因此，如果要缓存属于给定实体层次结构的子类，则 JPA <code>@Cacheable</code> 和特定于 Hibernate 的 <code>@Cache</code> 注解必须仅在根实体级别声明。</p>
+<blockquote>
+<p>Cacheable 注解的值由子类继承；可以通过在子类上指定 Cacheable 来覆盖它。从 Hibernate ORM 5.3 开始，您现在可以在子类级别覆盖基类 @Cacheable 或 @Cache 定义。但是，Hibernate 缓存并发策略（例如，只读，非严格读写，读写，事务）仍然在根实体级别定义，并且不能被覆盖。</p>
+</blockquote>
+<h3 id="管理缓存数据"><a class="markdownIt-Anchor" href="#管理缓存数据"></a> 管理缓存数据</h3>
+<p>传统上，Hibernate 定义了 <code>CacheMode</code> 枚举来描述与缓存数据交互的方式。 JPA 通过存储（<code>CacheStoreMode</code>）和检索（<code>CacheRetrieveMode</code>）分割缓存模式。两者的关系如下表：</p>
+<table>
+<thead>
+<tr>
+<th>Hibernate</th>
+<th>JPA</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CacheMode.NORMAL</td>
+<td><code>CacheStoreMode.USE</code> 和 <code>CacheRetrieveMode.USE</code></td>
+<td>默认。from/into 缓存读取/写入数据</td>
+</tr>
+<tr>
+<td>CacheMode.REFRESH</td>
+<td><code>CacheStoreMode.REFRESH</code> 和 <code>CacheRetrieveMode.BYPASS</code></td>
+<td>不从缓存中读取，而是在从数据库加载时写入缓存</td>
+</tr>
+<tr>
+<td>CacheMode.PUT</td>
+<td><code>CacheStoreMode.USE</code> 和 <code>CacheRetrieveMode.BYPASS</code></td>
+<td>不从缓存中读取，而是在从数据库读取时写入缓存</td>
+</tr>
+<tr>
+<td>CacheMode.GET</td>
+<td><code>CacheStoreMode.BYPASS</code> 和 <code>CacheRetrieveMode.USE</code></td>
+<td>从缓存中读取，但不写入缓存</td>
+</tr>
+<tr>
+<td>CacheMode.IGNORE</td>
+<td><code>CacheStoreMode.BYPASS</code> 和 <code>CacheRetrieveMode.BYPASS</code></td>
+<td>不从缓存读取/写入数据</td>
+</tr>
+</tbody>
+</table>
+<p>设置缓存模式可以在直接加载实体或执行查询时完成。</p>
+<ul>
+<li>使用 JPA 自定义缓存模式：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Object&gt; hints = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">hints.put( <span class="string">&quot;javax.persistence.cache.retrieveMode&quot;</span> , CacheRetrieveMode.USE );</span><br><span class="line">hints.put( <span class="string">&quot;javax.persistence.cache.storeMode&quot;</span> , CacheStoreMode.REFRESH );</span><br><span class="line">Person person = entityManager.find( Person.class, <span class="number">1L</span> , hints);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>使用 Hibernate 自定义缓存模式：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">session.setCacheMode( CacheMode.REFRESH );</span><br><span class="line">Person person = session.get( Person.class, <span class="number">1L</span> );</span><br></pre></td></tr></table></figure>
+<ul>
+<li>使用 Spring Data JPA 自定义缓存模式（1.10 版本之后）：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@QueryHints(value = &#123;</span></span><br><span class="line"><span class="meta">    @QueryHint(name = &quot;javax.persistence.cache.retrieveMode&quot;, value = &quot;USE&quot;),</span></span><br><span class="line"><span class="meta">    @QueryHint(name = &quot;javax.persistence.cache.storeMode&quot;, value = &quot;REFRESH&quot;)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="function">Optional&lt;Person&gt; <span class="title">findById</span><span class="params">(Long id)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>查询缓存，集合缓存，和缓存统计以后再来补充。</p>
+<h2 id="spring-boot-使用-ehcache"><a class="markdownIt-Anchor" href="#spring-boot-使用-ehcache"></a> Spring Boot 使用 EhCache</h2>
+<p>个人使用 Gradle 管理项目依赖，以下所述依赖皆是以基于Groovy 的特定于域的语言（DSL）定义。</p>
+<h3 id="仅使用缓存"><a class="markdownIt-Anchor" href="#仅使用缓存"></a> 仅使用缓存</h3>
+<p>Spring Boot 使用缓存非常简单，我们只需要导入所需要的包即可开箱即用，如果我们仅仅想使用缓存，则直接引入：<code>org.springframework.boot:spring-boot-starter-cache</code> starter 便可使用。</p>
+<p>在配置类或启动类上加入  <a target="_blank" rel="noopener" href="https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/cache/annotation/EnableCaching.html"><code>@EnableCaching</code></a> 注解，该注解会触发一个后处理器（post processor）去检测每个 Spring Bean 上是否存在公共方法的缓存注解。如果找到这样的注解，则自动创建代理以拦截方法调用并相应地处理缓存行为。</p>
+<p>此后处理器管理的注释是 <code>Cacheable</code>，<code>CachePut</code> 和 <code>CacheEvict</code>。Spring Boot 会自动配置合适的 <code>CacheManager</code> 作为相关缓存的提供程序。如果只引入了该包，则默认只会使用 Spring 上下文 <strong><code>ConcurrentHashMap</code></strong> 结构来存储缓存，这完全符合 JCache 的标准。</p>
+<p>如果当前上下文中存在 JSR-107 API，即 <code>javax.cache:cache-api</code> 该 jar 包，将额外的为 JSR-107 API 注解的 bean 创建代理，这些注解是 <code>@CacheResult</code>，<code>@CachePut</code>，<code>@CacheRemove</code> 和 <code>@CacheRemoveAll</code>。</p>
+<h3 id="使用-hibernate-jcache-标准来构建二级缓存"><a class="markdownIt-Anchor" href="#使用-hibernate-jcache-标准来构建二级缓存"></a> 使用 Hibernate JCache 标准来构建二级缓存</h3>
+<p>要使用 JCache 的内置集成，您需要将 <code>org.hibernate:hibernate-jcache</code> jar 集成进去。此外，还需要添加 JCache 实现。</p>
+<p><code>hibernate-jcache</code> 模块定义了以下区域工厂：<code>JCacheRegionFactory</code>。</p>
+<p>要使用该 <code>JCacheRegionFactory</code>，只需配置该属性为：<code>hibernate.cache.region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory</code>。</p>
+<p>JCache 要求共享相同 URI 和类加载器的 CacheManagers 在 JVM 中是唯一的。如果未指定其他属性，JCacheRegionFactory 将加载默认的 JCache 提供程序并创建默认的 CacheManager。同样的，将使用默认的 <code>javax.cache.configuration.MutableConfiguration</code> 创建缓存。</p>
+<p>为了控制使用哪个提供程序为 CacheManager 和 Caches 指定配置，您可以使用以下两个属性：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">property</span></span></span><br><span class="line"><span class="tag">    <span class="attr">name</span>=<span class="string">&quot;hibernate.javax.cache.provider&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">value</span>=<span class="string">&quot;org.ehcache.jsr107.EhcacheCachingProvider&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span></span></span><br><span class="line"><span class="tag">    <span class="attr">name</span>=<span class="string">&quot;hibernate.javax.cache.uri&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">value</span>=<span class="string">&quot;file:/path/to/ehcache.xml&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+<h3 id="使用-ehcache-20-构建二级缓存"><a class="markdownIt-Anchor" href="#使用-ehcache-20-构建二级缓存"></a> 使用 EhCache 2.0 构建二级缓存</h3>
+<p>使用 Ehcache 的内置集成要求我们引入 <code>org.hibernate:hibernate-ehcahe</code> jar 作为依赖。</p>
+<p>同样的我们需要配置 RegionFactory 为：<code>hibernate.cache.region.factory_class: org.hibernate.cache.ehcache.EhCacheRegionFactory</code> 。</p>
+<p>强制 Hibernate 使用单个 Ehcache CacheManager：<code>hibernate.cache.region.factory_class: org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</code> 。</p>
+<h3 id="使用-ehcache-30-构建二级缓存"><a class="markdownIt-Anchor" href="#使用-ehcache-30-构建二级缓存"></a> 使用 EhCache 3.0 构建二级缓存</h3>
+<p>使用 EhCache 3.0 时，hibernate 并没有默认的模块支持。但是我们可以通过 JCache 来指定具体的实现完成。</p>
+<p>我们同时引入 <code>org.ehcache:ehcache</code> 和 <code>org.hibernate:hibernate-jcache</code>，这里我们并没有指明具体版本，因为我们使用 spring boot starter 管理的版本，具体可以查看自己 spring boot starter 的版本和依赖版本。</p>
+<p>我们可以指定服务提供者 <code>hibernate.javax.cache.provider</code> 来完成配置。但是 <code>JCacheRegionFactory</code> 会使用默认的 <code>MutableConfiguration</code> 来创建 Cache，如果我们需要使用 EhCache 的配置来定义缓存，我们需要自己定义 RegionFactory 并以此作为 RegionFactory 配置。</p>
+<p>为了防止 JCacheRegionFactory 自动创建缓存，我们可以按如下配置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NoDefaultJCacheRegionFactory</span> <span class="keyword">extends</span> <span class="title">JCacheRegionFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String EXCEPTION_MESSAGE = <span class="string">&quot;All Hibernate caches should be created upfront. &quot;</span> +</span><br><span class="line">        <span class="string">&quot;Please update CacheConfiguration.java to add&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Cache&lt;Object, Object&gt; <span class="title">createCache</span><span class="params">(String regionName, Properties properties, CacheDataDescription</span></span></span><br><span class="line"><span class="params"><span class="function">        metadata)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(EXCEPTION_MESSAGE + <span class="string">&quot; &quot;</span> + regionName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后指定二级缓存 CacheManager 的创建方法，并使用当前的 CalssLoader，修复了 Spring Boot 2.0.3 中引入的 Spring 类加载器问题。 这允许对 ehcache 使用相同的类加载器，包括 Spring Cache 抽象和 Hibernate  2nd 级缓存。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanClassLoaderAwareJCacheRegionFactory</span> <span class="keyword">extends</span> <span class="title">NoDefaultJCacheRegionFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">volatile</span> ClassLoader classLoader;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> CacheManager <span class="title">getCacheManager</span><span class="params">(Properties properties)</span> </span>&#123;</span><br><span class="line">        Objects.requireNonNull(classLoader, <span class="string">&quot;Please set Spring&#x27;s classloader in the setBeanClassLoader &quot;</span> +</span><br><span class="line">            <span class="string">&quot;method before using this class in Hibernate&quot;</span>);</span><br><span class="line"></span><br><span class="line">        CachingProvider cachingProvider = getCachingProvider(properties);</span><br><span class="line">        String cacheManagerUri = getProp(properties, CONFIG_URI);</span><br><span class="line"></span><br><span class="line">        URI uri = getUri(cachingProvider, cacheManagerUri);</span><br><span class="line">        CacheManager cacheManager = cachingProvider.getCacheManager(uri, classLoader);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// To prevent some class loader memory leak this might cause</span></span><br><span class="line">        setBeanClassLoader(<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> cacheManager;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> URI <span class="title">getUri</span><span class="params">(CachingProvider cachingProvider, String cacheManagerUri)</span> </span>&#123;</span><br><span class="line">        URI uri;</span><br><span class="line">        <span class="keyword">if</span> (cacheManagerUri != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                uri = <span class="keyword">new</span> URI(cacheManagerUri);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (URISyntaxException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> CacheException(<span class="string">&quot;Couldn&#x27;t create URI from &quot;</span> + cacheManagerUri, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            uri = cachingProvider.getDefaultURI();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> uri;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * This method must be called from a Spring Bean to get the classloader.</span></span><br><span class="line"><span class="comment">     * For example: BeanClassLoaderAwareJCacheRegionFactory.setBeanClassLoader(this.getClass().getClassLoader());</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> classLoader The Spring classloader</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setBeanClassLoader</span><span class="params">(ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">        BeanClassLoaderAwareJCacheRegionFactory.classLoader = classLoader;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后，我们就可以使用 EhCache 的配置来创建缓存。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CacheConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> javax.cache.configuration.Configuration&lt;Object, Object&gt; jcacheConfiguration;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">CacheConfiguration</span><span class="params">(ApplicationProperties applicationProperties)</span> </span>&#123;</span><br><span class="line">        BeanClassLoaderAwareJCacheRegionFactory.setBeanClassLoader(<span class="keyword">this</span>.getClass().getClassLoader());</span><br><span class="line">        ApplicationProperties.Cache.Ehcache ehcache =</span><br><span class="line">            applicationProperties.getCache().getEhcache();</span><br><span class="line"></span><br><span class="line">        CacheEventListenerConfigurationBuilder cacheEventListenerConfiguration = CacheEventListenerConfigurationBuilder</span><br><span class="line">            .newEventListenerConfiguration(<span class="keyword">new</span> CacheListener(applicationProperties), EventType.CREATED, EventType.UPDATED, EventType.EVICTED, EventType.EXPIRED, EventType.REMOVED)</span><br><span class="line">            .unordered().asynchronous();</span><br><span class="line"></span><br><span class="line">        jcacheConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(</span><br><span class="line">            CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,</span><br><span class="line">                ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))</span><br><span class="line">                .add(<span class="keyword">new</span> Jsr107CacheConfiguration(ConfigurationElementState.ENABLED, ConfigurationElementState.ENABLED))</span><br><span class="line">                .add(cacheEventListenerConfiguration)</span><br><span class="line">                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(ehcache.getTimeToLiveSeconds())))</span><br><span class="line">                .build());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> JCacheManagerCustomizer <span class="title">cacheManagerCustomizer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> cm -&gt; &#123;</span><br><span class="line">         cm.createCache(com.zeral.domain.User.class.getName(), jcacheConfiguration);</span><br><span class="line">         cm.createCache(com.auo.spc.domain.User.class.getName() + <span class="string">&quot;.authorities&quot;</span>, jcacheConfiguration);</span><br><span class="line">         <span class="comment">// application-needle-ehcache-add-entry</span></span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码使用了堆内存储，并指定了每个域最大缓存条目数，指定了缓存键和值的类型，以及过期策略，并开启了监控，配置了缓存监听器。</p>
+<p>这里我们并没有使用 Hibernate 的 <code>@Cacheable</code> 来显示指明需要缓存哪里实体或集合，而是手动的通过调用 cacheManager 创建了基于 Ehcache 配置的缓存，<code>JCacheManagerCustomizer</code> 回掉函数允许我们在 Spring Boot 根据当前环境服务提供者 JCacheRegionFactory 创建缓存管理器时做一些额外的工作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> CacheManager <span class="title">jCacheCacheManager</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">   CacheManager jCacheCacheManager = createCacheManager();</span><br><span class="line">   List&lt;String&gt; cacheNames = <span class="keyword">this</span>.cacheProperties.getCacheNames();</span><br><span class="line">   <span class="keyword">if</span> (!CollectionUtils.isEmpty(cacheNames)) &#123;</span><br><span class="line">      <span class="keyword">for</span> (String cacheName : cacheNames) &#123;</span><br><span class="line">         jCacheCacheManager.createCache(cacheName, getDefaultCacheConfiguration());</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   customize(jCacheCacheManager);</span><br><span class="line">   <span class="keyword">return</span> jCacheCacheManager;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="hibernate-二级缓存如何工作"><a class="markdownIt-Anchor" href="#hibernate-二级缓存如何工作"></a> Hibernate 二级缓存如何工作</h2>
+<p>每当要加载实体时，都会触发 <a target="_blank" rel="noopener" href="https://docs.jboss.org/hibernate/orm/4.3/javadocs/org/hibernate/event/spi/LoadEvent.html">LoadEevent</a>，并且 <a target="_blank" rel="noopener" href="https://docs.jboss.org/hibernate/orm/4.3/javadocs/org/hibernate/event/internal/DefaultLoadEventListener.html">DefaultLoadEventListener</a> 对其进行如下处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">Object entity = loadFromSessionCache( event,</span><br><span class="line">    keyToLoad, options );</span><br><span class="line"><span class="keyword">if</span> ( entity == REMOVED_ENTITY_MARKER ) &#123;</span><br><span class="line">    LOG.debug(<span class="string">&quot;Load request found matching entity</span></span><br><span class="line"><span class="string">        in context, but it is scheduled for removal;</span></span><br><span class="line"><span class="string">        returning null&quot;</span> );</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> ( entity == INCONSISTENT_RTN_CLASS_MARKER ) &#123;</span><br><span class="line">    LOG.debug(<span class="string">&quot;Load request found matching entity</span></span><br><span class="line"><span class="string">        in context, but the matched entity was of</span></span><br><span class="line"><span class="string">        an inconsistent return type;</span></span><br><span class="line"><span class="string">        returning null&quot;</span></span><br><span class="line">    );</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> ( entity != <span class="keyword">null</span> ) &#123;</span><br><span class="line">    <span class="keyword">if</span> ( traceEnabled ) &#123;</span><br><span class="line">        LOG.tracev(<span class="string">&quot;Resolved object in &quot;</span></span><br><span class="line">            + <span class="string">&quot;session cache: &#123;0&#125;&quot;</span>,</span><br><span class="line">            MessageHelper.infoString( persister,</span><br><span class="line">                event.getEntityId(),</span><br><span class="line">                event.getSession().getFactory() )</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> entity;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">entity = loadFromSecondLevelCache( event,</span><br><span class="line">    persister, options );</span><br><span class="line"><span class="keyword">if</span> ( entity != <span class="keyword">null</span> ) &#123;</span><br><span class="line">    <span class="keyword">if</span> ( traceEnabled ) &#123;</span><br><span class="line">        LOG.tracev(<span class="string">&quot;Resolved object in &quot;</span></span><br><span class="line">            + <span class="string">&quot;second-level cache: &#123;0&#125;&quot;</span>,</span><br><span class="line">            MessageHelper.infoString( persister,</span><br><span class="line">                event.getEntityId(),</span><br><span class="line">                event.getSession().getFactory() )</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> ( traceEnabled ) &#123;</span><br><span class="line">        LOG.tracev(<span class="string">&quot;Object not resolved in &quot;</span></span><br><span class="line">            + <span class="string">&quot;any cache: &#123;0&#125;&quot;</span>,</span><br><span class="line">            MessageHelper.infoString( persister,</span><br><span class="line">                event.getEntityId(),</span><br><span class="line">                event.getSession().getFactory() )</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">    entity = loadFromDatasource( event, persister,</span><br><span class="line">        keyToLoad, options );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该 <code>doLoad</code> 方法协调加载给定实体的工作。首先，尝试从会话级缓存中加载实体。如果在此处找不到，再尝试从二级缓存加载。最后，尝试直接从数据源加载它。</p>
+<h3 id="二级缓存内部"><a class="markdownIt-Anchor" href="#二级缓存内部"></a> 二级缓存内部</h3>
+<p>实体被作为 <a target="_blank" rel="noopener" href="https://docs.jboss.org/hibernate/orm/4.3/javadocs/org/hibernate/cache/spi/entry/CacheEntry.html"><em>CacheEntry</em></a> 存储，实体 <em>水合 (hydrated)</em><sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> 状态用于创建缓存条目值。</p>
+<h4 id="水合"><a class="markdownIt-Anchor" href="#水合"></a> 水合</h4>
+<p>在 Hibernate 中，<a target="_blank" rel="noopener" href="https://docs.jboss.org/hibernate/orm/4.3/javadocs/org/hibernate/persister/entity/Loadable.html#hydrate">水合作用</a> 是将 <em>JDBC ResultSet</em> 转换为由原始值组成的数组的过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> Object[] values = persister.hydrate(</span><br><span class="line">    rs, id, object,</span><br><span class="line">    rootPersister, cols, eagerPropertyFetch, session</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>水合状态以 EntityEntry 对象的形式保存在当前运行的持久化上下文中，该对象封装了加载时的实体快照。然后通过以下方式使用水合状态：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://vladmihalcea.com/the-anatomy-of-hibernate-dirty-checking/">默认脏检查机制</a>，它将当前实体数据与加载时的快照比较</li>
+<li>二级缓存，其缓存项是根据加载时实体快照构建的</li>
+</ul>
+<p>反向操作称为<a target="_blank" rel="noopener" href="https://docs.jboss.org/hibernate/orm/4.3/javadocs/org/hibernate/persister/entity/AbstractEntityPersister.html#dehydrate">脱水</a>，它将实体状态复制到 <em>INSERT</em> 或 <em>UPDATE</em> 语句中。</p>
+<h4 id="二级缓存键"><a class="markdownIt-Anchor" href="#二级缓存键"></a> 二级缓存键</h4>
+<p>键 <a target="_blank" rel="noopener" href="https://docs.jboss.org/hibernate/orm/4.3/javadocs/org/hibernate/cache/spi/CacheKey.html">CacheKey</a> 在之前介绍过，默认会将标识符封装在元组中构建。</p>
+<h4 id="二级缓存值元素"><a class="markdownIt-Anchor" href="#二级缓存值元素"></a> 二级缓存值元素</h4>
+<p>二级缓存值元素使用拆解的水合状态构建：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> CacheEntry entry = persister.buildCacheEntry(entity, hydratedState, version, session);</span><br></pre></td></tr></table></figure>
+<p>水合状态在存储到 CacheEntry 中之前先进行分解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">this</span>.disassembledState = TypeHelper.disassemble(</span><br><span class="line">    state, </span><br><span class="line">    persister.getPropertyTypes(),</span><br><span class="line">    persister.isLazyPropertiesCacheable() ? <span class="keyword">null</span> : persister.getPropertyLaziness(),</span><br><span class="line">    session,</span><br><span class="line">    owner</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>接下来会根据配置来选择是否结构化存储值，其中：</p>
+<ul>
+<li>不存储 id（主键）它作为缓存键的一部分存储</li>
+<li>瞬态（Transient）属性不存储</li>
+<li>集合不存储</li>
+<li>非关联属性值以其原始格式存储</li>
+<li>ToOne 关联仅存储 id（外键）</li>
+</ul>
+<p>我们必须明确指出集合（OneToMany 或 ManyToMany 关联）是可缓存的，否则就不会缓存。</p>
+<p>实际上，Hibernate 将集合存储在单独的缓存区域中，每个集合一个。区域名称是完全限定的类名称加上集合属性的名称。如上诉代码手动添加的用户角色关联缓存。</p>
+<h3 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h3>
+<p>二级缓存是关系数据缓存，因此它以规范化形式存储数据，并且每个实体更新仅影响一个缓存条目。由于在二级缓存条目中未实现实体关联，因此无法读取整个实体图（entity graph）。</p>
+<p>聚合的实体图以使写入操作复杂化为代价，但为读取操作提供了更好的性能。如果未对缓存的数据进行规范化并将其散布在各种聚合模型中，则实体更新将不得不修改多个缓存项，从而影响写入操作的性能。</p>
+<p>由于它反映了基础关系数据，因此二级缓存提供了各种并发策略机制，因此我们可以平衡读取性能和保证一致性。</p>
+<hr class="footnotes-sep" />
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>水合，最初是一个术语，表示从 DB 中填充实例化但为空的值-对象/模型。在给某物补水时，例如干无花果，该物质的本质在那里，但缺乏饱满感。这就是“水合”对象时发生的事情。 <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Hibernate/" rel="tag"># Hibernate</a>
+              <a href="/tags/Cache/" rel="tag"># Cache</a>
+              <a href="/tags/EhCache/" rel="tag"># EhCache</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/persistence/%E8%A7%A3%E5%86%B3-Hibernate-N+1-%E9%97%AE%E9%A2%98/" rel="prev" title="解决 Hibernate N+1 问题">
+      <i class="fa fa-chevron-left"></i> 解决 Hibernate N+1 问题
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/java/Java%20%E4%BB%A3%E7%90%86%E5%85%A5%E9%97%A8/" rel="next" title="Java 代理 入门">
+      Java 代理 入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%BC%93%E5%AD%98"><span class="nav-number">1.</span> <span class="nav-text"> 什么是缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#jsr107jcache"><span class="nav-number">1.1.</span> <span class="nav-text"> JSR107(JCache)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#jcache-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">2.</span> <span class="nav-text"> JCache 核心概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E5%80%BC%E5%AD%98%E5%82%A8%E5%92%8C%E6%8C%89%E5%BC%95%E7%94%A8%E5%AD%98%E5%82%A8"><span class="nav-number">2.1.</span> <span class="nav-text"> 按值存储和按引用存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E5%AE%83"><span class="nav-number">2.2.</span> <span class="nav-text"> 其它</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E-jcache-%E5%88%B0-ehcache"><span class="nav-number">3.</span> <span class="nav-text"> 从 JCache 到 EhCache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-%E4%BD%9C%E4%B8%BA-jcache-%E4%BE%9B%E5%BA%94%E5%95%86"><span class="nav-number">3.1.</span> <span class="nav-text"> 使用 EhCache 作为 JCache 供应商</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E-jcache-%E9%85%8D%E7%BD%AE%E8%AE%BF%E9%97%AE%E5%9F%BA%E7%A1%80-ehcache-%E9%85%8D%E7%BD%AE"><span class="nav-number">3.2.</span> <span class="nav-text"> 从 JCache 配置访问基础 Ehcache 配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%BC%96%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE-ehcache"><span class="nav-number">3.3.</span> <span class="nav-text"> 使用编程的方式配置 EhCache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ehcache-%E5%AD%98%E5%82%A8%E5%B1%82"><span class="nav-number">3.4.</span> <span class="nav-text"> EhCache 存储层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E7%AE%A1%E7%90%86%E7%9A%84%E7%BC%93%E5%AD%98"><span class="nav-number">3.5.</span> <span class="nav-text"> 用户管理的缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hibernate-%E7%BC%93%E5%AD%98"><span class="nav-number">4.</span> <span class="nav-text"> Hibernate 缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">4.1.</span> <span class="nav-text"> 配置二级缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#regionfactory"><span class="nav-number">4.1.1.</span> <span class="nav-text"> RegionFactory</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E9%85%8D%E7%BD%AE%E5%B1%9E%E6%80%A7"><span class="nav-number">4.1.2.</span> <span class="nav-text"> 缓存配置属性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E6%98%A0%E5%B0%84"><span class="nav-number">4.2.</span> <span class="nav-text"> 配置二级缓存映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BD%93%E7%BB%A7%E6%89%BF%E5%92%8C%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E6%98%A0%E5%B0%84"><span class="nav-number">4.3.</span> <span class="nav-text"> 实体继承和二级缓存映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%A1%E7%90%86%E7%BC%93%E5%AD%98%E6%95%B0%E6%8D%AE"><span class="nav-number">4.4.</span> <span class="nav-text"> 管理缓存数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spring-boot-%E4%BD%BF%E7%94%A8-ehcache"><span class="nav-number">5.</span> <span class="nav-text"> Spring Boot 使用 EhCache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%85%E4%BD%BF%E7%94%A8%E7%BC%93%E5%AD%98"><span class="nav-number">5.1.</span> <span class="nav-text"> 仅使用缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-hibernate-jcache-%E6%A0%87%E5%87%86%E6%9D%A5%E6%9E%84%E5%BB%BA%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">5.2.</span> <span class="nav-text"> 使用 Hibernate JCache 标准来构建二级缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-20-%E6%9E%84%E5%BB%BA%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">5.3.</span> <span class="nav-text"> 使用 EhCache 2.0 构建二级缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-30-%E6%9E%84%E5%BB%BA%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">5.4.</span> <span class="nav-text"> 使用 EhCache 3.0 构建二级缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hibernate-%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C"><span class="nav-number">6.</span> <span class="nav-text"> Hibernate 二级缓存如何工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%86%85%E9%83%A8"><span class="nav-number">6.1.</span> <span class="nav-text"> 二级缓存内部</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%90%88"><span class="nav-number">6.1.1.</span> <span class="nav-text"> 水合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E9%94%AE"><span class="nav-number">6.1.2.</span> <span class="nav-text"> 二级缓存键</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%80%BC%E5%85%83%E7%B4%A0"><span class="nav-number">6.1.3.</span> <span class="nav-text"> 二级缓存值元素</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">6.2.</span> <span class="nav-text"> 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : '76a137894e6970c162e25390a00ee0b9',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

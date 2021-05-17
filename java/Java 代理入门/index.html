@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是代理 代理是一种设计模式。当我们想要添加或修改现有类的某些功能时，我们创建并使用代理对象。通常，代理对象具有与原始代理对象相同的方法，并且在 Java 代理类中通常扩展原始类。代理的主要目的是控制对目标对象的访问，而不是增强目标对象的功能。 这样，代理类可以通过方便的方式实现许多功能：  方法开始和结束时日志 访问控制，过滤恶意请求 本地执行远程服务 缓存请求结果 对参数执行额外检查 模拟">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 代理 入门">
+<meta property="og:url" content="https://www.zeral.cn/java/Java%20%E4%BB%A3%E7%90%86%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="什么是代理 代理是一种设计模式。当我们想要添加或修改现有类的某些功能时，我们创建并使用代理对象。通常，代理对象具有与原始代理对象相同的方法，并且在 Java 代理类中通常扩展原始类。代理的主要目的是控制对目标对象的访问，而不是增强目标对象的功能。 这样，代理类可以通过方便的方式实现许多功能：  方法开始和结束时日志 访问控制，过滤恶意请求 本地执行远程服务 缓存请求结果 对参数执行额外检查 模拟">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/cglib.PNG">
+<meta property="og:image" content="https://www.zeral.cn/images/java/cblig-2.PNG">
+<meta property="og:image" content="https://www.zeral.cn/images/java/cglib-3.PNG">
+<meta property="article:published_time" content="2019-04-10T02:07:25.000Z">
+<meta property="article:modified_time" content="2021-03-22T09:57:27.361Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Proxy">
+<meta property="article:tag" content="CGLIB">
+<meta property="article:tag" content="ASM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/cglib.PNG">
+
+<link rel="canonical" href="https://www.zeral.cn/java/Java%20%E4%BB%A3%E7%90%86%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java 代理 入门 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java%20%E4%BB%A3%E7%90%86%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java 代理 入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-04-10 10:07:25" itemprop="dateCreated datePublished" datetime="2019-04-10T10:07:25+08:00">2019-04-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-03-22 17:57:27" itemprop="dateModified" datetime="2021-03-22T17:57:27+08:00">2021-03-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/Java%20%E4%BB%A3%E7%90%86%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Java 代理 入门" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="什么是代理"><a class="markdownIt-Anchor" href="#什么是代理"></a> 什么是代理</h2>
+<p>代理是一种设计模式。当我们想要添加或修改现有类的某些功能时，我们创建并使用代理对象。通常，代理对象具有与原始代理对象相同的方法，并且在 Java 代理类中通常扩展原始类。代理的主要目的是控制对目标对象的访问，而不是增强目标对象的功能。</p>
+<p>这样，代理类可以通过方便的方式实现许多功能：</p>
+<ul>
+<li>方法开始和结束时日志</li>
+<li>访问控制，过滤恶意请求</li>
+<li>本地执行远程服务</li>
+<li>缓存请求结果</li>
+<li>对参数执行额外检查</li>
+<li>模拟原始类的行为</li>
+<li>实现对昂贵资源的懒加载</li>
+<li>智能引用，可在没有客户端使用某个重量级对象时立即销毁该对象</li>
+<li>etc…</li>
+</ul>
+<p>在实际应用中，代理类不直接实现功能。遵循单一责任原则，代理类仅执行代理，并且实际行为在处理程序中实现。</p>
+<p>与静态代理相比，动态代理需要在运行时进行 Java 反射的字节码生成。使用动态方法，无需创建代理类，这可以带来更多便利。</p>
+<a id="more"></a>
+<h2 id="静态代理类"><a class="markdownIt-Anchor" href="#静态代理类"></a> 静态代理类</h2>
+<h2 id="动态代理类"><a class="markdownIt-Anchor" href="#动态代理类"></a> 动态代理类</h2>
+<p>动态代理类（下面简称为代理类）是一个在运行时实现指定接口列表的类，这样就可以通过其中一个接口实例类上的方法调用编码并通过统一接口分配给另一个对象。因此，动态代理类可用于为接口列表创建类型安全的代理对象，而无需预生成代理类，例如使用编译时工具。动态代理类的实例上的方法调用被分派到实例的调用处理程序中的单个方法，它们使用 <code>java.lang.reflect.Method</code> 对象进行编码，该对象标识被调用的方法以及包含参数的 Object 类型数组。</p>
+<p>动态代理类对于需要在呈现接口 API 的对象上提供类型安全反射调度调用的应用程序或库非常有用。应用程序可以使用动态代理类来创建实现多个任意事件侦听器接口的对象，扩展 <code>java.util.EventListener</code> 的接口，以统一的方式处理不同类型的各种事件，例如将所有此类事件记录到文件中。</p>
+<h3 id="动态代理类-api"><a class="markdownIt-Anchor" href="#动态代理类-api"></a> 动态代理类 API</h3>
+<p>动态代理类（下面简称为代理类）是一个实现在运行时创建指定的接口列表的类的类。</p>
+<p>代理接口就是由代理类实现的接口。</p>
+<p>代理实例是代理类的实例。</p>
+<h4 id="创建代理类"><a class="markdownIt-Anchor" href="#创建代理类"></a> 创建代理类</h4>
+<p>使用类 <code>java.lang.reflect.Proxy</code> 的静态方法创建代理类及其实例。</p>
+<p>在给定类加载器和接口数组的情况下，<code>Proxy.getProxyClass</code> 方法返回代理类的 java.lang.Class 对象。代理类将在指定的类加载器中定义，并将实现所有提供的接口。如果已经在类加载器中定义了相同的接口排列的代理类，将返回现有的代理类；否则，将动态生成这些接口的代理类，并在类加载器中定义。</p>
+<p>可以传递给 <code>Proxy.getProxyClass</code> 的参数有几个限制：</p>
+<ul>
+<li><code>interfaces</code> 数组中的所有 <code>Class</code> 对象都必须表示接口，而不是类或基本类型。</li>
+<li><code>interfaces</code> 数组中没有两个元素可以引用相同的 <code>Class</code> 对象。</li>
+<li>所有接口类型必须通过指定的类加载器按名称可见。换句话说，对于类加载器 cl 和每个接口 i，以下表达式必须为 true：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Class.forName(i.getName(), <span class="keyword">false</span>, cl) == i</span><br></pre></td></tr></table></figure>
+<ul>
+<li>所有非公共接口必须位于同一个包中；否则，代理类无法实现所有接口，无论它在哪个包中定义。</li>
+<li>对于具有相同签名的指定接口的任何成员方法集：
+<ul>
+<li>如果任何方法的返回类型是基本类型或 void，则所有方法必须具有相同的返回类型。</li>
+<li>否则，其中一个方法必须具有可分配给其余方法的所有返回类型的返回类型。</li>
+</ul>
+</li>
+<li>生成的代理类不得超过虚拟机对类强加的任何限制。例如，VM 可以将类可以实现的接口数量限制为 65535；在这种情况下，<code>interfaces</code> 数组的大小不得超过 65535。</li>
+</ul>
+<p>请注意，指定代理接口的顺序很重要：对具有相同接口组合但顺序不同的代理类的两个请求将导致两个不同的代理类。代理类通过其代理接口的顺序来区分，以便在两个或更多代理接口共享具有相同名称和参数签名的方法的情况下提供确定性方法调用编码;</p>
+<p>因此，每次使用相同的类加载器和接口列表调用 <code>Proxy.getProxyClass</code> 时，不需要生成新的代理类，动态代理类API 的实现应保留生成的代理类的缓存，由其相应的加载器和接口列表键入。实现时应注意不要引用类加载器，接口和代理类，以防止类加载器及其所有类在适当时被垃圾收集。</p>
+<h4 id="代理类属性"><a class="markdownIt-Anchor" href="#代理类属性"></a> 代理类属性</h4>
+<p>代理类具有以下属性：</p>
+<ul>
+<li>代理类是公共的，最终的，而不是抽象的。</li>
+<li>未指定代理类的非限定名称。但是，以字符串 <code>“$Proxy”</code> 开头的类名空间是为代理类保留的。</li>
+<li>代理类扩展了 <code>java.lang.reflect.Proxy</code>。</li>
+<li>代理类以相同的顺序实现其创建时指定的接口。</li>
+<li>如果代理类实现非公共接口，则它将在与该接口相同的包中定义。否则，代理类的包也是指定的。请注意，程序包密封不会阻止在运行时在特定程序包中成功定义代理类，也不会在同一个类加载器中定义类，也不会在特定程序集中使用相同的程序包。</li>
+<li>由于代理类实现了在创建时指定的所有接口，因此在其 Class 对象上调用 getInterfaces 将返回一个包含相同接口列表的数组（按照创建时指定的顺序）。在其 Class 对象上调用 getMethods 将返回包含这些接口中所有方法的 Method 对象数组，并且调用 getMethod 将按预期在代理接口中查找方法。</li>
+<li>如果 <code>Proxy.isProxyClass</code> 方法传递了一个代理类 - （由 <code>Proxy.getProxyClass</code> 返回的类或 <code>Proxy.newProxyInstance</code> 返回的对象的类），则返回 true，否则返回 false。</li>
+<li>代理类的 <code>java.security.ProtectionDomain</code> 与引导类加载器加载的系统类相同，例如 java.lang.Object，因为代理类的代码是由受信任的系统代码生成的。通常会授予此保护域 <code>java.security.AllPermission</code>。</li>
+</ul>
+<h4 id="创建代理实例"><a class="markdownIt-Anchor" href="#创建代理实例"></a> 创建代理实例</h4>
+<p>每个代理类都有一个公共构造函数，它接受一个参数，即 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/InvocationHandler.html"><code>InvocationHandler</code></a> 接口的实现。</p>
+<p>每个代理实例都有一个关联的 <code>InvocationHandler</code> 对象，该对象就是通过构造方法传递进来的。不必非要使用反射 API 来访问公共构造函数，也可以通过调用 <code>Proxy.newProxyInstance</code> 方法创建代理实例。 <code>Proxy.newProxyInstance</code> 因与 <code>Proxy.getProxyClass</code> 相同的原因抛出 <code>IllegalArgumentException</code>（比如接口数量不能超过 65535）。</p>
+<h4 id="代理实例属性"><a class="markdownIt-Anchor" href="#代理实例属性"></a> 代理实例属性</h4>
+<p>代理实例有以下属性：</p>
+<ul>
+<li>给定代理实例 proxy 和其代理类 Foo 实现的接口之一，以下表达式将返回 true：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxy <span class="keyword">instanceof</span> Foo</span><br></pre></td></tr></table></figure>
+<p>并且以下转换操作将成功（而不是抛出 ClassCastException）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(Foo) proxy</span><br></pre></td></tr></table></figure>
+<ul>
+<li>
+<p>静态 <code>Proxy.getInvocationHandler</code> 方法传递代理实例并返回与之关联的 <code>InvocationHandler</code>。如果传递给 <code>Proxy.getInvocationHandler</code> 的对象不是代理实例，则将抛出 <code>IllegalArgumentException</code>。</p>
+</li>
+<li>
+<p>代理实例上的接口方法调用将被编码并调度到 <code>InvocationHandler</code> 的调用方法，如下所述。</p>
+<p>代理实例本身将作为 <code>invoke</code> 的第一个参数传递，它是 Object 类型。</p>
+<p>传递给 <code>invoke</code> 的第二个参数是 <code>java.lang.reflect.Method</code> 实例，该实例对应于在代理实例上调用的接口方法。<code>Method</code> 对象的声明类将是声明方法的接口，它可以是代理接口继承方法的代理接口的超接口。</p>
+<p>传递给 <code>invoke</code> 的第三个参数是一个对象数组，其中包含在代理实例上的方法调用中传递的参数的值。原始类型的参数包装在适当的原始包装类的实例中，例如 <code>java.lang.Integer</code> 或 <code>java.lang.Boolean</code>。 <code>invoke</code> 方法的实现可以自由修改此数组的内容。</p>
+<p><code>invoke</code> 方法返回的值将成为代理实例上方法调用的返回值。如果接口方法的声明返回值是基本类型，则 invoke 返回的值必须是相应原始包装类的实例；否则，它必须是可分配给声明的返回类型的类型。如果 <code>invoke</code> 返回的值为 <code>null</code>，并且接口方法的返回类型为原始类型，则代理实例上的方法调用将抛出 <code>NullPointerException</code>。如果 <code>invoke</code> 返回的值与上面描述的方法声明的返回类型不兼容，则代理实例将抛出 <code>ClassCastException</code>。</p>
+<p>如果 <code>invoke</code> 方法抛出异常，它也将被代理实例上的方法调用抛出。异常的类型必须可分配给在接口方法的签名中声明的任何异常类型，或者分配给未经检查的异常类型 <code>java.lang.RuntimeException</code> 或 <code>java.lang.Error</code>。如果通过调用抛出已检查的异常，该异常不能分配给接口方法的 <code>throws</code> 子句中声明的任何异常类型，在代理实例上的方法调用将抛出 <code>UndeclaredThrowableException</code>。将使用 <code>invoke</code> 方法抛出的异常构造 <code>UndeclaredThrowableException</code>。</p>
+</li>
+<li>
+<p>在代理实例上的 <code>java.lang.Object</code> 中声明的 <code>hashCode</code>，<code>equals</code> 或 <code>toString</code> 方法的调用将被编码并调度到 <code>InvocationHandler</code> 的 <code>invoke</code> 方法，其方式与编码和分派接口方法调用的方式相同，如上所述。 传递给 <code>invoke</code> 的 <code>Method</code> 对象的声明类将是 <code>java.lang.Object</code>。 从 <code>java.lang.Object</code> 继承的代理实例的其他公共方法不会被代理类覆盖，因此这些方法的调用就像它们对 <code>java.lang.Object</code> 的实例一样。</p>
+</li>
+</ul>
+<h4 id="序列化"><a class="markdownIt-Anchor" href="#序列化"></a> 序列化</h4>
+<p>由于 <code>java.lang.reflect.Proxy</code> 实现了 <code>java.io.Serializable</code>，因此可以序列化代理实例。</p>
+<h3 id="examples"><a class="markdownIt-Anchor" href="#examples"></a> Examples</h3>
+<p>下面是一个简单的示例，它在实现任意接口列表的对象上的方法调用之前和之后打印出一条消息：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">Object</span> bar(<span class="keyword">Object</span> obj) throws BazException;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FooImpl</span> <span class="keyword">implements</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">Object</span> bar(<span class="keyword">Object</span> obj) throws BazException &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DebugProxy</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">reflect</span>.<span class="title">InvocationHandler</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">Object</span> obj;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">static</span> <span class="keyword">Object</span> newInstance(<span class="keyword">Object</span> obj) &#123;</span><br><span class="line">        <span class="keyword">return</span> java.lang.reflect.Proxy.newProxyInstance(</span><br><span class="line">            obj.getClass().getClassLoader(),</span><br><span class="line">            obj.getClass().getInterfaces(),</span><br><span class="line">            <span class="keyword">new</span> DebugProxy(obj));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> DebugProxy(<span class="keyword">Object</span> obj) &#123;</span><br><span class="line">        this.obj = obj;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">Object</span> invoke(<span class="keyword">Object</span> proxy, Method m, <span class="keyword">Object</span>[] args)</span><br><span class="line">        throws <span class="built_in">Throwable</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">Object</span> result;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;before method &quot;</span> + m.getName());</span><br><span class="line">            result = m.invoke(obj, args);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InvocationTargetException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> e.getTargetException();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (<span class="built_in">Exception</span> e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">RuntimeException</span>(<span class="string">&quot;unexpected invocation exception: &quot;</span> +</span><br><span class="line">                                       e.getMessage());</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;after method &quot;</span> + m.getName());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>要为 <code>Foo</code> 接口的实现构造 <code>DebugProxy</code> 并调用其方法之一：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Foo foo = (Foo) DebugProxy.newInstance(<span class="keyword">new</span> FooImpl());</span><br><span class="line">foo.bar(<span class="keyword">null</span>);</span><br></pre></td></tr></table></figure>
+<p>下面是一个实用程序调用处理程序类的示例，它为从 <code>java.lang.Object</code> 继承的方法提供默认代理行为，并根据被调用方法的接口实现对不同对象的某些代理方法调用的委派：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.lang.reflect.*;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Delegator</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// preloaded Method objects for the methods in java.lang.Object</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Method hashCodeMethod;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Method equalsMethod;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Method toStringMethod;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            hashCodeMethod = Object.class.getMethod(&quot;hashCode&quot;, <span class="keyword">null</span>);</span><br><span class="line">            equalsMethod =</span><br><span class="line">                Object.class.getMethod(&quot;equals&quot;, <span class="keyword">new</span> Class[] &#123; Object.class &#125;);</span><br><span class="line">            toStringMethod = Object.class.getMethod(&quot;toString&quot;, <span class="keyword">null</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (NoSuchMethodException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchMethodError(e.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Class[] interfaces;</span><br><span class="line">    <span class="keyword">private</span> Object[] delegates;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Delegator</span><span class="params">(Class[] interfaces, Object[] delegates)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.interfaces = (Class[]) interfaces.clone();</span><br><span class="line">        <span class="keyword">this</span>.delegates = (Object[]) delegates.clone();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method m, Object[] args)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> Throwable</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        Class declaringClass = m.getDeclaringClass();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (declaringClass == Object.class) &#123;</span><br><span class="line">            <span class="keyword">if</span> (m.equals(hashCodeMethod)) &#123;</span><br><span class="line">                <span class="keyword">return</span> proxyHashCode(proxy);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (m.equals(equalsMethod)) &#123;</span><br><span class="line">                <span class="keyword">return</span> proxyEquals(proxy, args[<span class="number">0</span>]);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (m.equals(toStringMethod)) &#123;</span><br><span class="line">                <span class="keyword">return</span> proxyToString(proxy);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(</span><br><span class="line">                    <span class="string">&quot;unexpected Object method dispatched: &quot;</span> + m);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; interfaces.length; i++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (declaringClass.isAssignableFrom(interfaces[i])) &#123;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        <span class="keyword">return</span> m.invoke(delegates[i], args);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (InvocationTargetException e) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> e.getTargetException();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> invokeNotDelegated(proxy, m, args);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Object <span class="title">invokeNotDelegated</span><span class="params">(Object proxy, Method m,</span></span></span><br><span class="line"><span class="function"><span class="params">                                        Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(<span class="string">&quot;unexpected method dispatched: &quot;</span> + m);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Integer <span class="title">proxyHashCode</span><span class="params">(Object proxy)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Integer(System.identityHashCode(proxy));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Boolean <span class="title">proxyEquals</span><span class="params">(Object proxy, Object other)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (proxy == other ? Boolean.TRUE : Boolean.FALSE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> String <span class="title">proxyToString</span><span class="params">(Object proxy)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> proxy.getClass().getName() + <span class="string">&#x27;@&#x27;</span> +</span><br><span class="line">            Integer.toHexString(proxy.hashCode());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>Delegator</code> 的子类可以覆盖 <code>invokeNotDelegated</code> 以实现代理方法调用的行为，而不是直接委托给其他对象，它们可以覆盖 <code>proxyHashCode</code>，<code>proxyEquals</code> 和 <code>proxyToString</code>，以覆盖代理从 <code>java.lang.Object</code> 继承的方法的默认行为。</p>
+<p>要为 <code>Foo</code> 接口的实现构造 <code>Delegator</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Class[] proxyInterfaces = <span class="keyword">new</span> Class[] &#123; Foo.class &#125;;</span><br><span class="line">Foo foo = (Foo) Proxy.newProxyInstance(Foo.class.getClassLoader(), proxyInterfaces, </span><br><span class="line">                                       <span class="keyword">new</span> Delegator(proxyInterfaces, <span class="keyword">new</span> Object[] &#123; <span class="keyword">new</span> FooImpl() &#125;));</span><br></pre></td></tr></table></figure>
+<p>请注意，上面给出的 <code>Delegator</code> 类的实现旨在说明而不是优化；例如，不是缓存和比较 <code>hashCode</code>，<code>equals</code> 和 <code>toString</code> 方法的 <code>Method</code> 对象，而是可以通过它们的字符串名称匹配它们，因为这些方法名称都没有在 <code>java.lang.Object</code> 中重载。</p>
+<blockquote>
+<p>由于 <code>InvocationHandler</code> 是一个函数接口，因此可以使用 <code>lambda</code> 表达式内联定义处理程序。</p>
+</blockquote>
+<h2 id="cglib-代理"><a class="markdownIt-Anchor" href="#cglib-代理"></a> CGLIB 代理</h2>
+<p><code>JDK 动态代理</code>通常用于动态创建代理。JDK 动态代理很容易使用，但 JDK 动态代理方法要求目标对象实现一个或多个接口。对象不一定实现接口，对象集合不一定共享相同的接口。面对这样的需求，JDK 动态代理无法提供答案。</p>
+<p><code>CGLIB</code> 是一个功能强大的高性能代码生成库。它在基于代理的面向方面编程（<code>AOP</code>）框架（如 <code>Spring AOP</code> 和 <code>dynaop</code>）中广泛使用，以提供方法拦截。<code>Hibernate</code> 使用 <code>CGLIB</code> 为持久化类生成代理。<code>EasyMock</code> 和 <code>jMock</code> 是使用模拟对象测试 <code>Java</code> 代码的库。它们都使用 <code>CGLIB</code> 库为没有接口的类创建模拟对象。</p>
+<p>在幕后，CGLIB 库使用 <code>ASM</code>，一个小但快速的字节码操作框架，来转换现有的字节码并生成新的类。除了 <code>CGLIB</code> 库之外，脚本语言（如 <code>Groovy</code> 和 <code>BeanShell</code>）也使用 <code>ASM</code> 生成 <code>Java</code> 字节码。 <code>ASM</code> 使用类似 <code>SAX</code> 解析器的机制来实现高性能。不鼓励直接使用 <code>ASM</code>，因为它需要熟悉 <code>JVM</code>，包括类文件格式和指令集。</p>
+<p><img src="../../images/java/cglib.PNG" alt="CGLIB and ASM" /></p>
+<blockquote>
+<p>请注意，某些框架（如 <code>Spring AOP</code> 和 <code>Hibernate</code>）通常同时使用 <code>CGLIB</code> 库和 <code>JDK 动态代理</code>来满足其需求。<code>Hibernate</code> 使用 JDK 动态代理为 <code>WebShere</code> 应用程序服务器实现事务管理器适配器；默认情况下，<code>Spring AOP</code> 使用 <strong>JDK 动态代理</strong>来代理接口，除非您强制使用 CGLIB 代理。</p>
+</blockquote>
+<h3 id="cglib-代理-api"><a class="markdownIt-Anchor" href="#cglib-代理-api"></a> CGLIB 代理 API</h3>
+<p><code>CGLIB</code> 库代码库很小，但由于缺少文档，很难学习。<code>CGLIB</code> 库的版本组织如下：</p>
+<ul>
+<li>
+<p><code>net.sf.cglib.core</code></p>
+<p>低级字节码操作类；他们中的大多数都与 <code>ASM</code> 有关。</p>
+</li>
+<li>
+<p><code>net.sf.cglib.transform</code></p>
+<p>运行时或构建时的类文件转换的类</p>
+</li>
+<li>
+<p><code>net.sf.cglib.proxy</code></p>
+<p>代理创建和方法拦截的类</p>
+</li>
+<li>
+<p><code>net.sf.cglib.reflect</code></p>
+<p>用于更快反射的类和 <code>C#</code> 样式的委托</p>
+</li>
+<li>
+<p><code>net.sf.cglib.util</code></p>
+<p>集合排序工具类</p>
+</li>
+<li>
+<p><code>net.sf.cglib.beans</code></p>
+<p><code>JavaBean</code> 相关工具类</p>
+</li>
+</ul>
+<p>要动态创建代理，大多数情况下，您只需要使用代理包中的一些 API。</p>
+<p>如前一节所述，<code>CGLIB</code> 库是 <code>ASM</code> 之上的高级层。它对代理不实现接口的类非常有用。本质上，它动态生成一个子类来覆盖代理类的非 final 方法，并连接回调用户定义的拦截器的钩子。它比 JDK 动态代理方法更快。</p>
+<p><img src="../../images/java/cblig-2.PNG" alt="CGLIB APIs commonly used for proxying classes" /></p>
+<p>通常用于代理具体类的 CGLIB 库 API 如上图所示。<code>net.sf.cglib.proxy.Callback</code> 接口是一个标记接口。 <code>net.sf.cglib.proxy.Enhancer</code> 类使用的所有回调接口都扩展了此接口。</p>
+<p><code>net.sf.cglib.proxy.MethodInterceptor</code> 是最常用的回调类型。它在 AOP 术语中启用 ”around advice“（围绕建议） - 也就是说，您可以在调用 “super” 方法之前和之后调用自定义代码。此外，您可以在调用 super 方法之前修改参数，或者根本不调用它：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">intercept</span><span class="params">(Object object, java.lang.reflect.Method method,</span></span></span><br><span class="line"><span class="function"><span class="params">        Object[] args, MethodProxy proxy)</span> <span class="keyword">throws</span> Throwable</span>;</span><br></pre></td></tr></table></figure>
+<p>当 <code>net.sf.cglib.proxy.MethodInterceptor</code> 是代理的所有方法的回调时，代理上的方法调用将在调用原始对象上的方法之前路由到此方法。如下图所示。第一个参数是代理对象。第二个和第三个参数分别是截获的方法和方法参数。可以使用 <code>java.lang.reflect.Method</code> 对象或使用 <code>net.sf.cglib.proxy.MethodProxy</code> 对象通过常规反射调用原始方法。<code>net.sf.cglib.proxy.MethodProxy</code> 通常是首选，因为它更快。在此方法中，可以在调用原始方法之前或之后注入自定义代码。</p>
+<p><img src="../../images/java/cglib-3.PNG" alt="CGLIB MethodInterceptor" /></p>
+<p><code>net.sf.cglib.proxy.MethodInterceptor</code> 满足任何拦截需求，但在某些情况下可能有点过分。为了简化和性能，提供了开箱即用的其他专用回调类型。举些例子，</p>
+<ul>
+<li>
+<p><code>net.sf.cglib.proxy.FixedValue</code></p>
+<p>出于性能原因，强制特定方法返回固定值很有用。</p>
+</li>
+<li>
+<p><code>net.sf.cglib.proxy.NoOp</code></p>
+<p>它将方法调用直接委托给超类中的默认实现。</p>
+</li>
+<li>
+<p><code>net.sf.cglib.proxy.LazyLoader</code></p>
+<p>当真实对象需要延迟加载时，它很有用。加载实际对象后，它将用于代理实例的每个未来方法调用。</p>
+</li>
+<li>
+<p><code>net.sf.cglib.proxy.Dispatcher</code></p>
+<p>它与 <code>net.sf.cglib.proxy.LazyLoader</code> 具有相同的签名，但在调用代理方法时始终会调用 <code>loadObject</code> 方法。</p>
+</li>
+<li>
+<p><code>net.sf.cglib.proxy.ProxyRefDispatcher</code></p>
+<p>它与 <code>Dispatcher</code> 相同，但它允许将代理对象作为 <code>loadObject</code> 方法的参数传入。</p>
+</li>
+</ul>
+<p>回调通常用于代理类中的所有方法，如上图所示，但您可以使用 <code>net.sf.cglib.proxy.CallbackFilter</code> 有选择地对方法应用回调。JDK 动态代理中没有这种细粒度控制功能，其中 <code>java.lang.reflect.InvocationHandler</code> 的 <code>invoke</code> 方法适用于代理对象的所有方法。</p>
+<p>除了代理类之外，CGLIB 还可以通过提供 <code>java.lang.reflect.Proxy</code> 的替代代码 <code>net.sf.cglib.proxy.Proxy</code> 来代理接口，以支持 JDK 1.3 之前的 Java 代理。由于很少使用此替换代理功能，因此此处不涉及相关代理 API。</p>
+<p>代理包还提供对 <code>net.sf.cglib.proxy.Mixin</code> 的支持。基本上，它允许将多个对象组合成一个更大的对象。代理上的方法调用委托给底层对象。</p>
+<p>让我们看看如何使用 CGLIB 代理 API 创建代理。</p>
+<h4 id="创建代理类-2"><a class="markdownIt-Anchor" href="#创建代理类-2"></a> 创建代理类</h4>
+<p>CGLIB 代理的核心是 <code>net.sf.cglib.proxy.Enhancer</code> 类。要创建 CGLIB 代理，至少需要一个类。让我们先使用内置的 NoOp 回调：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 使用NoOp回调创建代理。目标类必须有一个默认的零参数构造函数。</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> targetClass 代理的超类</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> 目标类实例的新代理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">createProxy</span><span class="params">(Class targetClass)</span> </span>&#123;</span><br><span class="line">    Enhancer enhancer = <span class="keyword">new</span> Enhancer();</span><br><span class="line">    enhancer.setSuperclass(targetClass);</span><br><span class="line">    enhancer.setCallback(NoOp.INSTANCE);</span><br><span class="line">    <span class="keyword">return</span> enhancer.create();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>返回值是目标类实例的代理。在此示例中，为 <code>net.sf.cglib.proxy.Enhancer</code> 类配置了单个 <code>net.sf.cglib.proxy.Callback</code>。可以看出，创建一个简单的代理是相当简单的。而不是创建 <code>net.sf.cglib.proxy.Enhancer</code> 的新实例，您可以简单地使用 <code>net.sf.cglib.proxy.Enhancer</code> 类中的静态帮助器方法来创建代理。但是最好使用上例中显示的方法，因为它允许您配置 <code>net.sf.cglib.proxy.Enhancer</code> 实例以精确控制生成的代理。</p>
+<p>请注意，目标类作为生成的代理的超类传入。与 JDK 动态代理不同，您无法在代理创建期间传递目标对象。目标对象必须由 CGLIB 库创建。在此示例中，默认的零参数构造函数用于创建目标实例。如果您希望 CGLIB 使用一些参数创建实例，<code>net.sf.cglib.proxy.Enhancer.create(Class[]，Object[])</code> 应当使用该方法替代 <code>net.sf.cglib.proxy.Enhancer.create()</code>。第一个参数指定参数类型和第二个指定参数值。原始类型在参数中应该使用包装类型。</p>
+<h4 id="使用-methodinterceptor"><a class="markdownIt-Anchor" href="#使用-methodinterceptor"></a> 使用 MethodInterceptor</h4>
+<p>要使代理更有用，可以使用自定义 <code>net.sf.cglib.proxy.MethodInterceptor</code> 替换 net.sf.cglib.proxy.NoOp 回调。代理上的所有方法调用都被调度到 <code>net.sf.cglib.proxy.MethodInterceptor</code> 的单个 <code>intercept</code> 方法。然后，<code>intercept</code> 方法将调用委托给底层对象。</p>
+<p>假设您要对目标对象的所有方法调用应用授权检查。如果授权失败，将抛出运行时异常 <code>AuthorizationException</code>。 <code>Authorization.java</code> 接口如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *  用于说明目的的简单授权服务。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AuthorizationService</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 方法调用的授权检查。如果检查失败将抛出 AuthorizationException。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">authorize</span><span class="params">(Method method)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>net.sf.cglib.proxy.MethodInterceptor</code> 的实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> net.sf.cglib.proxy.MethodInterceptor;</span><br><span class="line"><span class="keyword">import</span> net.sf.cglib.proxy.MethodProxy;</span><br><span class="line"><span class="keyword">import</span> com.lizjason.cglibproxy.AuthorizationService;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 一个简单的 MethodInterceptor 实现，对代理方法调用应用授权检查。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AuthorizationInterceptor</span> <span class="keyword">implements</span> <span class="title">MethodInterceptor</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> AuthorizationService authorizationService;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 使用给定的 AuthorizationServic 创建 AuthorizationInterceptor </span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AuthorizationInterceptor</span> <span class="params">(AuthorizationService authorizationService)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.authorizationService = authorizationService;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 拦截代理方法调用以注入授权检查。通过 MethodProxy 调用原始方法。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> object 代理对象</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> method 拦截方法</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> args 方法传参</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> proxy 用于调用原始方法的代理</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> 可抛出任何异常；如果抛出异常，将不会调用 super 方法</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 与代理方法的签名兼容的任何值。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">intercept</span><span class="params">(Object object, Method method, Object[] args, MethodProxy methodProxy )</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (authorizationService != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">//may throw an AuthorizationException if authorization failed</span></span><br><span class="line">            authorizationService.authorize(method);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> methodProxy.invokeSuper(object, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 <code>intercept</code> 方法中，首先检查授权。如果授权通过，则 <code>intercept</code> 方法将调用目标对象上的原始方法。出于性能原因，使用 <code>CGLIB</code> <code>net.sf.cglib.proxy.MethodProxy</code> 对象而不是使用 <code>java.lang.reflect.Method</code> 对象进行常规反射来调用原始方法。</p>
+<h4 id="使用-callbackfilter"><a class="markdownIt-Anchor" href="#使用-callbackfilter"></a> 使用 CallbackFilter</h4>
+<p><code>net.sf.cglib.proxy.CallbackFilter</code> 允许您在方法级别设置回调。假设您有一个 <code>PersistenceServiceImpl</code> 类，它有两个方法：<code>save</code> 和 <code>load</code>。 <code>save</code> 方法需要授权检查，但 <code>load</code> 方法不需要。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.lizjason.cglibproxy.PersistenceService;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * PersistenceService 接口的简单实现</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PersistenceServiceImpl</span> <span class="keyword">implements</span> <span class="title">PersistenceService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">save</span><span class="params">(<span class="keyword">long</span> id, String data)</span> </span>&#123;</span><br><span class="line">        System.out.println(data + <span class="string">&quot; has been saved successfully.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">load</span><span class="params">(<span class="keyword">long</span> id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Jason Zhicheng Li&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>请注意，<code>PersistenceServiceImpl</code> 类实现了 <code>PersistenceService</code> 接口，但这不是使用 <code>CGLIB</code> 生成代理所必需的。 <code>PersistenceServiceImpl</code> 的 <code>net.sf.cglib.proxy.CallbackFilter</code> 实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> net.sf.cglib.proxy.CallbackFilter;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * PersistenceServiceImpl 的 CallbackFilter 实现</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PersistenceServiceCallbackFilter</span> <span class="keyword">implements</span> <span class="title">CallbackFilter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// save 方法的回调索引</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SAVE = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// load 方法的回调索引</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> LOAD = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 指定要用于所调用方法的回调。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@method</span> 被调用的方法。</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 此方法的回调数组中的回调索引</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">accept</span><span class="params">(Method method)</span> </span>&#123;</span><br><span class="line">        String name = method.getName();</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&quot;save&quot;</span>.equals(name)) &#123;</span><br><span class="line">            <span class="keyword">return</span> SAVE;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 对于其他方法，包括 load方法，使用第二个回调</span></span><br><span class="line">        <span class="keyword">return</span> LOAD;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>accept</code> 方法将代理方法映射到回调。返回值是特定方法的回调数组中的索引。以下是 <code>PersistenceServiceImpl</code> 类的代理创建实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">Enhancer enhancer = <span class="keyword">new</span> Enhancer();</span><br><span class="line">enhancer.setSuperclass(PersistenceServiceImpl.class);</span><br><span class="line"></span><br><span class="line">CallbackFilter callbackFilter = <span class="keyword">new</span> PersistenceServiceCallbackFilter();</span><br><span class="line">enhancer.setCallbackFilter(callbackFilter);</span><br><span class="line"></span><br><span class="line">AuthorizationService authorizationService = ...</span><br><span class="line">Callback saveCallback = <span class="keyword">new</span> AuthorizationInterceptor(authorizationService);</span><br><span class="line">Callback loadCallback = NoOp.INSTANCE;</span><br><span class="line">Callback[] callbacks = <span class="keyword">new</span> Callback[]&#123;saveCallback, loadCallback &#125;;</span><br><span class="line">enhancer.setCallbacks(callbacks);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">return</span> (PersistenceServiceImpl)enhancer.create();</span><br></pre></td></tr></table></figure>
+<p>在此示例中，<code>AuthorizationInterceptor</code> 实例应用于 <code>save</code> 方法，<code>NoOp.INSTANCE</code> 应用于 <code>load</code> 方法。可选的，您可以通过 <code>net.sf.cglib.proxy.Enhancer.setInterfaces(Class [])</code> 方法指定代理对象要实现的接口。</p>
+<p>除了设置 <code>net.sf.cglib.proxy.Enhancer</code> 的回调数组外，还可以通过 <code>net.sf.cglib.proxy.Enhancer.setCallbackTypes(Class [])</code> 方法指定回调类型数组。如果在代理创建期间没有实际回调实例数组，则回调类型很有用。与回调类似，您需要使用 <code>net.sf.cglib.proxy.CallbackFilter</code> 为每个方法指定回调类型索引。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>**<code>JDK 动态代理</code>**允许我们在运行时动态的创建代理类。但必须要求代理对象实现一个或多个接口。它大量使用反射进行操作，使用原生 Java 代码。</p>
+<p><strong><code>CGLIB</code></strong> 是一个功能强大的高性能代码生成库。它是 JDK 动态代理的补充，除了实现接口之外，还允许代理扩展具体的基类。底层，它使用 ASM 字节码操作框架。实质上，CGLIB 动态生成一个子类来覆盖代理类的非 final 方法。它比使用 Java 反射的 JDK 动态代理方法更快。</p>
+<p><strong>CGLIB 不能代理 final 类或任何 final 方法。</strong></p>
+<p>对于一般情况，您使用 JDK 动态代理方法来创建代理。 当接口不可用或性能问题时，CGLIB 是一个很好的选择。</p>
+<blockquote>
+<p><em>原文链接：<a target="_blank" rel="noopener" href="http://jnb.ociweb.com/jnb/jnbNov2005.html">使用 CGLIB 库动态创建代理</a></em></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Proxy/" rel="tag"># Proxy</a>
+              <a href="/tags/CGLIB/" rel="tag"># CGLIB</a>
+              <a href="/tags/ASM/" rel="tag"># ASM</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/" rel="prev" title="Java Cache 入门">
+      <i class="fa fa-chevron-left"></i> Java Cache 入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/PM2-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="next" title="PM2 使用指南">
+      PM2 使用指南 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E4%BB%A3%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text"> 什么是代理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E4%BB%A3%E7%90%86%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text"> 静态代理类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text"> 动态代理类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E7%B1%BB-api"><span class="nav-number">3.1.</span> <span class="nav-text"> 动态代理类 API</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86%E7%B1%BB"><span class="nav-number">3.1.1.</span> <span class="nav-text"> 创建代理类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%90%86%E7%B1%BB%E5%B1%9E%E6%80%A7"><span class="nav-number">3.1.2.</span> <span class="nav-text"> 代理类属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86%E5%AE%9E%E4%BE%8B"><span class="nav-number">3.1.3.</span> <span class="nav-text"> 创建代理实例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%90%86%E5%AE%9E%E4%BE%8B%E5%B1%9E%E6%80%A7"><span class="nav-number">3.1.4.</span> <span class="nav-text"> 代理实例属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BA%8F%E5%88%97%E5%8C%96"><span class="nav-number">3.1.5.</span> <span class="nav-text"> 序列化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#examples"><span class="nav-number">3.2.</span> <span class="nav-text"> Examples</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cglib-%E4%BB%A3%E7%90%86"><span class="nav-number">4.</span> <span class="nav-text"> CGLIB 代理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cglib-%E4%BB%A3%E7%90%86-api"><span class="nav-number">4.1.</span> <span class="nav-text"> CGLIB 代理 API</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86%E7%B1%BB-2"><span class="nav-number">4.1.1.</span> <span class="nav-text"> 创建代理类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-methodinterceptor"><span class="nav-number">4.1.2.</span> <span class="nav-text"> 使用 MethodInterceptor</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-callbackfilter"><span class="nav-number">4.1.3.</span> <span class="nav-text"> 使用 CallbackFilter</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : '95fa269918bbb7b285344b322453ef7a',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

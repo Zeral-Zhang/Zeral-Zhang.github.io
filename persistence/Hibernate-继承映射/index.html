@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概述 在关系型数据库中我们没有直接的方法去映射类的继承到数据库表中。为了解决这个问题，JPA 标准提供了几种策略：  MappedSuperclass - 父类，不能是实体 Single Table - 来自具有共同祖先的不同类的实体被放置在单个表中 Joined Table - 每个类都有自己的表，查询子类实体需要连接表 Table-Per-Class - 类的所有的属性都在一张表中，所以不需">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hibernate 继承映射">
+<meta property="og:url" content="https://www.zeral.cn/persistence/Hibernate-%E7%BB%A7%E6%89%BF%E6%98%A0%E5%B0%84/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="概述 在关系型数据库中我们没有直接的方法去映射类的继承到数据库表中。为了解决这个问题，JPA 标准提供了几种策略：  MappedSuperclass - 父类，不能是实体 Single Table - 来自具有共同祖先的不同类的实体被放置在单个表中 Joined Table - 每个类都有自己的表，查询子类实体需要连接表 Table-Per-Class - 类的所有的属性都在一张表中，所以不需">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-11-17T05:00:58.000Z">
+<meta property="article:modified_time" content="2020-09-23T16:07:12.669Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Hibernate">
+<meta property="article:tag" content="MappedSuperclass">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.zeral.cn/persistence/Hibernate-%E7%BB%A7%E6%89%BF%E6%98%A0%E5%B0%84/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Hibernate 继承映射 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/Hibernate-%E7%BB%A7%E6%89%BF%E6%98%A0%E5%B0%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hibernate 继承映射
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-11-17 13:00:58" itemprop="dateCreated datePublished" datetime="2018-11-17T13:00:58+08:00">2018-11-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-24 00:07:12" itemprop="dateModified" datetime="2020-09-24T00:07:12+08:00">2020-09-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/JPA/" itemprop="url" rel="index"><span itemprop="name">JPA</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/persistence/Hibernate-%E7%BB%A7%E6%89%BF%E6%98%A0%E5%B0%84/" class="post-meta-item leancloud_visitors" data-flag-title="Hibernate 继承映射" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="概述"><a class="markdownIt-Anchor" href="#概述"></a> 概述</h2>
+<p>在关系型数据库中我们没有直接的方法去映射类的继承到数据库表中。为了解决这个问题，JPA 标准提供了几种策略：</p>
+<ul>
+<li>MappedSuperclass - 父类，不能是实体</li>
+<li>Single Table - 来自具有共同祖先的不同类的实体被放置在单个表中</li>
+<li>Joined Table - 每个类都有自己的表，查询子类实体需要连接表</li>
+<li>Table-Per-Class - 类的所有的属性都在一张表中，所以不需要连接<br />
+每种策略都会产生不同的数据库结构。</li>
+</ul>
+<a id="more"></a>
+<p><strong>实体查询意味着我们可以在查询父类时使用动态查询获取所有的子类。</strong><br />
+由于 Hibernate 是 JPA 的一个实现，它包含上述所有内容以及一些与继承相关的特定于 Hibernate 的功能。</p>
+<h2 id="映射父类策略"><a class="markdownIt-Anchor" href="#映射父类策略"></a> 映射父类策略</h2>
+<p>使用 MappedSuperclass 策略，继承只在类中体现，而不是实体模型。让我们从创建一个代表父类的Person类开始：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@MappedSuperclass</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> personId;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// constructor, getters, setters</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>**请注意这里的类没有 <code>@Entity</code> 注解 ** ，所以它不会被持久化到数据库中。<br />
+接着，我们添加一个 Employee 子类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyEmployee</span> <span class="keyword">extends</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String company;</span><br><span class="line">    <span class="comment">// constructor, getters, setters </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在数据库中，这将只生成一个 “MyEmployee” 表，总共三列包含子类定义的字段以及继承而来的字段。</p>
+<p>**如果我们使用此策略，祖先不能包含与其他实体的关联。<br />
+该策略可以用于为相同类定义相同字段，比如创建时间，创建者等审计功能或者通用字段。 **</p>
+<h2 id="单表策略"><a class="markdownIt-Anchor" href="#单表策略"></a> 单表策略</h2>
+<p><strong>单表策略为每个类层次结构创建一个表。</strong> 如果我们没有明确指定，这也是 JPA 选择的默认策略。<br />
+我们可以通过将 <code>@Inheritance</code> 注释添加到父类来定义我们想要使用的策略：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Inheritance(strategy = InheritanceType.SINGLE_TABLE)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyProduct</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> productId;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// constructor, getters, setters</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后，我们添加一些子类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Book</span> <span class="keyword">extends</span> <span class="title">MyProduct</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String author;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Pen</span> <span class="keyword">extends</span> <span class="title">MyProduct</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String color;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这将生成下面的表：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> MyProduct (</span><br><span class="line">  DTYPE <span class="built_in">varchar</span>(<span class="number">31</span>) <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">  productId <span class="built_in">bigint</span> <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">  author <span class="built_in">varchar</span>(<span class="number">255</span>),</span><br><span class="line">  color <span class="built_in">varchar</span>(<span class="number">255</span>),</span><br><span class="line">  primary <span class="keyword">key</span> (productId)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>当我们向其中插入数据时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Book book = <span class="keyword">new</span> Book();</span><br><span class="line">book.setProductId(<span class="number">1L</span>);</span><br><span class="line">book.setAuthor(<span class="string">&quot;Zeral&quot;</span>);</span><br><span class="line"></span><br><span class="line">Pen pen = <span class="keyword">new</span> Pen();</span><br><span class="line">pen.setProductId(<span class="number">2L</span>);</span><br><span class="line">pen.setColor(<span class="string">&quot;red&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>Hibernate 将会使用子类名称填充 <code>DTYPE</code>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> MyProduct (author, DTYPE, productId) <span class="keyword">VALUES</span> (<span class="string">&#x27;Zeral&#x27;</span>, <span class="string">&#x27;Book&#x27;</span>, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> MyProduct (color, DTYPE, productId) <span class="keyword">VALUES</span> (<span class="string">&#x27;red&#x27;</span>, <span class="string">&#x27;Pen&#x27;</span>, <span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="discriminator-values-鉴别器值"><a class="markdownIt-Anchor" href="#discriminator-values-鉴别器值"></a> Discriminator Values 鉴别器值</h3>
+<p>由于所有的实体记录都在同一个表中，因此 Hibernate 需要一种区分它们的方法。<br />
+**默认情况下，这是通过名为 <code>DTYPE</code> 的鉴别器列完成的 ** ，该列使用实体的名称作为值。<br />
+要自定义鉴别器列，我们可以使用 <code>@DiscriminatorColumn</code> 注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity(name=&quot;products&quot;)</span></span><br><span class="line"><span class="meta">@Inheritance(strategy = InheritanceType.SINGLE_TABLE)</span></span><br><span class="line"><span class="meta">@DiscriminatorColumn(name=&quot;product_type&quot;, </span></span><br><span class="line"><span class="meta">  discriminatorType = DiscriminatorType.INTEGER)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyProduct</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里，我们选择通过名为 product_type 的整数列来区分 MyProduct 子类实体。<br />
+接下来，我们需要告诉 Hibernate 每个子类对应于 product_type 列的什么值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@DiscriminatorValue(&quot;1&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Book</span> <span class="keyword">extends</span> <span class="title">MyProduct</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@DiscriminatorValue(&quot;2&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Pen</span> <span class="keyword">extends</span> <span class="title">MyProduct</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Hibernate 添加了注解可以采用的另外两个预定义值：“null” 和 “not null”：</p>
+<ul>
+<li><code>@DiscriminatorValue(“null”)</code> - 当任意行没有鉴别器值时将被映射到使用此注解的实体类;这可以应用于层次结构的根类</li>
+<li><code>@DiscriminatorValue(“not null”)</code> - 当任意行有鉴别器值时但是未找到该鉴别器对应的类时将被映射到使用此注解的实体类</li>
+</ul>
+<p><strong>这两个注解可以解决在集成遗留数据库时，鉴别器列包含 NULL 或某些与任何实体子类无关的值，如果不做该映射处理，这些异常数据在处理时会抛出异常。</strong></p>
+<p>除了列，我们还可以使用特定于 Hibernate 的<code>@DiscriminatorFormula</code> 注释来确定区分值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Inheritance(strategy = InheritanceType.SINGLE_TABLE)</span></span><br><span class="line"><span class="meta">@DiscriminatorFormula(&quot;case when author is not null then 1 else 2 end&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyProduct</span> </span>&#123; ... &#125;</span><br></pre></td></tr></table></figure>
+<p>**此策略具有多态查询性能的优点，因为在查询父实体时只需要访问一个表。另一方面，这也意味着我们不能再对子类实体属性使用 NOT NULL 约束。 **</p>
+<h2 id="连表策略"><a class="markdownIt-Anchor" href="#连表策略"></a> 连表策略</h2>
+<p>使用此策略，层次结构中的每个类都映射到其表。在所有表中重复出现的唯一列是标识符，将在需要时用于连接它们。<br />
+让我们创建一个使用此策略的父类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Inheritance(strategy = InheritanceType.JOINED)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Animal</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> animalId;</span><br><span class="line">    <span class="keyword">private</span> String species;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// constructor, getters, setters </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后，我们定义一个子类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Pet</span> <span class="keyword">extends</span> <span class="title">Animal</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// constructor, getters, setters</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>两个表都有一个 animalId 标识符列。 Pet 实体的主键还具有对其父实体的主键的外键约束。要自定义此列，我们可以添加 <code>@PrimaryKeyJoinColumn</code> 注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@PrimaryKeyJoinColumn(name = &quot;petId&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Pet</span> <span class="keyword">extends</span> <span class="title">Animal</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>创建的表结构如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> Animal (</span><br><span class="line">  animalId <span class="built_in">bigint</span> <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">  species <span class="built_in">varchar</span>(<span class="number">255</span>),</span><br><span class="line">  primary <span class="keyword">key</span> (animalId);</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> Pet (</span><br><span class="line">  petId <span class="built_in">bigint</span> <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">  <span class="keyword">name</span> <span class="built_in">varchar</span>(<span class="number">255</span>),</span><br><span class="line">  primary <span class="keyword">key</span> (petId),</span><br><span class="line">  <span class="keyword">foreign</span> <span class="keyword">key</span>(petId) <span class="keyword">references</span> Animal(animalId) </span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p><strong>此继承映射方法的缺点是检索实体需要表之间的连接，这可能导致大量记录的性能降低。</strong><br />
+查询父类时，连接数会更高，因为它将与每个相关的子项连接 - 因此，我们想要检索记录的层次结构越高，性能就越可能受到影响。</p>
+<h2 id="单类单表策略"><a class="markdownIt-Anchor" href="#单类单表策略"></a> 单类单表策略</h2>
+<p><strong>Table Per Class 策略将每个实体映射到一张表，该表包含实体的所有属性，包括继承的属性。</strong><br />
+生成的模式类似于使用 @MappedSuperclass 的模式，但与此不同，它会为父类定义实体，从而允许关联和多态查询。<br />
+要使用此策略，我们只需要将 <code>@Inheritance</code> 注解添加到基类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Vehicle</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> vehicleId;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String manufacturer;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// standard constructor, getters, setters</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们为其添加一个子类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> <span class="keyword">extends</span> <span class="title">Vehicle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> String engine;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// standard constructor, getters, setters</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>生成的 sql 如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> Car (</span><br><span class="line">  vehicleId <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  manufacturer <span class="built_in">varchar</span>(<span class="number">255</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="keyword">engine</span> <span class="built_in">varchar</span>(<span class="number">255</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (vehicleId)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>这与在没有继承的情况下映射每个实体没有太大区别。在查询基类时，这种区别是显而易见的，它将在后台使用 UNION 语句返回所有子类记录。<br />
+<strong>在选择此策略时，使用 UNION 也会导致性能下降。另一个问题是我们不能再使用标式键密钥生成。</strong></p>
+<h2 id="多态查询"><a class="markdownIt-Anchor" href="#多态查询"></a> 多态查询</h2>
+<p>我们创建两个 Book 和 Pen 对象，然后查询它们的超类 MyProduct 以验证我们将返回两个对象。<br />
+<strong>Hibernate 还可以查询由实体类扩展或实现的接口或基类这些非实体类。</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">session.createQuery(</span><br><span class="line">  <span class="string">&quot;from com.baeldung.hibernate.pojo.inheritance.Person&quot;</span>)</span><br><span class="line">  .getResultList())</span><br><span class="line">  .hasSize(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>请注意，这也适用于任何父类或接口，无论它是否是 @MappedSuperclass。与通常的 HQL 查询的区别在于我们必须使用完全限定名称，因为它们不是由 Hibernate 管理的实体。<br />
+如果我们不希望这种类型的查询返回特定子类，那么我们只需要在其定义中添加 Hibernate <code>@Polymorphism</code> 注释，类型为 <code>EXPLICIT</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Polymorphism(type = PolymorphismType.EXPLICIT)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Bag</span> <span class="keyword">implements</span> <span class="title">Item</span> </span>&#123; ...&#125;</span><br></pre></td></tr></table></figure>
+<p>在这种情况下，查询父类时，不会返回 Bag 记录。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Hibernate/" rel="tag"># Hibernate</a>
+              <a href="/tags/MappedSuperclass/" rel="tag"># MappedSuperclass</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/persistence/%E4%BD%BF%E7%94%A8-ResultTransformer-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%93%E6%9E%9C%E9%9B%86%E6%98%A0%E5%B0%84/" rel="prev" title="为什么需要使用 ResultTransformer 自定义结果集映射">
+      <i class="fa fa-chevron-left"></i> 为什么需要使用 ResultTransformer 自定义结果集映射
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/java/Java8-Stream%E4%BD%BF%E7%94%A8/" rel="next" title="Java8 Stream 使用">
+      Java8 Stream 使用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text"> 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%A0%E5%B0%84%E7%88%B6%E7%B1%BB%E7%AD%96%E7%95%A5"><span class="nav-number">2.</span> <span class="nav-text"> 映射父类策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E8%A1%A8%E7%AD%96%E7%95%A5"><span class="nav-number">3.</span> <span class="nav-text"> 单表策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#discriminator-values-%E9%89%B4%E5%88%AB%E5%99%A8%E5%80%BC"><span class="nav-number">3.1.</span> <span class="nav-text"> Discriminator Values 鉴别器值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E8%A1%A8%E7%AD%96%E7%95%A5"><span class="nav-number">4.</span> <span class="nav-text"> 连表策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E7%B1%BB%E5%8D%95%E8%A1%A8%E7%AD%96%E7%95%A5"><span class="nav-number">5.</span> <span class="nav-text"> 单类单表策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E6%80%81%E6%9F%A5%E8%AF%A2"><span class="nav-number">6.</span> <span class="nav-text"> 多态查询</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : 'c4859b0bbdd5d6363c1bd8f22c616e04',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

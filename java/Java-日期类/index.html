@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Java 的 API 提供了很多有用的组件，能帮我们构建复杂的应用。比如日期处理，Java 从 1.0，就提供了 java.util.Date 类用于支持日期和时间的处理，不过由于该 API 设计的缺陷，产生了糟糕的易用性。随着 1.0 退出舞台，Date 类中的很多方法都被废弃了，Java 1.1 使用 java.util.Calendar 类取而代之，很不幸，Calendar 类也有类似的问题">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 日期类">
+<meta property="og:url" content="https://www.zeral.cn/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Java 的 API 提供了很多有用的组件，能帮我们构建复杂的应用。比如日期处理，Java 从 1.0，就提供了 java.util.Date 类用于支持日期和时间的处理，不过由于该 API 设计的缺陷，产生了糟糕的易用性。随着 1.0 退出舞台，Date 类中的很多方法都被废弃了，Java 1.1 使用 java.util.Calendar 类取而代之，很不幸，Calendar 类也有类似的问题">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/zoneDateTime.jpg">
+<meta property="article:published_time" content="2020-05-10T01:51:25.000Z">
+<meta property="article:modified_time" content="2020-11-17T08:38:53.446Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="日期类">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/zoneDateTime.jpg">
+
+<link rel="canonical" href="https://www.zeral.cn/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java 日期类 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java 日期类
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-10 09:51:25" itemprop="dateCreated datePublished" datetime="2020-05-10T09:51:25+08:00">2020-05-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:38:53" itemprop="dateModified" datetime="2020-11-17T16:38:53+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/Java8/" itemprop="url" rel="index"><span itemprop="name">Java8</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/Java-%E6%97%A5%E6%9C%9F%E7%B1%BB/" class="post-meta-item leancloud_visitors" data-flag-title="Java 日期类" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Java 的 API 提供了很多有用的组件，能帮我们构建复杂的应用。比如日期处理，Java 从 1.0，就提供了 <code>java.util.Date</code> 类用于支持日期和时间的处理，不过由于该 API 设计的缺陷，产生了糟糕的易用性。随着 1.0 退出舞台，Date 类中的很多方法都被废弃了，Java 1.1 使用 <code>java.util.Calendar</code> 类取而代之，很不幸，Calendar 类也有类似的问题和设计缺陷，导致使用这些方法写出的代码非常容易出错。</p>
+<p>所有这些缺陷和不一致导致用户们转投第三方的日期和时间库，比如 <code>Joda-Time</code>。为了解决这些问题，Oracle 决定在原生的 Java API 中提供高质量的日期和时间支持。你会看到 Java 8 在 <code>java.time</code> 包中整合了很多 Joda-Time 的特性。</p>
+<p>在开始介绍日期类之前，我们先陈述几个经常出现的名次：</p>
+<p><em><strong>UTC</strong></em></p>
+<p><strong>协调世界时</strong>，是最主要的<strong>世界时间标准</strong>，基于原子钟。</p>
+<a id="more"></a>
+<blockquote>
+<p>在 UTC 中，大约每一年或两年会多出一秒，称为“闰秒”，添加到一天的最后一秒，并且总是在 12 月 31 日或 6 月 30 日。</p>
+</blockquote>
+<p><em><strong>GMT</strong></em></p>
+<p><strong>格林尼治标准时间，代表时区</strong>，标准时间为 UTC+0，是之前的民间标准，根据地球的自转和公转来计算时间，在欧洲国家和非洲国家用做当地标准时间。</p>
+<blockquote>
+<p>GMT 因为是根据地球的转动来计算时间的，而地球的自转目前正在缓速变慢，所以 UTC 比 GMT 更加精准。但是一些计算机的标准是根据格林尼治标准时间（GMT）定义的，所以大多数计算机时钟不够精确。</p>
+<p>在民用领域可以认为两者相同。</p>
+</blockquote>
+<p><em><strong>CST</strong></em></p>
+<p><strong>北美中部时区，代表时区</strong>，标准时间为 UTC-6。</p>
+<blockquote>
+<p>这种缩写的时区代表一片区域，但是由于没有明确的标准，CST 概念来说在中国也代表中国标准时间。具体缩写的定义可以查看 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html#SHORT_IDS">ZoneId.SHORT_IDS</a> 定义。</p>
+<p>所以 java 提供了明确的时区表示方法，具体可用的时区字符串 Id 可以通过 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html#getAvailableZoneIds--">ZoneId.getAvailableZoneIds()</a> 方法查看。</p>
+</blockquote>
+<p><em><strong>ISO 8601</strong></em></p>
+<p>代表国际标准的日期和时间表示方法。</p>
+<p>日期格式一般为：<strong>yyyy-MM-dd</strong>；</p>
+<p>带时区的日期一般格式为：<strong>yyyy-MM-dd’T’HH:mm:ss.SSSZ</strong>。</p>
+<blockquote>
+<p>在 Java 中定义了一些参见的格式化表示方法，在 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a> 有具体的静态格式化类表示。</p>
+</blockquote>
+<p><em><strong>UNIX 纪元（Epoch）</strong></em></p>
+<p>代表 1970 年 1 月 1 日 0 时 0 分 0 秒 GMT 午夜</p>
+<h2 id="date"><a class="markdownIt-Anchor" href="#date"></a> Date</h2>
+<p><strong>Date 类表示特定的时刻，精度为毫秒，该类反映的是协调世界时（UTC），不反映时区。</strong></p>
+<p>该类在使用时有几点需要注意：</p>
+<ul>
+<li>该时刻表示的当前时间与纪元的差（以毫秒为单位）；</li>
+<li>年代表与 <strong>1900</strong> 的差</li>
+<li>一个月由 0 到 11 之间的整数表示；0 是一月，1 是二月，以此类推；</li>
+<li>日期（一个月中的一天）由 1 到 31 之间的整数表示；</li>
+<li>小时用 0 到 23 之间的的整数表示；</li>
+<li>分钟用 0 到 59 之间的整数表示；</li>
+<li>秒用 0 到 61 之间的整数表示；值 60 和 61 仅在闰秒出现；</li>
+<li><strong>使用 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html">SimpleDateFormat</a> 格式化显示，该类非线程安全。</strong></li>
+<li><strong>该类是可变类，线程不安全。</strong></li>
+</ul>
+<h3 id="使用"><a class="markdownIt-Anchor" href="#使用"></a> 使用</h3>
+<h4 id="创建"><a class="markdownIt-Anchor" href="#创建"></a> 创建</h4>
+<p>创建当前时刻：<code>new Date()</code>，相当于：<code>new Date(System.currentTimeMillis())</code>，使用纪元时间与当前时间毫秒差创建日期。</p>
+<p>使用 Java8 Instant 转换：<code>Date.from(Instant instant)</code>，内部还是使用纪元时间差，其它日期对象转换思想相同。</p>
+<h4 id="日期"><a class="markdownIt-Anchor" href="#日期"></a> 日期</h4>
+<p>Date 实现了 <code>Comparable</code> 接口，可以使用 <code>compareTo</code> 直接比较两个对象；</p>
+<p>使用 <code>after</code> 和 <code>before</code> 实例方法；</p>
+<h4 id="文本间转换"><a class="markdownIt-Anchor" href="#文本间转换"></a> 文本间转换</h4>
+<p>使用 <code>DateFormat</code> 抽象类静态方法转换简单的 ISO 格式：</p>
+<blockquote>
+<p>该抽象类非线程安全，由于使用了成员变量 calendar 维护内部时间状态，导致 format 等方法依赖状态。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">Date date = <span class="keyword">new</span> Date();</span><br><span class="line">DateFormat dateInstance = DateFormat.getDateInstance();</span><br><span class="line">String format = dateInstance.format(date);</span><br><span class="line">Date parse = dateInstance.parse(format);</span><br><span class="line">System.out.println(parse + <span class="string">&quot; DateInstance format：&quot;</span> + format);</span><br><span class="line"><span class="comment">// Sun May 31 00:00:00 CST 2020 DateInstance format：2020-5-31</span></span><br><span class="line"></span><br><span class="line">DateFormat dateTimeInstance = DateFormat.getDateTimeInstance();</span><br><span class="line">String format1 = dateTimeInstance.format(date);</span><br><span class="line">Date parse1 = dateInstance.parse(format1);</span><br><span class="line">System.out.println(parse1 + <span class="string">&quot; DateTimeInstance format：&quot;</span> + format1);</span><br><span class="line"><span class="comment">// Sun May 31 00:00:00 CST 2020 DateTimeInstance format：2020-5-31 21:04:03</span></span><br><span class="line"></span><br><span class="line">DateFormat instance = DateFormat.getInstance();</span><br><span class="line">String format2 = instance.format(date);</span><br><span class="line">Date parse2 = instance.parse(format2);</span><br><span class="line">System.out.println(parse2 + <span class="string">&quot; Instance format：&quot;</span> + format2);</span><br><span class="line"><span class="comment">// Sun May 31 21:04:00 CST 2020 Instance format：20-5-31 下午9:04</span></span><br><span class="line"></span><br><span class="line">DateFormat timeInstance = DateFormat.getTimeInstance();</span><br><span class="line">String format3 = timeInstance.format(date);</span><br><span class="line">Date parse3 = timeInstance.parse(format3);</span><br><span class="line">System.out.println(parse3 + <span class="string">&quot; TimeInstance format：&quot;</span> + format3);</span><br><span class="line"><span class="comment">// Thu Jan 01 21:04:03 CST 1970 TimeInstance format：21:04:03</span></span><br></pre></td></tr></table></figure>
+<p>或使用 <code>DateFormat</code> 实现类 <code>SimpleDateFormat</code> 基于 Pattern 形式转换：</p>
+<blockquote>
+<p>该类非线程安全，原因和 DateFormat 相同。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>字符</th>
+<th>日期或时间元素</th>
+<th>Presentation</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G</td>
+<td>Era 年代</td>
+<td>Text</td>
+<td>AD</td>
+</tr>
+<tr>
+<td>y</td>
+<td>年</td>
+<td>Year</td>
+<td>1996; 96</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>Week year</td>
+<td>Year</td>
+<td>2009; 09</td>
+</tr>
+<tr>
+<td>M</td>
+<td>一年中的月份 (上下文敏感)</td>
+<td>Month</td>
+<td>July; Jul; 07</td>
+</tr>
+<tr>
+<td>L</td>
+<td>一年中的月份 (独立格式)</td>
+<td>Month</td>
+<td>July; Jul; 07</td>
+</tr>
+<tr>
+<td>w</td>
+<td>一年中的周</td>
+<td>Number</td>
+<td>27</td>
+</tr>
+<tr>
+<td>W</td>
+<td>一月中的周</td>
+<td>Number</td>
+<td>2</td>
+</tr>
+<tr>
+<td>D</td>
+<td>一年中的天</td>
+<td>Number</td>
+<td>189</td>
+</tr>
+<tr>
+<td>d</td>
+<td>一月中的天</td>
+<td>Number</td>
+<td>10</td>
+</tr>
+<tr>
+<td>F</td>
+<td>每月的星期几</td>
+<td>Number</td>
+<td>2</td>
+</tr>
+<tr>
+<td>E</td>
+<td>Day name in week</td>
+<td>Text</td>
+<td>Tuesday; Tue</td>
+</tr>
+<tr>
+<td>u</td>
+<td>星期几 (1 = 星期一, …, 7 = 星期天)</td>
+<td>Number</td>
+<td>1</td>
+</tr>
+<tr>
+<td>a</td>
+<td>Am/pm 标记</td>
+<td>Text</td>
+<td>PM</td>
+</tr>
+<tr>
+<td>H</td>
+<td>小时 (0-23)</td>
+<td>Number</td>
+<td>0</td>
+</tr>
+<tr>
+<td>k</td>
+<td>小时 (1-24)</td>
+<td>Number</td>
+<td>24</td>
+</tr>
+<tr>
+<td>K</td>
+<td>基于上午/下午表示的时间 am/pm (0-11)</td>
+<td>Number</td>
+<td>0</td>
+</tr>
+<tr>
+<td>h</td>
+<td>基于上午/下午表示的时间 am/pm (1-12)</td>
+<td>Number</td>
+<td>12</td>
+</tr>
+<tr>
+<td>m</td>
+<td>分钟</td>
+<td>Number</td>
+<td>30</td>
+</tr>
+<tr>
+<td>s</td>
+<td>秒</td>
+<td>Number</td>
+<td>55</td>
+</tr>
+<tr>
+<td>S</td>
+<td>毫秒</td>
+<td>Number</td>
+<td>978</td>
+</tr>
+<tr>
+<td>z</td>
+<td>时区</td>
+<td>一般时区</td>
+<td>Pacific Standard Time; PST; GMT-08:00</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>时区</td>
+<td>RFC 822 时区</td>
+<td>-0800</td>
+</tr>
+<tr>
+<td>X</td>
+<td>时区</td>
+<td>ISO 8601 时区</td>
+<td>-08; -0800;  -08:00</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SimpleDateFormat simpleDateFormat = <span class="keyword">new</span> SimpleDateFormat(<span class="string">&quot;yyyy-MM-dd&#x27;T&#x27;HH:mm:ss.SSSZ&quot;</span>);</span><br><span class="line">String format = simpleDateFormat.format(<span class="keyword">new</span> Date());</span><br><span class="line">Date parse = simpleDateFormat.parse(format);</span><br></pre></td></tr></table></figure>
+<h2 id="calendar"><a class="markdownIt-Anchor" href="#calendar"></a> Calendar</h2>
+<p>该类是一个抽象类，和 Date 一样，代表特定的时刻，该类提供了一些操作日历字段的方法，比如获得下一周的日期。</p>
+<p>该类使用时需要注意一下几点：</p>
+<ul>
+<li>支持指定时区和区域构造日历。最常见的实现是 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/util/GregorianCalendar.html">GregorianCalendar</a>，代表公历；</li>
+<li>该时刻表示的当前时间与纪元的差（以毫秒为单位）；</li>
+<li>年份不再从 1900 年开始，月份依旧从 0 开始计算；</li>
+<li><strong>没有专门的文本格式转换，通过 Date 作为中转</strong>；</li>
+<li><strong>该类是可变类，线程不安全。</strong></li>
+</ul>
+<h3 id="使用-2"><a class="markdownIt-Anchor" href="#使用-2"></a> 使用</h3>
+<h4 id="创建-2"><a class="markdownIt-Anchor" href="#创建-2"></a> 创建</h4>
+<ul>
+<li>使用静态工厂方法获取基于系统时区的当前时刻：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Calendar rightNow = Calendar.getInstance();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>使用静态内部类构建器构建时间日历：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> Calendar.Builder()</span><br><span class="line">        .setCalendarType(<span class="string">&quot;iso8601&quot;</span>)</span><br><span class="line">        .setWeekDate(<span class="number">2013</span>, <span class="number">1</span>, MONDAY)</span><br><span class="line">        .build();</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>Date</code> 转 <code>Calendar</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> Calendar calendar = <span class="keyword">new</span> Calendar.Builder().setInstant(d).build();</span><br></pre></td></tr></table></figure>
+<h4 id="比较"><a class="markdownIt-Anchor" href="#比较"></a> 比较</h4>
+<p>该类同样实现了 <code>Comparable</code> 接口，可以使用 <code>compareTo</code> 直接比较两个对象；</p>
+<p>使用 <code>after</code> 和 <code>before</code> 实例方法；</p>
+<h4 id="修改字段"><a class="markdownIt-Anchor" href="#修改字段"></a> 修改字段</h4>
+<p>通过 <code>set(int field, int value)</code> 修改<strong>当前日历对象</strong>字段，第一个参数为字段类型，定义在类的静态常量中：</p>
+<p><code>ERA</code>, <code>YEAR</code>, <code>MONTH</code>(<code>JANUARY</code>, <code>FEBRUARY</code>, <code>MARCH</code>, <code>APRIL</code>, <code>MAY</code>, <code>JUNE</code>, <code>JULY</code>, <code>AUGUST</code>, <code>SEPTEMBER</code>, <code>OCTOBER</code>, <code>NOVEMBER</code>, <code>DECEMBER</code>, <code>UNDECIMBER</code>), <code>WEEK_OF_YEAR</code>, <code>WEEK_OF_MONTH</code>, <code>DATE</code>, <code>DAY_OF_MONTH</code>, <code>DAY_OF_YEAR</code>, <code>DAY_OF_WEEK</code>(<code>SUNDAY</code>, <code>MONDAY</code>, <code>TUESDAY</code>, <code>WEDNESDAY</code>, <code>THURSDAY</code>, <code>FRIDAY</code>, <code>SATURDAY</code>), <code>DAY_OF_WEEK_IN_MONTH</code>, <code>AM_PM</code>, <code>HOUR</code>, <code>HOUR_OF_DAY</code>, <code>MINUTE</code>, <code>SECOND</code>, <code>MILLISECOND</code>, <code>ZONE_OFFSET</code>, <code>DST_OFFSET</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Calendar rightNow = Calendar.getInstance();</span><br><span class="line">rightNow.set(Calendar.MONTH, Calendar.JANUARY);</span><br></pre></td></tr></table></figure>
+<p>或者 <code>set(int year, int month, int date, int hourOfDay, int minute)</code> 和 <code>set(int year, int month, int date)</code> 等。</p>
+<p>增加或降低字段值：<code>add(int field, int amount)</code>；</p>
+<p>滚动增加或减小某个单位值，不影响前一个字段值：<code>roll(int field, boolean up)</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// create a calendar</span></span><br><span class="line">Calendar cal = Calendar.getInstance();</span><br><span class="line"></span><br><span class="line"><span class="comment">// displays the current calendar</span></span><br><span class="line">System.out.println(<span class="string">&quot;Month is &quot;</span> + cal.get(Calendar.MONTH));</span><br><span class="line"><span class="comment">// Month is 4</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// roll month</span></span><br><span class="line">cal.roll(Calendar.MONTH, <span class="keyword">true</span>);</span><br><span class="line">System.out.println(<span class="string">&quot;Month is &quot;</span> + cal.get(Calendar.MONTH));</span><br><span class="line"><span class="comment">// Month is 5</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// roll downwards</span></span><br><span class="line">cal.roll(Calendar.MONTH, <span class="keyword">false</span>);</span><br><span class="line">System.out.println(<span class="string">&quot;Month is &quot;</span> + cal.get(Calendar.MONTH));</span><br><span class="line"><span class="comment">// Month is 4</span></span><br></pre></td></tr></table></figure>
+<h2 id="new-package-javatime"><a class="markdownIt-Anchor" href="#new-package-javatime"></a> new package java.time</h2>
+<p>该包中定义的类代表基本的日期时间概念，包括瞬间，持续时间，日期，时间，时区和时间段。它们基于 ISO 日历系统（公历）。所有的类都是<strong>不可变的并且是线程安全的</strong>。</p>
+<p>每个日期实例都是由方便获取的字段 API 组成。对于较低级别的字段访问，可以参考 <code>java.time.temporal</code> 包。每个类都支持打印和解析为各种日期和时间，具体参阅 <code>java.time.format</code> 包以获取自定义选项。</p>
+<p><code>java.time.chrono</code> 包包含日历中立 API <code>ChronoLocalDate</code>，<code>ChronoLocalDateTime</code>，<code>ChronoZonedDateTime</code> 和 <code>Era</code>，这些类可以用来构建地区化的日历系统，比如农历等，系统内置提供了 4 中日历系统，分别是：</p>
+<ul>
+<li><code>ThaiBuddhistDate</code>：泰国佛教历</li>
+<li><code>MinguoDate</code>：中华民国历</li>
+<li><code>JapaneseDate</code>：日本历</li>
+<li><code>HijrahDate</code>：伊斯兰历</li>
+</ul>
+<h2 id="package-javatimetemporal"><a class="markdownIt-Anchor" href="#package-javatimetemporal"></a> package java.time.temporal</h2>
+<p>我们可以使用字段、单位和日期时间调节器来访问日期和时间。</p>
+<p>该程序包在基本程序包上扩展，以提供更多功能来满足更强大的用例。支持包括：</p>
+<ul>
+<li>日期时间单位，例如年，月，日和小时</li>
+<li>日期时间字段，例如一年中的某月，一周中的某日或一天中的某小时</li>
+<li>日期时间调整功能</li>
+<li>周的不同定义</li>
+</ul>
+<h3 id="字段和单位"><a class="markdownIt-Anchor" href="#字段和单位"></a> 字段和单位</h3>
+<p>日期和时间以字段和单位表示。单位用于测量时间量，例如年，天或分钟。所有单位都实现 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalUnit.html"><code>TemporalUnit</code></a>。众所周知的单位集在 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/ChronoUnit.html"><code>ChronoUnit</code></a> 中定义，例如 DAYS。该单位中也定义了一些常用的单位操作 API，例如：</p>
+<ul>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/ChronoUnit.html#addTo-R-long-">addTo</a></strong>(R temporal, long amount) - 添加指定时间段</li>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/ChronoUnit.html#between-java.time.temporal.Temporal-java.time.temporal.Temporal-">between</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/Temporal.html">Temporal</a> temporal1Inclusive, <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/Temporal.html">Temporal</a> temporal2Exclusive) - 比较两个时间对象之间的时间</li>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/ChronoUnit.html#isSupportedBy-java.time.temporal.Temporal-">isSupportedBy</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/Temporal.html">Temporal</a> temporal) - 指定时间对象是否支持此单位</li>
+</ul>
+<p>字段用于表示较大日期时间的一部分，例如年，一年中的月或一分钟中的秒。所有字段都实现 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html"><code>TemporalField</code></a>。在 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/ChronoField.html"><code>ChronoField</code></a> 中定义了一组众所周知的字段，例如 HOUR_OF_DAY。其他字段由 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/JulianFields.html"><code>JulianFields</code></a>，<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/WeekFields.html"><code>WeekFields</code></a> 和 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/IsoFields.html"><code>IsoFields</code></a> 定义。该字段也有一些常用的 API，例如：</p>
+<ul>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html#getFrom-java.time.temporal.TemporalAccessor-">getFrom</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAccessor.html">TemporalAccessor</a> temporal) - 从指定的时间对象获取此字段的值</li>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html#isSupportedBy-java.time.temporal.TemporalAccessor-">isSupportedBy</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAccessor.html">TemporalAccessor</a> temporal) - 检查时间对象是否支持此字段</li>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html#range--">range</a></strong>() - 获取此字段的有效范围</li>
+</ul>
+<p>字段的一种用法是从时间对象中获取没有便利方法的字段。例如，获取月中的某天很常见，以至于 <code>LocalDate</code> 上有一个名为 <code>getDayOfMonth()</code> 的方法。但是，对于更特殊的字段，必须使用该字段。例如，获取月中的周数，date.get(ChronoField.ALIGNED_WEEK_OF_MONTH)。</p>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/Temporal.html"><code>Temporal</code></a> 作为支持字段的日期时间类型的抽象。其方法支持获取字段的值、创建修改字段值后的新日期时间以及查询其他信息（通常用于提取偏移量或时区）。</p>
+<h3 id="调整和查询"><a class="markdownIt-Anchor" href="#调整和查询"></a> 调整和查询</h3>
+<p>日期时间问题中的关键部分是将日期调整为新的相关值，例如“每月的最后一天”或“下一个星期三”。这些被建模为调整基准日期时间的函数。该函数实现 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAdjuster.html"><code>TemporalAdjuster</code></a> 并在 Temporal 上运行。<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAdjusters.html"><code>TemporalAdjusters</code></a> 中提供了一组常用功能。例如，要查找给定日期后一周中某天的第一次出现，请使用 TemporalAdjusters.next(DayOfWeek)，例如 date.with(next(MONDAY))。</p>
+<p>TemporalAdjuster 函数接口有一些常见的静态实现：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">方法名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">dayOfWeekInMonth</td>
+<td>创建一个新的日期，它的值为同一个月中每一周的第几天</td>
+</tr>
+<tr>
+<td style="text-align:left">firstDayOfMonth</td>
+<td>创建一个新的日期，它的值为当月的第一天</td>
+</tr>
+<tr>
+<td style="text-align:left">firstDayOfNextMonth</td>
+<td>创建一个新的日期，它的值为下月的第一天</td>
+</tr>
+<tr>
+<td style="text-align:left">firstDayOfNextYear</td>
+<td>创建一个新的日期，它的值为明年的第一天</td>
+</tr>
+<tr>
+<td style="text-align:left">firstDayOfYear</td>
+<td>创建一个新的日期，它的值为当年的第一天</td>
+</tr>
+<tr>
+<td style="text-align:left">firstInMonth</td>
+<td>创建一个新的日期，它的值为同一个月中，第一个符合星期几要求的值</td>
+</tr>
+<tr>
+<td style="text-align:left">lastDayOfMonth</td>
+<td>创建一个新的日期，它的值为当月的最后一天</td>
+</tr>
+<tr>
+<td style="text-align:left">lastDayOfNextMonth</td>
+<td>创建一个新的日期，它的值为下月的最后一天</td>
+</tr>
+<tr>
+<td style="text-align:left">lastDayOfNextYear</td>
+<td>创建一个新的日期，它的值为明年的最后一天</td>
+</tr>
+<tr>
+<td style="text-align:left">lastDayOfYear</td>
+<td>创建一个新的日期，它的值为今年的最后一天</td>
+</tr>
+<tr>
+<td style="text-align:left">lastInMonth</td>
+<td>创建一个新的日期，它的值为同一个月中，最后一个符合星期几要求的值</td>
+</tr>
+<tr>
+<td style="text-align:left">next/previous</td>
+<td>创建一个新的日期，并将其值设定为日期调整后或者调整前，第一个符合指定星期几要求的日期</td>
+</tr>
+<tr>
+<td style="text-align:left">nextOrSame/previousOrSame</td>
+<td>创建一个新的日期，并将其值设定为日期调整后或者调整前，第一个符合指定星期几要求的日期，如果该日期已经符合要求，直接返回该对象</td>
+</tr>
+</tbody>
+</table>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAmount.html"><code>TemporalAmount</code></a> 接口模拟相对时间量，比如常用的实现类 <code>Duration</code>，<code>Period</code>。</p>
+<p>除了调整日期时间外，还提供了一个接口以启用通过 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalQuery.html"><code>TemporalQuery</code></a> 进行查询。查询接口的最常见实现是方法引用。可以使用主要时间对象类上的 <code>from(TemporalAccessor)</code> 方法，例如 <code>LocalDate::from</code> 或 <code>Month::from</code>。在 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalQueries.html"><code>TemporalQueries</code></a> 中作为静态方法提供了进一步的实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> ZonedDateTime now = ZonedDateTime.now();</span><br><span class="line"></span><br><span class="line"><span class="comment">// Now: 2020-06-11T00:00:39.096326+08:00[Asia/Shanghai]</span></span><br><span class="line">System.out.format(<span class="string">&quot;Now: %s%n&quot;</span>, now);</span><br><span class="line"></span><br><span class="line"><span class="keyword">final</span> LocalDate localDate = now.query(TemporalQueries.localDate());</span><br><span class="line"><span class="keyword">final</span> LocalDate toLocalDate = now.toLocalDate();</span><br><span class="line"><span class="keyword">final</span> LocalDate fromLocalDate = now.query(LocalDate::from);</span><br><span class="line"></span><br><span class="line"><span class="comment">// true</span></span><br><span class="line">System.out.println(localDate.isEqual(toLocalDate) &amp;&amp; localDate.isEqual(fromLocalDate));</span><br><span class="line"></span><br><span class="line"><span class="keyword">final</span> TemporalUnit unit = now.query(TemporalQueries.precision());</span><br><span class="line"><span class="keyword">final</span> Chronology chronology = now.query(TemporalQueries.chronology());</span><br><span class="line"><span class="keyword">final</span> ZoneId zone = now.query(TemporalQueries.zoneId());</span><br><span class="line"><span class="keyword">final</span> ZoneOffset offset = now.query(TemporalQueries.offset());</span><br><span class="line"></span><br><span class="line"><span class="comment">// TemporalUnit: Nanos, Chronology: ISO, ZoneId: Asia/Shanghai, ZoneOffset: +08:00</span></span><br><span class="line">System.out.format(<span class="string">&quot;TemporalUnit: %s, Chronology: %s, ZoneId: %s, ZoneOffset: %s %n&quot;</span>, unit, chronology, zone, offset);</span><br><span class="line"></span><br><span class="line"><span class="keyword">final</span> Month month = now.query(Month::from);</span><br><span class="line"><span class="keyword">final</span> MonthDay monthDay = now.query(MonthDay::from);</span><br><span class="line"><span class="keyword">final</span> YearMonth yearMonth = now.query(YearMonth::from);</span><br><span class="line"><span class="keyword">final</span> DayOfWeek dayOfWeek = now.query(DayOfWeek::from);</span><br><span class="line"><span class="keyword">final</span> ZoneId zoneId = now.query(ZoneId::from);</span><br><span class="line"><span class="keyword">final</span> ZoneOffset zoneOffset = now.query(ZoneOffset::from);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Month: JUNE, MonthDay: --06-11, YearMonth: 2020-06, DayOfWeek: THURSDAY, zoneId: Asia/Shanghai, zoneOffset: +08:00</span></span><br><span class="line">System.out.format(<span class="string">&quot;Month: %s, MonthDay: %s, YearMonth: %s, DayOfWeek: %s, zoneId: %s, zoneOffset: %s %n&quot;</span>, month, monthDay, yearMonth, dayOfWeek, zoneId, zoneOffset);</span><br></pre></td></tr></table></figure>
+<h3 id="周"><a class="markdownIt-Anchor" href="#周"></a> 周</h3>
+<p>不同的语言环境对星期有不同的定义。例如，在欧洲，一周通常从星期一开始，而在美国，则从星期日开始。 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/WeekFields.html"><code>WeekFields</code></a> 类为这种区别建模。IOS 定义星期一为一周开始，一周至少需要四天。</p>
+<p>ISO 日历系统定义了一个额外的基于周的年划分。这定义了基于从一年整个星期一到星期一的一年，它是在 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/IsoFields.html"><code>IsoFields</code></a> 中建模的。</p>
+<h2 id="日期和时间"><a class="markdownIt-Anchor" href="#日期和时间"></a> 日期和时间</h2>
+<p>日期和时间类的接口都提供了一致的设计，所以再很多 API 上都做了通用的处理，比如一致的方法前缀：</p>
+<ul>
+<li><code>of</code> - 静态工厂方法</li>
+<li><code>parse</code> - 侧重于解析的静态工厂方法</li>
+<li><code>get</code> - 获取值或其它</li>
+<li><code>is</code> - 检查是否为真</li>
+<li><code>with</code> - 等同于 setter 的不可变修改，返回新的副本</li>
+<li><code>plus</code> - 增加一定数量的单位</li>
+<li><code>minus</code> - 减少一定数量的单位</li>
+<li><code>to</code> - 将一个对象转换为另一个对象</li>
+<li><code>at</code> - 将一个对象结合到该对象中，例如 <code>date.atTime(time)</code></li>
+</ul>
+<p>这里主要以 Insant 展开介绍。</p>
+<h3 id="instant"><a class="markdownIt-Anchor" href="#instant"></a> Instant</h3>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html"><code>Instant</code></a> 实质上是一个数字时间戳。可以从时钟（<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Clock.html"><code>Clock</code></a>）中获取当前的瞬时信息。这对于时间点的记录和持久化很有用，存储的结果与 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#currentTimeMillis--"><code>System.currentTimeMillis()</code></a>` 相关联。</p>
+<h4 id="创建-3"><a class="markdownIt-Anchor" href="#创建-3"></a> 创建</h4>
+<p>从 <code>Date</code> 获取：<code>new Date().toInstant()</code>；</p>
+<p>使用静态工厂方法：</p>
+<ul>
+<li>从系统时钟（Clock）构建：<code>Instant.now()</code>，<code>Instant.now(Clock clock)</code></li>
+<li>根据纪元差毫秒构建构建：<code>Instant.ofEpochMilli(long epochMilli)</code></li>
+<li>使用标准 ISO 格式字符串构建：<code>Instant.parse(CharSequence text)</code>，格式例如：2007-12-03T10:15:30.00Z</li>
+<li>从 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAccessor.html">TemporalAccessor</a> 实现类构建，该类可以为 Instant 或支持 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/ChronoField.html#INSTANT_SECONDS"><code>INSTANT_SECONDS</code></a> 和 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/ChronoField.html#NANO_OF_SECOND"><code>NANO_OF_SECOND</code></a> 字段的实现类，比如：<code>ZonedDateTime</code></li>
+</ul>
+<h4 id="比较-2"><a class="markdownIt-Anchor" href="#比较-2"></a> 比较</h4>
+<p>使用前需明确该对象支持的单位或字段类型，API 文档中有说明支持的类型；</p>
+<p>或者使用：<strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#isSupported-java.time.temporal.TemporalUnit-">isSupported</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalUnit.html">TemporalUnit</a> unit) 和 <strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#isSupported-java.time.temporal.TemporalUnit-">isSupported</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalUnit.html">TemporalUnit</a> unit) 判断</p>
+<ul>
+<li>
+<p>比较与指定 Temporal 实现类指定单位的差：<strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#until-java.time.temporal.Temporal-java.time.temporal.TemporalUnit-">until</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/Temporal.html">Temporal</a> endExclusive, <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalUnit.html">TemporalUnit</a> unit)</p>
+</li>
+<li>
+<p>使用 <strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#isAfter-java.time.Instant-">isAfter</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html">Instant</a> otherInstant) 或 isBefore(Instant otherInstant) 或 <strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#compareTo-java.time.Instant-">compareTo</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html">Instant</a> otherInstant)</p>
+</li>
+</ul>
+<h4 id="获取"><a class="markdownIt-Anchor" href="#获取"></a> 获取</h4>
+<p>获取时间的字段值前同样得确认是否支持，这些方法通常以 <code>get*</code> 单位的形式存在，或者直接通过：</p>
+<ul>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#get-java.time.temporal.TemporalField-">get</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html">TemporalField</a> field)</li>
+<li><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#get-java.time.temporal.TemporalField-">getLong</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html">TemporalField</a> field)</li>
+<li>构建查询获取：<strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#query-java.time.temporal.TemporalQuery-">query</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalQuery.html">TemporalQuery</a><R> query)</li>
+</ul>
+<p>获取字段的有效值范围：<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#range-java.time.temporal.TemporalField-">range</a>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html">TemporalField</a> field)</p>
+<h4 id="调整"><a class="markdownIt-Anchor" href="#调整"></a> 调整</h4>
+<p>所有的修改方法都返回新的副本：</p>
+<ul>
+<li>调整字段值：<strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#with-java.time.temporal.TemporalField-long-">with</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalField.html">TemporalField</a> field, long newValue)</li>
+<li>截断操作会将小于该单位的字段都设置为 0：<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#truncatedTo-java.time.temporal.TemporalUnit-">truncatedTo</a>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalUnit.html">TemporalUnit</a> unit)</li>
+<li>增加或减少某个字段：<code>plus*</code>、<code>minus*</code></li>
+<li>通过 TemporalAdjuster 函数接口实现调整：<strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#with-java.time.temporal.TemporalAdjuster-">with</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAdjuster.html">TemporalAdjuster</a> adjuster)</li>
+</ul>
+<h3 id="localdate"><a class="markdownIt-Anchor" href="#localdate"></a> LocalDate</h3>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/LocalDate.html"><code>LocalDate</code></a> 存储没有时间的日期，也不附带时区信息。它会存储 <code>yyyy-MM-dd</code> 格式的日期，可以用来存储生日。</p>
+<h3 id="localtime"><a class="markdownIt-Anchor" href="#localtime"></a> LocalTime</h3>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/LocalTime.html"><code>LocalTime</code></a> 存储没有日期的时间。它将存储类似于 <code>HH:mm:ss</code> 格式的时间。</p>
+<h3 id="localdatetime"><a class="markdownIt-Anchor" href="#localdatetime"></a> LocalDateTime</h3>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/LocalDateTime.html"><code>LocalDateTime</code></a> 存储日期和时间。它将存储类似于 <code>yyyy-MM-dd HH:mm:ss</code> 格式的时间。</p>
+<h3 id="zoneddatetime"><a class="markdownIt-Anchor" href="#zoneddatetime"></a> ZonedDateTime</h3>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/ZonedDateTime.html"><code>ZonedDateTime</code></a> 存储带有时区的日期和时间。如果要考虑到 ZoneId（例如“欧洲/巴黎”）对日期和时间进行准确的计算，这将很有用。如果可能，建议使用没有时区的简单类。时区的广泛使用往往会增加应用程序的复杂性。</p>
+<p>该类存储类似于 <code>yyyy-MM-dd HH:mm:ss.zzz</code> 格式的时间。可通过上面所述时间类通过：<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html#atZone-java.time.ZoneId-">atZone</a>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html">ZoneId</a> zone) 添加时区而来。</p>
+<p>下图对 ZoneDateTime 的组成部分进行了说明。</p>
+<p><img src="../../images/java/zoneDateTime.jpg" alt="zoneDateTime" /></p>
+<h2 id="持续时间和周期"><a class="markdownIt-Anchor" href="#持续时间和周期"></a> 持续时间和周期</h2>
+<h3 id="duration"><a class="markdownIt-Anchor" href="#duration"></a> Duration</h3>
+<p>持续时间是沿时间线以纳秒为单位的时间的简单度量。</p>
+<p>此类以秒和纳秒为单位对时间量进行建模。也可以使用其他基于持续时间的单位（例如分钟和小时）来访问它。</p>
+<h4 id="创建-4"><a class="markdownIt-Anchor" href="#创建-4"></a> 创建</h4>
+<p>目前为止, 我们看到的所有类都实现了 <code>Temporal</code> 接口, <code>Temporal</code> 接口定义了如何读取和操纵为时间建模的对象的值。</p>
+<p><code>Duration</code> 类的静态工厂方法 <code>between</code> 就可以为两个 Temporal 对象创建持续时间。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Duration d1 = Duration.between(time1, time2); </span><br><span class="line">Duration d1 = Duration.between(dateTime1, dateTime2); </span><br><span class="line">Duration d2 = Duration.between(instant1, instant2);</span><br></pre></td></tr></table></figure>
+<p>也可以使用静态工厂从其它时间单位创建：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Duration threeMinutes = Duration.ofMinutes(<span class="number">3</span>); </span><br><span class="line">Duration threeMinutes = Duration.of(<span class="number">3</span>, ChronoUnit.MINUTES);  </span><br></pre></td></tr></table></figure>
+<h3 id="period"><a class="markdownIt-Anchor" href="#period"></a> Period</h3>
+<p>周期以对人类有意义的单位表示时间量。例如年、月或天。</p>
+<h4 id="创建-5"><a class="markdownIt-Anchor" href="#创建-5"></a> 创建</h4>
+<p>使用静态工厂方法创建：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Period tenDays = Period.between(LocalDate.of(<span class="number">2014</span>, <span class="number">3</span>, <span class="number">8</span>), LocalDate.of(<span class="number">2014</span>, <span class="number">3</span>, <span class="number">18</span>));</span><br><span class="line"></span><br><span class="line">Period tenDays = Period.ofDays(<span class="number">10</span>); </span><br><span class="line">Period threeWeeks = Period.ofWeeks(<span class="number">3</span>); </span><br><span class="line">Period twoYearsSixMonthsOneDay = Period.of(<span class="number">2</span>, <span class="number">6</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<hr />
+<p><code>Duration</code> 类和 <code>Period</code> 类共享了很多相似的方法，参见下表所示。</p>
+<table>
+<thead>
+<tr>
+<th>方 法 名</th>
+<th>是否是静态方法</th>
+<th>方法描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>between</td>
+<td>是</td>
+<td>创建两个时间点之间的 interval</td>
+</tr>
+<tr>
+<td>from</td>
+<td>是</td>
+<td>由一个临时时间点创建 interval</td>
+</tr>
+<tr>
+<td>of</td>
+<td>是</td>
+<td>由它的组成部分创建 interval 的实例</td>
+</tr>
+<tr>
+<td>parse</td>
+<td>是</td>
+<td>由字符串创建 interval 的实例</td>
+</tr>
+<tr>
+<td>addTo</td>
+<td>否</td>
+<td>创建该 interval 的副本,并将其?加到某个指定的 temporal 对象</td>
+</tr>
+<tr>
+<td>get</td>
+<td>否</td>
+<td>读取该 interval 的状态</td>
+</tr>
+<tr>
+<td>isNegative</td>
+<td>否</td>
+<td>检查该 interval 是否为负值,不包含零</td>
+</tr>
+<tr>
+<td>isZero</td>
+<td>否</td>
+<td>检查该 interval 的时长是否为零</td>
+</tr>
+<tr>
+<td>minus</td>
+<td>否</td>
+<td>通过减去一定的时间创建该 interval 的副本</td>
+</tr>
+<tr>
+<td>multipliedBy</td>
+<td>否</td>
+<td>将 interval 的值乘以某个标量创建该 interval 的副本</td>
+</tr>
+<tr>
+<td>negated</td>
+<td>否</td>
+<td>以忽略某个时长的方式创建该 interval 的副本</td>
+</tr>
+<tr>
+<td>plus</td>
+<td>否</td>
+<td>以增加某个指定的时长的方式创建该 interval 的副本</td>
+</tr>
+<tr>
+<td>subtractFrom</td>
+<td>否</td>
+<td>从指定的 temporal 对象中减去该 interval</td>
+</tr>
+</tbody>
+</table>
+<h2 id="打印输出及解析日期"><a class="markdownIt-Anchor" href="#打印输出及解析日期"></a> 打印输出及解析日期</h2>
+<p>处理日期和时间对象时，格式化以及解析日期-时间对象是另一个非常重要的功能。新的 <code>java.time.format</code> 包就是特别为这个目的而设计的。</p>
+<p>这个包中，最重要的类是 <strong><code>DateTimeFormatter</code></strong>。创建格式器最简单的方法是通过它的静态工厂方法以及常量。</p>
+<p>它包含了 IOS 格式定义的常见格式，像 <code>BASIC_ISO_DATE</code> 和 <code>ISO_LOCAL_DATE</code>  这样的常量是 DateTimeFormatter 类的预定义实例。</p>
+<p>所有的 DateTimeFormatter 实例都能用于以一定的格式创建代表特定日期或时间的字符串。比如，下面的这个例子中，我们使用了两个不同的格式器生成了字符串:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">LocalDate date = LocalDate.of(<span class="number">2014</span>, <span class="number">3</span>, <span class="number">18</span>);  </span><br><span class="line">String s1 = date.format(DateTimeFormatter.BASIC_ISO_DATE);	&lt;-- <span class="number">20140318</span></span><br><span class="line">String s2 = date.format(DateTimeFormatter.ISO_LOCAL_DATE);  &lt;-- <span class="number">2014</span>-<span class="number">03</span>-<span class="number">18</span></span><br></pre></td></tr></table></figure>
+<p>你也可以通过解析代表日期或时间的字符串重新创建该日期对象。所有的日期和时间API 都提供了表示时间点或者时间段的工厂方法,你可以使用工厂方法parse达到重创该日期对象的目的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LocalDate date1 = LocalDate.parse(<span class="string">&quot;20140318&quot;</span>, DateTimeFormatter.BASIC_ISO_DATE); </span><br><span class="line">LocalDate date2 = LocalDate.parse(<span class="string">&quot;2014-03-18&quot;</span>, DateTimeFormatter.ISO_LOCAL_DATE);</span><br></pre></td></tr></table></figure>
+<p>和老的 <em><code>java.util.DateFormat</code></em> 相比较，所有的 <code>DateTimeFormatter</code> 实例<strong>都是线程安全的</strong>。所以，我们能够以单例模式创建格式器实例，就像 DateTimeFormatter 所定义的那些常量，并能在多个线程间共享这些实例。DateTimeFormatter 类还支持一个静态工厂方法,它可以按照某个特定的模式创建格式器，代码清单如下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DateTimeFormatter formatter = DateTimeFormatter.ofPattern(<span class="string">&quot;dd/MM/yyyy&quot;</span>);</span><br><span class="line">LocalDate date1 = LocalDate.of(<span class="number">2014</span>, <span class="number">3</span>, <span class="number">18</span>); </span><br><span class="line">String formattedDate = date1.format(formatter); </span><br><span class="line">LocalDate date2 = LocalDate.parse(formattedDate, formatter);</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%97%A5%E6%9C%9F%E7%B1%BB/" rel="tag"># 日期类</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/spring/Spring-Security-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/" rel="prev" title="Spring Security 架构初谈">
+      <i class="fa fa-chevron-left"></i> Spring Security 架构初谈
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/middleware/Elasticsearch%20%E5%85%A5%E9%97%A8/" rel="next" title="Elasticsearch 入门">
+      Elasticsearch 入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#date"><span class="nav-number">1.</span> <span class="nav-text"> Date</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.1.</span> <span class="nav-text"> 使用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA"><span class="nav-number">1.1.1.</span> <span class="nav-text"> 创建</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%A5%E6%9C%9F"><span class="nav-number">1.1.2.</span> <span class="nav-text"> 日期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%87%E6%9C%AC%E9%97%B4%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.1.3.</span> <span class="nav-text"> 文本间转换</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calendar"><span class="nav-number">2.</span> <span class="nav-text"> Calendar</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-2"><span class="nav-number">2.1.</span> <span class="nav-text"> 使用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-2"><span class="nav-number">2.1.1.</span> <span class="nav-text"> 创建</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AF%94%E8%BE%83"><span class="nav-number">2.1.2.</span> <span class="nav-text"> 比较</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E5%AD%97%E6%AE%B5"><span class="nav-number">2.1.3.</span> <span class="nav-text"> 修改字段</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#new-package-javatime"><span class="nav-number">3.</span> <span class="nav-text"> new package java.time</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#package-javatimetemporal"><span class="nav-number">4.</span> <span class="nav-text"> package java.time.temporal</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E5%92%8C%E5%8D%95%E4%BD%8D"><span class="nav-number">4.1.</span> <span class="nav-text"> 字段和单位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E6%95%B4%E5%92%8C%E6%9F%A5%E8%AF%A2"><span class="nav-number">4.2.</span> <span class="nav-text"> 调整和查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%A8"><span class="nav-number">4.3.</span> <span class="nav-text"> 周</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E6%9C%9F%E5%92%8C%E6%97%B6%E9%97%B4"><span class="nav-number">5.</span> <span class="nav-text"> 日期和时间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#instant"><span class="nav-number">5.1.</span> <span class="nav-text"> Instant</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-3"><span class="nav-number">5.1.1.</span> <span class="nav-text"> 创建</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AF%94%E8%BE%83-2"><span class="nav-number">5.1.2.</span> <span class="nav-text"> 比较</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96"><span class="nav-number">5.1.3.</span> <span class="nav-text"> 获取</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E6%95%B4"><span class="nav-number">5.1.4.</span> <span class="nav-text"> 调整</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#localdate"><span class="nav-number">5.2.</span> <span class="nav-text"> LocalDate</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#localtime"><span class="nav-number">5.3.</span> <span class="nav-text"> LocalTime</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#localdatetime"><span class="nav-number">5.4.</span> <span class="nav-text"> LocalDateTime</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#zoneddatetime"><span class="nav-number">5.5.</span> <span class="nav-text"> ZonedDateTime</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%81%E7%BB%AD%E6%97%B6%E9%97%B4%E5%92%8C%E5%91%A8%E6%9C%9F"><span class="nav-number">6.</span> <span class="nav-text"> 持续时间和周期</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#duration"><span class="nav-number">6.1.</span> <span class="nav-text"> Duration</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-4"><span class="nav-number">6.1.1.</span> <span class="nav-text"> 创建</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#period"><span class="nav-number">6.2.</span> <span class="nav-text"> Period</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-5"><span class="nav-number">6.2.1.</span> <span class="nav-text"> 创建</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%8D%B0%E8%BE%93%E5%87%BA%E5%8F%8A%E8%A7%A3%E6%9E%90%E6%97%A5%E6%9C%9F"><span class="nav-number">7.</span> <span class="nav-text"> 打印输出及解析日期</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : 'ad7d888a6ab678d62473996d7a456d54',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

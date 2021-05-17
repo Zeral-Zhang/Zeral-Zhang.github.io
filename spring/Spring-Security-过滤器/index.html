@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Spring Security 的 Web 基础结构完全基于标准的 servlet 过滤器。Spring Security 在内部维护一个过滤器链，其中每个过滤器都有特定的责任，过滤器的顺序很重要，因为它们之间存在依赖关系。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Security 过滤器">
+<meta property="og:url" content="https://www.zeral.cn/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Spring Security 的 Web 基础结构完全基于标准的 servlet 过滤器。Spring Security 在内部维护一个过滤器链，其中每个过滤器都有特定的责任，过滤器的顺序很重要，因为它们之间存在依赖关系。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-10-21T05:32:01.000Z">
+<meta property="article:modified_time" content="2020-03-13T12:58:16.443Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Spring Security">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.zeral.cn/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Spring Security 过滤器 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring Security 过滤器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-10-21 13:32:01" itemprop="dateCreated datePublished" datetime="2018-10-21T13:32:01+08:00">2018-10-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-03-13 20:58:16" itemprop="dateModified" datetime="2020-03-13T20:58:16+08:00">2020-03-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Spring Security 过滤器" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Spring Security 的 Web 基础结构完全基于标准的 servlet 过滤器。Spring Security 在内部维护一个过滤器链，其中每个过滤器都有特定的责任，过滤器的顺序很重要，因为它们之间存在依赖关系。</p>
+<a id="more"></a>
+<h2 id="过滤器链"><a class="markdownIt-Anchor" href="#过滤器链"></a> 过滤器链</h2>
+<ul>
+<li>
+<h2 id="delegatingfilterproxy"><a class="markdownIt-Anchor" href="#delegatingfilterproxy"></a> <code>DelegatingFilterProxy</code></h2>
+<p>使用 servlet 过滤器时，显然需要在 <code>web.xml</code> 中声明它们，否则 servlet 容器将忽略它们。在 Spring Security 中，过滤器类也是在应用程序上下文中定义的 Spring bean，因此能够利用 Spring 丰富的依赖注入工具和生命周期接口。Spring 的 <code>DelegatingFilterProxy</code> 提供了 <code>web.xml</code> 和应用程序上下文之间的链接。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>myFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>org.springframework.web.filter.DelegatingFilterProxy<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>myFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>请注意，过滤器实际上是 <code>DelegatingFilterProxy</code>，而不是实际实现过滤器逻辑的类。DelegatingFilterProxy 所做的是将 <code>Filter</code> 的方法委托给从 Spring 应用程序上下文中获取的 bean。bean 必须实现 <code>javax.servlet.Filter</code>，它必须与 <code>filter-name</code> 元素中的名称相同。<br />
+<code>DelegatingFilterProxy</code> 继承 <code>GenericFilterBean</code>，该抽象类实现 <code>Filter</code> 接口，并提供 Spring 的管理。但是委托类自己不去实现安全过滤，而是将过滤方法委托给 <code>FilterChainProxy</code> 代理类去做。</p>
+</li>
+</ul>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response, FilterChain filterChain)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Lazily initialize the delegate if necessary.</span></span><br><span class="line">    Filter delegateToUse = <span class="keyword">this</span>.delegate;</span><br><span class="line">    <span class="keyword">if</span> (delegateToUse == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>.delegateMonitor) &#123;</span><br><span class="line">            delegateToUse = <span class="keyword">this</span>.delegate;</span><br><span class="line">            <span class="keyword">if</span> (delegateToUse == <span class="keyword">null</span>) &#123;</span><br><span class="line">                WebApplicationContext wac = findWebApplicationContext();</span><br><span class="line">                <span class="keyword">if</span> (wac == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;No WebApplicationContext found: &quot;</span> +</span><br><span class="line">                            <span class="string">&quot;no ContextLoaderListener or DispatcherServlet registered?&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                delegateToUse = initDelegate(wac);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">this</span>.delegate = delegateToUse;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Let the delegate perform the actual doFilter operation.</span></span><br><span class="line">    invokeDelegate(delegateToUse, request, response, filterChain);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的 <code>delegateToUse</code> 就是 <code>FilterChainProxy</code>,代理类调用自己的 <code>Filter</code> 实现。</p>
+<ul>
+<li>
+<h2 id="filterchainproxy"><a class="markdownIt-Anchor" href="#filterchainproxy"></a> <code>FilterChainProxy</code></h2>
+<p>Spring Security 的 Web 基础结构只能通过委托 FilterChainProxy 实例来实现。安全过滤器不应该使用自身。FilterChainProxy 允许我们向 web.xml 添加一个条目，并完全处理应用程序上下文文件以管理我们的 Web 安全 bean。</p>
+<p>该类同样继承自 <code>GenericFilterBean</code>，<code>Filter</code> 实现如下：</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response,</span></span></span><br><span class="line"><span class="function"><span class="params">        FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">    <span class="keyword">boolean</span> clearContext = request.getAttribute(FILTER_APPLIED) == <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (clearContext) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            request.setAttribute(FILTER_APPLIED, Boolean.TRUE);</span><br><span class="line">            doFilterInternal(request, response, chain);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">finally</span> &#123;</span><br><span class="line">            SecurityContextHolder.clearContext();</span><br><span class="line">            request.removeAttribute(FILTER_APPLIED);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        doFilterInternal(request, response, chain);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doFilterInternal</span><span class="params">(ServletRequest request, ServletResponse response,</span></span></span><br><span class="line"><span class="function"><span class="params">        FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">    FirewalledRequest fwRequest = firewall</span><br><span class="line">            .getFirewalledRequest((HttpServletRequest) request);</span><br><span class="line">    HttpServletResponse fwResponse = firewall</span><br><span class="line">            .getFirewalledResponse((HttpServletResponse) response);</span><br><span class="line"></span><br><span class="line">    List&lt;Filter&gt; filters = getFilters(fwRequest);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (filters == <span class="keyword">null</span> || filters.size() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">            logger.debug(UrlUtils.buildRequestUrl(fwRequest)</span><br><span class="line">                    + (filters == <span class="keyword">null</span> ? <span class="string">&quot; has no matching filters&quot;</span></span><br><span class="line">                            : <span class="string">&quot; has an empty filter list&quot;</span>));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        fwRequest.reset();</span><br><span class="line"></span><br><span class="line">        chain.doFilter(fwRequest, fwResponse);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    VirtualFilterChain vfc = <span class="keyword">new</span> VirtualFilterChain(fwRequest, chain, filters);</span><br><span class="line">    vfc.doFilter(fwRequest, fwResponse);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的 firewall 就实现了安全字符过滤，Url编码解码配置，访问方法配置等等安全策略。<br />
+真正执行安全过滤的是在其内部类 <code>VirtualFilterChain</code> 中，在该类中依次调用各个安全过滤器。</p>
+<h2 id="后处理配置实体"><a class="markdownIt-Anchor" href="#后处理配置实体"></a> 后处理配置实体</h2>
+<p>Spring Security 的 Java 配置不会公开它配置的每个对象的每个属性。这简化了大多数用户的配置。毕竟，如果每个属性都被暴露，用户可以使用标准 bean 配置。</p>
+<p>虽然有充分的理由不直接公开每个属性，但用户可能仍需要更高级的配置选项。为了解决这个问题，Spring Security引入了 <code>ObjectPostProcessor</code> 的概念，可用于修改或替换 Java Configuration 创建的许多 Object 实例。例如，如果要在 FilterSecurityInterceptor 上配置 filterSecurityPublishAuthorizationSuccess 属性，可以使用以下命令：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configure</span><span class="params">(HttpSecurity http)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">http</span><br><span class="line">    .authorizeRequests()</span><br><span class="line">        .anyRequest().authenticated()</span><br><span class="line">        .withObjectPostProcessor(<span class="keyword">new</span> ObjectPostProcessor&lt;FilterSecurityInterceptor&gt;() &#123;</span><br><span class="line">            <span class="keyword">public</span> &lt;O extends FilterSecurityInterceptor&gt; <span class="function">O <span class="title">postProcess</span><span class="params">(O fsi)</span> </span>&#123;</span><br><span class="line">                <span class="comment">// 默认只会广播 AuthorizationFailureEvent 事件，如果设置为 true，则同时也会广播 AuthorizedEvent</span></span><br><span class="line">                fsi.setPublishAuthorizationSuccess(<span class="keyword">true</span>);</span><br><span class="line">                <span class="keyword">return</span> fsi;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="过滤器顺序"><a class="markdownIt-Anchor" href="#过滤器顺序"></a> 过滤器顺序</h2>
+<p>过滤器在链中定义的顺序非常重要：</p>
+<ul>
+<li><code>ChannelProcessingFilter</code>：因为它可能需要重定向到不同的协议</li>
+<li><code>SecurityContextPersistenceFilter</code>: 因此，可以在 Web 请求开始时在 SecurityContextHolder 中设置 SecurityContext，并且当 Web 请求结束时（可以使用下一个Web请求准备好），可以将对 SecurityContext 的任何更改复制到 HttpSession。</li>
+<li><code>ConcurrentSessionFilter</code>： 因为它需要使用 SecurityContextHolder 的功能，而且更新对应 session 的最后更新时间，以及通过 SessionRegistry 获取当前的 SessionInformation 以检查当前的 session 是否已经过期，过期则会调用 LogoutHandler。</li>
+<li>身份验证处理机制 - <code>UsernamePasswordAuthenticationFilter</code>，<code>CasAuthenticationFilter</code>，<code>BasicAuthenticationFilter</code>等 - 以便可以修改SecurityContextHolder 以包含有效的身份验证请求令牌.</li>
+<li><code>SecurityContextHolderAwareRequestFilter</code>：使用它将 Spring Security 感知  HttpServletRequestWrapper 安装到您的 servlet 容器中</li>
+<li><code>JaasApiIntegrationFilter</code>：如果 JaasAuthenticationToken 位于SecurityContextHolder 中，则会将 FilterChain 作为 JaasAuthenticationToken 中的 Subject 进行处理</li>
+<li><code>RememberMeAuthenticationFilter</code>: 如果没有更早的身份验证处理机制更新SecurityContextHolder，并且该请求提供了一个 cookie，使我能够记住我的服务，一个合适的 remembered Authentication 验证对象将会设给 SecurityContextHolder</li>
+<li><code>AnonymousAuthenticationFilter</code>，这样如果没有早期的身份验证处理机制更新SecurityContextHolder，那么匿名身份验证对象将被放在那里</li>
+<li><code>ExceptionTranslationFilter</code>，用于捕获任何 Spring Security 异常，以便可以返回 HTTP 错误响应或启动相应的 AuthenticationEntryPoint</li>
+<li><code>FilterSecurityInterceptor</code>，用于保护 Web URI 并在访问被拒绝时引发异常</li>
+</ul>
+<h2 id="核心过滤器"><a class="markdownIt-Anchor" href="#核心过滤器"></a> 核心过滤器</h2>
+<ul>
+<li>
+<h3 id="filtersecurityinterceptor"><a class="markdownIt-Anchor" href="#filtersecurityinterceptor"></a> <code>FilterSecurityInterceptor</code></h3>
+</li>
+</ul>
+<p>该过滤器负责处理 HTTP 资源的安全性，它需要一个 <code>AuthenticationManager</code> 和 <code>AccessDecisionManager</code> 的引用。它还提供了适用于不同 HTTP URL 请求的配置属性。<br />
+<code>FilterSecurityInterceptor</code> 可以通过两种方式配置配置属性。第一种，是使用命名空间元素 <filter-security-metadata-source>，这里不再说明。第二个选项是编写自己的<code>SecurityMetadataSource</code>，无论使用何种方法。SecurityMetadataSource 负责返回List<ConfigAttribute>，其中包含与单个安全 HTTP URL 关联的所有配置属性。<br />
+应该注意的是，FilterSecurityInterceptor.setSecurityMetadataSource() 方法实际上需要FilterInvocationSecurityMetadataSource 的实例。它是一个标记接口，表示它是 <code>SecurityMetadataSource</code> 的子类。它只是表示SecurityMetadataSource了解FilterInvocation。为了简单起见，我们将继续将FilterInvocationSecurityMetadataSource 称为 SecurityMetadataSource，因为这种区别与大多数用户没什么关系。<br />
+由命名空间语法创建的SecurityMetadataSource 通过将请求 URL 与配置的 pattern 属性相匹配来获取特定 FilterInvocation 的配置属性。这与命名空间配置的行为方式相同。缺省情况是将所有表达式视为 Apache Ant 路径，并且对于更复杂的情况也支持正则表达式。request-matcher 属性用于指定正在使用的模式的类型。在同一定义中无法混合表达式语法。<br />
+始终按照定义的顺序评估模式。因此，在列表中定义的更具体的模式比不太具体的模式更高这一点很重要。</p>
+<ul>
+<li>
+<h3 id="exceptiontranslationfilter"><a class="markdownIt-Anchor" href="#exceptiontranslationfilter"></a> <code>ExceptionTranslationFilter</code></h3>
+<code>ExceptionTranslationFilter</code> 位于安全过滤器堆栈中的 <code>FilterSecurityInterceptor</code> 之上。它不执行任何实际的安全实施，但处理安全拦截器抛出的异常并提供合适的 HTTP 响应。</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean id=<span class="string">&quot;exceptionTranslationFilter&quot;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span></span>=<span class="string">&quot;org.springframework.security.web.access.ExceptionTranslationFilter&quot;</span>&gt;</span><br><span class="line">&lt;property name=<span class="string">&quot;authenticationEntryPoint&quot;</span> ref=<span class="string">&quot;authenticationEntryPoint&quot;</span>/&gt;</span><br><span class="line">&lt;property name=<span class="string">&quot;accessDeniedHandler&quot;</span> ref=<span class="string">&quot;accessDeniedHandler&quot;</span>/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br><span class="line"></span><br><span class="line">&lt;bean id=<span class="string">&quot;authenticationEntryPoint&quot;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span></span>=<span class="string">&quot;org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint&quot;</span>&gt;</span><br><span class="line">&lt;property name=<span class="string">&quot;loginFormUrl&quot;</span> value=<span class="string">&quot;/login.jsp&quot;</span>/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br><span class="line"></span><br><span class="line">&lt;bean id=<span class="string">&quot;accessDeniedHandler&quot;</span></span><br><span class="line">    <span class="class"><span class="keyword">class</span></span>=<span class="string">&quot;org.springframework.security.web.access.AccessDeniedHandlerImpl&quot;</span>&gt;</span><br><span class="line">&lt;property name=<span class="string">&quot;errorPage&quot;</span> value=<span class="string">&quot;/accessDenied.htm&quot;</span>/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>
+<h4 id="authenticationentrypoint"><a class="markdownIt-Anchor" href="#authenticationentrypoint"></a> <code>AuthenticationEntryPoint</code></h4>
+</li>
+</ul>
+<p>用户未进行身份验证时请求安全的 HTTP 资源时，会调用 <code>AuthenticationEntryPoint</code>。安全拦截器将在调用堆栈的下方抛出适当的 <code>AuthenticationException</code> 或 <code>AccessDeniedException</code>,触发入口点的 <code>commence</code> 方法。这样做的目的是向用户提供适当的响应，以便开始身份验证。我们在这里使用的是<code>LoginUrlAuthenticationEntryPoint</code>，它将请求重定向到不同的URL（通常是登录页面）。使用的实际实现将取决于您希望在应用程序中使用的身份验证机制。</p>
+<ul>
+<li>
+<h4 id="accessdeniedhandler"><a class="markdownIt-Anchor" href="#accessdeniedhandler"></a> <code>AccessDeniedHandler</code></h4>
+如果抛出<code>AccessDeniedException</code>并且用户已经过身份验证，则这意味着此操作没有足够权限。在这种情况下，<code>ExceptionTranslationFilter</code> 将调用第二个策略<code>AccessDeniedHandler</code>。默认情况下，使用 <code>AccessDeniedHandlerImpl</code>，它只向客户端发送403（Forbidden）响应。你也可以实现自己的处理。</li>
+<li>
+<h4 id="savedrequest和requestcache接口"><a class="markdownIt-Anchor" href="#savedrequest和requestcache接口"></a> <code>SavedRequest</code>和<code>RequestCache</code>接口</h4>
+</li>
+</ul>
+<p><code>ExceptionTranslationFilter</code> 职责的另一个职责是在调用 <code>AuthenticationEntryPoint</code> 之前保存当前请求。这允许在用户进行身份验证后恢复请求,一个典型的例子是用户使用表单登录，然后通过默认的 <code>SavedRequestAwareAuthenticationSuccessHandler</code> 重定向到原始URL。<br />
+<code>RequestCache</code> 封装了存储和检索 <code>HttpServletRequest</code> 实例所需的功能。默认使用 <code>HttpSessionRequestCache</code>，它将请求存储在 <code>HttpSession</code> 中。当用户被重定向到原始 URL 时，<code>RequestCacheFilter</code> 的作用是实际从缓存中恢复已保存的请求。</p>
+<ul>
+<li>
+<h3 id="securitycontextpersistencefilter"><a class="markdownIt-Anchor" href="#securitycontextpersistencefilter"></a> <code>SecurityContextPersistenceFilter</code></h3>
+<p>根据应用程序的类型，可能需要采用策略来在用户操作之间存储安全上下文。在典型的Web应用程序中，用户登录一次，然后由其 session Id 标识。服务器在会话期间缓存主体信息。在 Spring Security 中，在请求之间存储 <code>SecurityContext</code> 的责任属于<code>SecurityContextPersistenceFilter</code>，它默认将上下文存储为HTTP请求之间的 <code>HttpSession</code> 属性。它为每个请求恢复 <code>SecurityContextHolder</code> 的上下文，并且至关重要的是，在请求完成时清除 <code>SecurityContextHolder</code>。出于安全目的，您不应直接与<code>HttpSession</code> 交互，使用 SecurityContextHolder 即可。<br />
+许多其他类型的应用程序（例如，无状态 RESTful Web 服务）不使用 HTTP 会话，并将在每个请求上重新进行身份验证。但是，在链中包含 <code>SecurityContextPersistenceFilter</code> 以确保在每次请求后清除 <code>SecurityContextHolder</code> 仍然很重要。<br />
+如前所述，此过滤器有两个主要任务。它负责在 HTTP 请求之间存储 <code>SecurityContext</code> 内容，并在请求完成时清除 <code>SecurityContextHolder</code>。清除存储上下文的 <code>ThreadLocal</code> 是必不可少的，因为否则可能会将一个线程替换为 servlet 容器的线程池，与特定用户的安全上下文仍然附加。然后可以在稍后阶段使用该线程，使用错误的凭证执行操作。<br />
+从 Spring Security 3.0 开始，加载和存储安全上下文的工作现在被委托给一个单独的策略接口 <code>SecurityContextRepository</code>。</p>
+</li>
+<li>
+<h3 id="usernamepasswordauthenticationfilter"><a class="markdownIt-Anchor" href="#usernamepasswordauthenticationfilter"></a> <code>UsernamePasswordAuthenticationFilter</code></h3>
+<p>我们现在已经看到了 Spring Security Web 配置中始终存在的三个主要过滤器。现在唯一缺少的是实际的身份验证机制，允许用户进行身份验证。此过滤器是最常用的身份验证过滤器，也是最常定制的过滤器。配置它需要三个阶段。</p>
+<ul>
+<li>使用登录页面的URL来配 <code>LoginUrlAuthenticationEntryPoint</code>，就像我们上面所做的那样，并在 <code>ExceptionTranslationFilter</code> 上设置它。</li>
+<li>实现登录页面（使用 JSP 或 MVC 控制器）。</li>
+<li>在应用程序上下文中配置 <code>UsernamePasswordAuthenticationFilter</code> 的实例。</li>
+<li>将过滤器 bean 添加到过滤器链代理（确保您注意顺序）。</li>
+</ul>
+</li>
+</ul>
+<h4 id="认证成功与失败的应用流程"><a class="markdownIt-Anchor" href="#认证成功与失败的应用流程"></a> 认证成功与失败的应用流程</h4>
+<p>过滤器调用配置 <code>AuthenticationManager</code> 来处理每个身份验证请求。身份验证成功或身份验证失败后的目标分别由 <code>AuthenticationSuccessHandler</code> 和 <code>AuthenticationFailureHandler</code> 策略接口控制。分别的，过滤器具有这些属性以便您可以完全自定义行为。提供了一些标准实现，如 <code>SimpleUrlAuthenticationSuccessHandler</code>, <code>SavedRequestAwareAuthenticationSuccessHandler</code>, <code>SimpleUrlAuthenticationFailureHandler</code>, <code>ExceptionMappingAuthenticationFailureHandler</code> and <code>DelegatingAuthenticationFailureHandler</code>。查看这些类的 Javadoc 以及 <code>AbstractAuthenticationProcessingFilter</code>，以了解它们的工作原理和支持的功能。</p>
+<p>如果认证成功后，创建的 <code>Authentication</code> 对象将被放入 <code>SecurityContextHolder</code>中。然后将调用配置的 <code>AuthenticationSuccessHandler</code>，以将用户重定向或转发到适当的目标。默认情况下，使用 <code>SavedRequestAwareAuthenticationSuccessHandler</code>，这意味着在要求用户登录之前，用户将被重定向到他们请求的原始目标。</p>
+<p>如果身份验证失败，将调用配置的 <code>AuthenticationFailureHandler</code>。</p>
+<h2 id="请求匹配和-httpfirewall"><a class="markdownIt-Anchor" href="#请求匹配和-httpfirewall"></a> 请求匹配和 HttpFirewall</h2>
+<p>Servlet 规约为 HttpServletRequest 定义了一些属性，我们可能希望与之匹配来验证安全。这些是 <code>contextPath</code>,<code>servletPath</code>,<code>pathinfo</code>和<code>queryString</code>。Spring Security只对保护应用程序中的路径感兴趣，因此将忽略 contextPath。但是 serveltPath 和 pathInfo 没有明确规范路径如何定义，比如每段地址是否都可以包含参数。为了防止这些问题， <code>FilterChainProxy</code> 使用 <code>HttpFirewall</code> 策略去检查和包裹请求。默认情况下，未规范化的请求会自动被拒绝，删除路径参数和重复斜杠以进行匹配。因此，必须使用FilterChainProxy 来管理安全过滤器链。<br />
+如上所述，默认策略是使用 Ant-style 路径进行匹配，这可能是大多数用户的最佳选择。该策略在 <code>AntPathRequestMatcher</code> 类中实现，该类使用 Spring 的 AntPathMatcher 对servletPath 和 pathInfo 执行不区分大小写的模式匹配，忽略queryString。<br />
+如果你需要一个更加强大的模式匹配，你可以使用正则表达式。这种策略的实现是 <code>RegexRequestMatcher</code>。<br />
+<code>HttpFirewall</code>还通过拒绝 HTTP 响应标头中的换行字符来阻止 <a target="_blank" rel="noopener" href="https://www.owasp.org/index.php/HTTP_Response_Splitting">HTTP 响应拆分</a>。<br />
+默认情况下使用<code>StrictHttpFirewall</code>。此实现拒绝看似恶意的请求。你也可以自定义那些类型的请求应该被拒绝。比如，如果你希望利用 Spring MVC 的矩阵变量，你可以这样配置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> StrictHttpFirewall <span class="title">httpFirewall</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    StrictHttpFirewall firewall = <span class="keyword">new</span> StrictHttpFirewall();</span><br><span class="line">    firewall.setAllowSemicolon(<span class="keyword">true</span>);</span><br><span class="line">    <span class="keyword">return</span> firewall;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>StrictHttpFirewall 提供有效 HTTP 方法的白名单，允许防止跨站点跟踪（XST）和HTTP 动词篡改。默认有效的方法是&quot;DELETE&quot;, “GET”, “HEAD”, “OPTIONS”, “PATCH”, “POST”, and “PUT”。如果你希望修改有效的有效方法，可以这样配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> StrictHttpFirewall <span class="title">httpFirewall</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    StrictHttpFirewall firewall = <span class="keyword">new</span> StrictHttpFirewall();</span><br><span class="line">    firewall.setAllowedHttpMethods(Arrays.asList(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;POST&quot;</span>));</span><br><span class="line">    <span class="keyword">return</span> firewall;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果必须允许任何 HTTP 方法（不推荐），则可以使用StrictHttpFirewall.setUnsafeAllowAnyHttpMethod(true)。这将完全禁用 HTTP 方法的验证。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring-Security/" rel="tag"># Spring Security</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%B0%86%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84-DTO-%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F/" rel="prev" title="使用 JPA 和 Hibernate 将结果映射 DTO 的最好方式（翻译）">
+      <i class="fa fa-chevron-left"></i> 使用 JPA 和 Hibernate 将结果映射 DTO 的最好方式（翻译）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/%E9%9D%A2%E8%AF%95/" rel="next" title="面试整理">
+      面试整理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%87%E6%BB%A4%E5%99%A8%E9%93%BE"><span class="nav-number">1.</span> <span class="nav-text"> 过滤器链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#delegatingfilterproxy"><span class="nav-number">2.</span> <span class="nav-text"> DelegatingFilterProxy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#filterchainproxy"><span class="nav-number">3.</span> <span class="nav-text"> FilterChainProxy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E5%A4%84%E7%90%86%E9%85%8D%E7%BD%AE%E5%AE%9E%E4%BD%93"><span class="nav-number">4.</span> <span class="nav-text"> 后处理配置实体</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%87%E6%BB%A4%E5%99%A8%E9%A1%BA%E5%BA%8F"><span class="nav-number">5.</span> <span class="nav-text"> 过滤器顺序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="nav-number">6.</span> <span class="nav-text"> 核心过滤器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#filtersecurityinterceptor"><span class="nav-number">6.1.</span> <span class="nav-text"> FilterSecurityInterceptor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#exceptiontranslationfilter"><span class="nav-number">6.2.</span> <span class="nav-text"> ExceptionTranslationFilter</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#authenticationentrypoint"><span class="nav-number">6.2.1.</span> <span class="nav-text"> AuthenticationEntryPoint</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#accessdeniedhandler"><span class="nav-number">6.2.2.</span> <span class="nav-text"> AccessDeniedHandler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#savedrequest%E5%92%8Crequestcache%E6%8E%A5%E5%8F%A3"><span class="nav-number">6.2.3.</span> <span class="nav-text"> SavedRequest和RequestCache接口</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#securitycontextpersistencefilter"><span class="nav-number">6.3.</span> <span class="nav-text"> SecurityContextPersistenceFilter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#usernamepasswordauthenticationfilter"><span class="nav-number">6.4.</span> <span class="nav-text"> UsernamePasswordAuthenticationFilter</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81%E6%88%90%E5%8A%9F%E4%B8%8E%E5%A4%B1%E8%B4%A5%E7%9A%84%E5%BA%94%E7%94%A8%E6%B5%81%E7%A8%8B"><span class="nav-number">6.4.1.</span> <span class="nav-text"> 认证成功与失败的应用流程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E5%8C%B9%E9%85%8D%E5%92%8C-httpfirewall"><span class="nav-number">7.</span> <span class="nav-text"> 请求匹配和 HttpFirewall</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : 'f6a3a87450fae2560597d361c34ca677',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

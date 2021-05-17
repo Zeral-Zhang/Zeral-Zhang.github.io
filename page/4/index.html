@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Zeral, 全栈工程师一枚。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Zeral&#39;s Blog">
+<meta property="og:url" content="https://www.zeral.cn/page/4/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Zeral, 全栈工程师一枚。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="Zeral">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.zeral.cn/page/4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/%E9%9D%A2%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/%E9%9D%A2%E8%AF%95/" class="post-title-link" itemprop="url">面试整理</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-11-08 18:32:55" itemprop="dateCreated datePublished" datetime="2018-11-08T18:32:55+08:00">2018-11-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-10 14:13:30" itemprop="dateModified" datetime="2021-02-10T14:13:30+08:00">2021-02-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/%E9%9D%A2%E8%AF%95/" class="post-meta-item leancloud_visitors" data-flag-title="面试整理" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="java-面试问题整理"><a class="markdownIt-Anchor" href="#java-面试问题整理"></a> Java 面试问题整理</h2>
+<p>[TOC]</p>
+<h4 id="java-程序如何做到一次编写到处运行"><a class="markdownIt-Anchor" href="#java-程序如何做到一次编写到处运行"></a> Java 程序如何做到一次编写，到处运行</h4>
+<p>java 代码源文件经过 javac 编译期编译为 .class 文件，.class 文件不包含处理器本机代码，而是包含字节码 - JVM 的机器语言。启动器使用虚拟机运行程序。</p>
+<p><img src="../images/java/getStarted-compiler.gif" alt="Figure showing MyProgram.java, compiler, MyProgram.class, Java VM, and My Program running on a computer." /></p>
+<p>由于 JVM 可在许多不同的操作系统上使用，因此相同的 .class 文件可以在不同系统上运行。</p>
+<h4 id="jdk-和-jre-的区别"><a class="markdownIt-Anchor" href="#jdk-和-jre-的区别"></a> JDK 和 JRE 的区别</h4>
+<p>JRE(Java Runtime Environment)是 JVM 执行代码的基础。JDK 是 Java 程序开发所有特性的工具，包含JRE，编译，开发和调试工具。</p>
+<h4 id="什么是按值传递什么是引用传递java-中是值传递还是引用传递"><a class="markdownIt-Anchor" href="#什么是按值传递什么是引用传递java-中是值传递还是引用传递"></a> 什么是按值传递，什么是引用传递，Java 中是值传递还是引用传递</h4>
+<p>值传递：传递到方法中的形参值只是实参值的一个副本，对形参的修改不会影响之前的值；</p>
+<p>引用传递：形参只是实参的别名。它指向真正的实参，对形参所做的任意修改都反映在实参中。</p>
+<p>Java中都是值传递，基本类型值传递，对象类型是引用值传递，也就是说值的内容是对象的引用。</p>
+<p>详见：<a target="_blank" rel="noopener" href="https://www.zhihu.com/question/31203609">https://www.zhihu.com/question/31203609</a></p>
+<h4 id="通过-new-创建-string-对象和字面量形式创建有什么区别"><a class="markdownIt-Anchor" href="#通过-new-创建-string-对象和字面量形式创建有什么区别"></a> 通过 new 创建 String 对象和字面量形式创建有什么区别</h4>
+<p>当使用 new 创建 String 对象时它总是会在堆内存中创建一个新对象，使用字面量创建时则会优先返回字符串常量池已存在的对象引用，否则，会创建一个新对象，并放入字符串池以备后用。</p>
+<p>java7 之前字符串池存在在永久代，很难被回收，导致 OOM；之后移到了堆内存；</p>
+<p>除了字符串池，包装类使用包装类缓存来实现同样的效果，比如 Integer、Byte、Short、Long、Character 使用内部类维护对应的缓存。</p>
+<h4 id="如何跳出多重循环"><a class="markdownIt-Anchor" href="#如何跳出多重循环"></a> 如何跳出多重循环</h4>
+<p>通过对代码块加标签的形式为代码块命名，标签为任意有效的标识符后面加冒号，通过 <code>break 标签名;</code> 跳转到代码块所在结束范围。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">continueLabel</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    outer:</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">1</span>; j &lt; <span class="number">10</span>; j++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (j &gt; i) &#123;</span><br><span class="line">                System.out.println();</span><br><span class="line">                <span class="keyword">continue</span> outer;</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.print(<span class="string">&quot; &quot;</span> + (i * j));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>命名代码块同样适用于 <code>continue</code> 的跳转，同 goto 不同，标签块只能在自身代码块闭合范围内跳转。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">BreakLoop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    outer:</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++) &#123;</span><br><span class="line">        System.out.print(<span class="string">&quot;Pass &quot;</span> + i + <span class="string">&quot;: &quot;</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">100</span>; j++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (j == <span class="number">10</span>) &#123;</span><br><span class="line">                <span class="keyword">break</span> outer;</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.print(j + <span class="string">&quot; &quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(<span class="string">&quot;This will not print&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println(<span class="string">&quot;Loops complete.&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="jdk-和-jre-的区别-2"><a class="markdownIt-Anchor" href="#jdk-和-jre-的区别-2"></a> JDK 和 JRE 的区别</h4>
+<p>JRE(Java Runtime Environment)是 JVM 执行代码的基础。JDK 是 Java 程序开发所有特性的工具，包含 JRE，编译，执行 Java 应用。</p>
+<h4 id="静态方法能否重写静态方法能否访问非静态内容"><a class="markdownIt-Anchor" href="#静态方法能否重写静态方法能否访问非静态内容"></a> 静态方法能否重写，静态方法能否访问非静态内容</h4>
+<p>不能，虽然子类可以包含同名静态方法，但并不属于重写。重写相对于类实例而言，子类重写父类的方法实现不同的行为，方法重写是运行时多态的重要表现。1.8之前静态方法、变量存储在堆的永久代中，它们是class相关的数据，而不是实例，具体如何存储取决于JVM，不同JVM略有差异</p>
+<h4 id="hashcode-和-equals-方法主要是做什么"><a class="markdownIt-Anchor" href="#hashcode-和-equals-方法主要是做什么"></a> hashCode 和 equals 方法主要是做什么</h4>
+<p>equasl 去比较两个对象是否相等，重写后用来比较业务相等，重写 equals 必须重写 hashCode。</p>
+<p>hashCode 方法不是用于提供对象的唯一标识符，而是将对象的状态(即成员字段的值)摘要为一个整数。此值主要由某些基于哈希的数据结构(例如 Map 和集合)使用，以有效地存储和检索对象。</p>
+<p>hashCode 和 equals 的一些基本约定，比如：equals 相等，hashCode 一定要相等；重写了 hashCode 也要重写 equals；hashCode 需要保持一致性，状态改变返回的哈希值仍然要一致。equals 的对称、反射、传递等特性。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/%E9%9D%A2%E8%AF%95/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/" class="post-title-link" itemprop="url">Spring Security 过滤器</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-10-21 13:32:01" itemprop="dateCreated datePublished" datetime="2018-10-21T13:32:01+08:00">2018-10-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-03-13 20:58:16" itemprop="dateModified" datetime="2020-03-13T20:58:16+08:00">2020-03-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Spring Security 过滤器" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Spring Security 的 Web 基础结构完全基于标准的 servlet 过滤器。Spring Security 在内部维护一个过滤器链，其中每个过滤器都有特定的责任，过滤器的顺序很重要，因为它们之间存在依赖关系。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/spring/Spring-Security-%E8%BF%87%E6%BB%A4%E5%99%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%B0%86%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84-DTO-%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%B0%86%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84-DTO-%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F/" class="post-title-link" itemprop="url">使用 JPA 和 Hibernate 将结果映射 DTO 的最好方式（翻译）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-09-29 15:01:55" itemprop="dateCreated datePublished" datetime="2018-09-29T15:01:55+08:00">2018-09-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:30:43" itemprop="dateModified" datetime="2020-11-17T16:30:43+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/JPA/" itemprop="url" rel="index"><span itemprop="name">JPA</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%B0%86%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84-DTO-%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F/" class="post-meta-item leancloud_visitors" data-flag-title="使用 JPA 和 Hibernate 将结果映射 DTO 的最好方式（翻译）" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="实体模型"><a class="markdownIt-Anchor" href="#实体模型"></a> 实体模型</h2>
+<p>假设我们有以下 <code>Post</code> 实体：</p>
+<p><img src="../../images/jpa/postentityfordtoprojection.png" alt="Post Domain" /><br />
+如果你需要修改实体，则需要抓取整个实体；但是如果你只是对其中的几列感兴趣，则使用 DTO 会更有效。</p>
+<p>如果我们只是想选择 <code>Post</code> 的 <code>id</code> 和 <code>title</code>，如果抓取整个实体会比较浪费资源，接下来我们看下 JPA 和 Hibernate 怎么实现我们的目标。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%B0%86%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84-DTO-%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%A4%84%E7%90%86-OneToMany-%E6%98%A0%E5%B0%84%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F%EF%BC%88%E7%BF%BB%E8%AF%91%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%A4%84%E7%90%86-OneToMany-%E6%98%A0%E5%B0%84%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F%EF%BC%88%E7%BF%BB%E8%AF%91%EF%BC%89/" class="post-title-link" itemprop="url">使用 JPA 和 Hibernate 映射 @OneToMany 关系的最好方式</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-07-28 22:46:00" itemprop="dateCreated datePublished" datetime="2018-07-28T22:46:00+08:00">2018-07-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-17 16:30:27" itemprop="dateModified" datetime="2020-11-17T16:30:27+08:00">2020-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/JPA/" itemprop="url" rel="index"><span itemprop="name">JPA</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%A4%84%E7%90%86-OneToMany-%E6%98%A0%E5%B0%84%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F%EF%BC%88%E7%BF%BB%E8%AF%91%EF%BC%89/" class="post-meta-item leancloud_visitors" data-flag-title="使用 JPA 和 Hibernate 映射 @OneToMany 关系的最好方式" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="引言"><a class="markdownIt-Anchor" href="#引言"></a> 引言</h2>
+<p>在关系数据库系统中，通过外键列来链接两个表之间的一对多关联，以便子表记录引用父表的主键。</p>
+<p><img src="../../images/jpa/many-to-one.png" alt="Many To One" /></p>
+<p>尽管在关系型数据库管理系统（RDBMS）中可能很简单，但在涉及 JPA 时，一对多数据库关联可以通过 <code>@ManyToOne</code> 或 <code>@OneToMany</code> 关联来表示，因为面向对象编程（OOP）的关联可以是单向的，也可以是双向的。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/persistence/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%A4%84%E7%90%86-OneToMany-%E6%98%A0%E5%B0%84%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F%EF%BC%88%E7%BF%BB%E8%AF%91%EF%BC%89/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/JavaScript-%E4%BD%8D%E8%BF%90%E7%AE%97%E7%AC%A6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/JavaScript-%E4%BD%8D%E8%BF%90%E7%AE%97%E7%AC%A6/" class="post-title-link" itemprop="url">JavaScript 运算符</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-05-30 09:54:00" itemprop="dateCreated datePublished" datetime="2018-05-30T09:54:00+08:00">2018-05-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-05-22 15:40:25" itemprop="dateModified" datetime="2019-05-22T15:40:25+08:00">2019-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/javascript/" itemprop="url" rel="index"><span itemprop="name">javascript</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/JavaScript-%E4%BD%8D%E8%BF%90%E7%AE%97%E7%AC%A6/" class="post-meta-item leancloud_visitors" data-flag-title="JavaScript 运算符" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在 JavaScript 中会出现很多运算符，对于有些运算符不明白看别人代码就有些懵，学习并整理一下它们的功能及用法。</p>
+<p>主要包括：双叹号<code>!!</code>，短路或<code>||</code>，短路与<code>&amp;&amp;</code>，按位非<code>~</code>，按位与<code>&amp;</code>，双波浪号<code>~~</code>，可选链式操作符(Optional Chaining Operator) <code>?.</code></p>
+<p>这些运算符也不并不是 JavaScript 特有的，在其他语言中也具有普遍性，但是也有差异。</p>
+<p>可能还会有一些运算符比如：可选参数<code>?:</code>，非空断言<code>!.</code>, 这些包含在 TypeScript 中的运算符在此不再解释。</p>
+<hr />
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/JavaScript-%E4%BD%8D%E8%BF%90%E7%AE%97%E7%AC%A6/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/Redux-bindActionCreators-%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/Redux-bindActionCreators-%E4%BD%BF%E7%94%A8/" class="post-title-link" itemprop="url">Redux bindActionCreators 使用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-05-18 14:49:31" itemprop="dateCreated datePublished" datetime="2018-05-18T14:49:31+08:00">2018-05-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-04-10 10:24:45" itemprop="dateModified" datetime="2019-04-10T10:24:45+08:00">2019-04-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/React/" itemprop="url" rel="index"><span itemprop="name">React</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/Redux-bindActionCreators-%E4%BD%BF%E7%94%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Redux bindActionCreators 使用" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>总结下 <code>bindActionCreators(actionCreators, dispatch)</code> 的用法：</p>
+<hr />
+<h2 id="actioncreator"><a class="markdownIt-Anchor" href="#actioncreator"></a> ActionCreator</h2>
+<ul>
+<li>
+<h3 id="为什么需要-actioncreator"><a class="markdownIt-Anchor" href="#为什么需要-actioncreator"></a> 为什么需要 <code>actionCreator</code>:</h3>
+</li>
+</ul>
+<p>如果我们的 action 直接可以拿到的，当然就不需要 actionCreator，我们可以直接 <code>store.dispatch(&#123;'INCREMENT'&#125;)</code></p>
+<p>但是如果我们的 action 信息是异步获取的，或者其它方法获取的话，就需要 actionCreator，感觉是废话。</p>
+<ul>
+<li>
+<h3 id="actioncreator-是什么"><a class="markdownIt-Anchor" href="#actioncreator-是什么"></a> <code>actionCreator</code> 是什么</h3>
+</li>
+</ul>
+<p>我们直接复制文档中的概念：</p>
+<blockquote>
+<p>一个 <strong>action creator</strong> 就是一个创建 action 的函数。action 是信息的载体，action creator 是用来创建 action 的工厂。</p>
+</blockquote>
+<p>&gt; 调用 action creator 只会产生一个 action，但是不会分发（dispatch）它。需要调用 store 的  <code>dispatch</code> 方法去完成分发。平时我们所说的 <strong>bound action creator</strong>(绑定行为创建器) 其实是说 <strong>调用 action   creator 并立即将结果分发给特定的 store 实例</strong> 的方法。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/Redux-bindActionCreators-%E4%BD%BF%E7%94%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/nginx-root-%E5%92%8C-alias/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/nginx-root-%E5%92%8C-alias/" class="post-title-link" itemprop="url">NGINX root 和 alias</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-05-03 15:30:00" itemprop="dateCreated datePublished" datetime="2018-05-03T15:30:00+08:00">2018-05-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-04-10 10:24:45" itemprop="dateModified" datetime="2019-04-10T10:24:45+08:00">2019-04-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/nginx-root-%E5%92%8C-alias/" class="post-meta-item leancloud_visitors" data-flag-title="NGINX root 和 alias" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在配置 NGINX 文件映射时发现 root 并没有按照期待映射，找解决方法，建议换作 alias 映射目录，不解，查下文档，理解区别。</p>
+<h2 id="root"><a class="markdownIt-Anchor" href="#root"></a> root</h2>
+<p>root 指令用于指定搜索文件的根目录。NGINX 将请求 URI 附加到 <code>root</code> 指定的路径。该指令可以放置在 <code>http</code>，<code>server</code> 或 <code>location</code> 上下文中的任何级别上。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/nginx-root-%E5%92%8C-alias/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/" class="post-title-link" itemprop="url">Spring MVC 架构初谈</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-04-20 00:18:00" itemprop="dateCreated datePublished" datetime="2018-04-20T00:18:00+08:00">2018-04-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-19 13:52:06" itemprop="dateModified" datetime="2021-04-19T13:52:06+08:00">2021-04-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/" class="post-meta-item leancloud_visitors" data-flag-title="Spring MVC 架构初谈" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在学习 Spring MVC 之前，我们先快速回顾下 Spring，Spring 是 Java 企业软件开发的长期实际标准。它向我们中的许多人介绍了很多概念，例如依赖项注入，面向切面的编程（AOP）以及使用普通的 Java 对象（POJO）进行编程。</p>
+<p>Spring 框架是由 Rod Johnson为《Expert One-on-One J2EE Design and Development》一书编写的代码演变而来。编写这本书是为了解释 JEE 中的一些复杂性以及如何克服它们。尽管在新的 JEE 规范中（特别是从 JEE 6 开始）已经解决了 JEE 的许多复杂性和问题，但 Spring 框架仍然非常流行。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/logstash-%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/middleware/logstash-%E5%AD%A6%E4%B9%A0/" class="post-title-link" itemprop="url">logstash 学习</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-04-11 18:12:00" itemprop="dateCreated datePublished" datetime="2018-04-11T18:12:00+08:00">2018-04-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-19 10:01:43" itemprop="dateModified" datetime="2021-02-19T10:01:43+08:00">2021-02-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/middleware/logstash-%E5%AD%A6%E4%B9%A0/" class="post-meta-item leancloud_visitors" data-flag-title="logstash 学习" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <hr />
+<blockquote>
+<p>logstash 版本（6.2）</p>
+</blockquote>
+<hr />
+<h2 id="配置中的-codec-到底是什么"><a class="markdownIt-Anchor" href="#配置中的-codec-到底是什么"></a> 配置中的 <code>codec</code> 到底是什么</h2>
+<p><code>codec</code> 属性用来配置编解码插件，它负责对输入输出的内容表现形式进行处理，插件本质上是个流式过滤器。<br />
+以下是常用的插件:</p>
+<ul>
+<li><code>json</code></li>
+</ul>
+<blockquote>
+<p>读取JSON格式的内容，在JSON数组中为每个元素创建一个事件</p>
+</blockquote>
+<ul>
+<li><code>line</code></li>
+</ul>
+<blockquote>
+<p>从行读取文本数据</p>
+</blockquote>
+<ul>
+<li><code>plain</code></li>
+</ul>
+<blockquote>
+<p>读取原始内容，不会进行转化</p>
+</blockquote>
+<ul>
+<li><code>rubydebug</code></li>
+</ul>
+<blockquote>
+<p>将输出打印到 logstash 的事件中</p>
+</blockquote>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/middleware/logstash-%E5%AD%A6%E4%B9%A0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java8-%E4%BF%AE%E5%A4%8D%E4%BB%A3%E7%A0%81%E7%83%82%E5%91%B3%E9%81%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/java/Java8-%E4%BF%AE%E5%A4%8D%E4%BB%A3%E7%A0%81%E7%83%82%E5%91%B3%E9%81%93/" class="post-title-link" itemprop="url">使用 Java8 修复代码烂味道</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-12-30 22:01:00" itemprop="dateCreated datePublished" datetime="2017-12-30T22:01:00+08:00">2017-12-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-07-05 21:38:48" itemprop="dateModified" datetime="2020-07-05T21:38:48+08:00">2020-07-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/Java8-%E4%BF%AE%E5%A4%8D%E4%BB%A3%E7%A0%81%E7%83%82%E5%91%B3%E9%81%93/" class="post-meta-item leancloud_visitors" data-flag-title="使用 Java8 修复代码烂味道" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在学习 Java8 时发现一些写法真的很优秀，用了就有种回不去的感觉，很好的处理了 Java 代码上的烂味道。</p>
+<h4 id="匿名内部类"><a class="markdownIt-Anchor" href="#匿名内部类"></a> 匿名内部类</h4>
+<p>在任何使用内部类的地方都使用 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">lamdba表达式</a> 进行重构，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">list.sort(<span class="keyword">new</span> Comparator&lt;String&gt;() &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span> <span class="params">(String o1, String o2)</span> </span>&#123;</span><br><span class="line">	    <span class="keyword">return</span> o1.length() - o2.length();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>可以更简洁的写成：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">list.sort((o1,o2) -&gt; o1.length() - o2.length());</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/Java8-%E4%BF%AE%E5%A4%8D%E4%BB%A3%E7%A0%81%E7%83%82%E5%91%B3%E9%81%93/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
