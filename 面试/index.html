@@ -33,7 +33,7 @@
 <meta property="og:image" content="https://www.zeral.cn/images/message/kafka/data-copying.gif">
 <meta property="og:image" content="https://www.zeral.cn/images/message/kafka/zero-copying.gif">
 <meta property="article:published_time" content="2018-11-08T10:32:55.000Z">
-<meta property="article:modified_time" content="2021-02-10T06:13:30.413Z">
+<meta property="article:modified_time" content="2021-06-04T13:16:38.120Z">
 <meta property="article:author" content="Zeral">
 <meta property="article:tag" content="Hibernate">
 <meta property="article:tag" content="Java8">
@@ -236,7 +236,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-10 14:13:30" itemprop="dateModified" datetime="2021-02-10T14:13:30+08:00">2021-02-10</time>
+                <time title="修改时间：2021-06-04 21:16:38" itemprop="dateModified" datetime="2021-06-04T21:16:38+08:00">2021-06-04</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -296,7 +296,7 @@
 <p>equasl 去比较两个对象是否相等，重写后用来比较业务相等，重写 equals 必须重写 hashCode。</p>
 <p>hashCode 方法不是用于提供对象的唯一标识符，而是将对象的状态(即成员字段的值)摘要为一个整数。此值主要由某些基于哈希的数据结构(例如 Map 和集合)使用，以有效地存储和检索对象。</p>
 <p>hashCode 和 equals 的一些基本约定，比如：equals 相等，hashCode 一定要相等；重写了 hashCode 也要重写 equals；hashCode 需要保持一致性，状态改变返回的哈希值仍然要一致。equals 的对称、反射、传递等特性。</p>
-<a id="more"></a>
+<span id="more"></span>
 <h4 id="arraylist-和-linkedlist-区别"><a class="markdownIt-Anchor" href="#arraylist-和-linkedlist-区别"></a> ArrayList 和 LinkedList 区别</h4>
 <p>ArrayList 和 LinkedList 都实现了 List 接口，顺序为添加时的顺序，可以包含重复元素。</p>
 <p><code>LinkedList</code> :</p>
@@ -346,15 +346,15 @@
 <h4 id="java8-添加了哪些新特性"><a class="markdownIt-Anchor" href="#java8-添加了哪些新特性"></a> Java8 添加了哪些新特性</h4>
 <p>Java8 添加了很多新特性。但最主要的是下面的内容：</p>
 <ul>
-<li>** Lambda 表达式 ** - 一种新的语言特性，允许将操作视为对象</li>
-<li>** 方法引用 ** - 允许直接使用方法的名称引用去定义 Lambda</li>
-<li>** Optional ** - 用于表达可能存在的特殊包装类</li>
-<li>** 函数接口 ** - 具有最多一个抽象方法的接口，可以使用 Lambda 表达式提供实现</li>
-<li>** 默认方法 ** - 除了使用抽象方法，让我们能够在接口中添加完整的实现</li>
-<li>** Nashorn，JavaScript 引擎 ** - 一种基于 Java 的引擎，用于执行和评估 JavaScript 代码</li>
-<li>** 流（Stream）接口 ** - 一个特殊的迭代器类，允许以函数方式处理对象集合</li>
-<li>** CompletableFuture ** - 为复杂的异步编码提供了可行性</li>
-<li>** Date 接口 ** - 一个改进的，不可改变的 JodaTime 灵感的 Date API<br />
+<li><strong>Lambda 表达式</strong> - 一种新的语言特性，允许将操作视为对象</li>
+<li><strong>方法引用</strong> - 允许直接使用方法的名称引用去定义 Lambda</li>
+<li><strong>Optional</strong> - 用于表达可能存在的特殊包装类</li>
+<li><strong>函数接口</strong> - 具有最多一个抽象方法的接口，可以使用 Lambda 表达式提供实现</li>
+<li><strong>默认方法</strong> - 除了使用抽象方法，让我们能够在接口中添加完整的实现</li>
+<li><strong>Nashorn，JavaScript 引擎</strong> - 一种基于 Java 的引擎，用于执行和评估 JavaScript 代码</li>
+<li><strong>流（Stream）接口</strong> - 一个特殊的迭代器类，允许以函数方式处理对象集合</li>
+<li><strong>CompletableFuture</strong> - 为复杂的异步编码提供了可行性</li>
+<li><strong>Date 接口</strong> - 一个改进的，不可改变的 JodaTime 灵感的 Date API<br />
 除了这些新功能外，还有很多在编译器和 JVM 级别下的功能增强。</li>
 </ul>
 <h4 id="什么是方法引用"><a class="markdownIt-Anchor" href="#什么是方法引用"></a> 什么是方法引用</h4>
@@ -381,13 +381,13 @@ Optional 是一种返回类型的方法，以前会返回 null。这样的方法
 <h4 id="描述标准库中的一些函数接口"><a class="markdownIt-Anchor" href="#描述标准库中的一些函数接口"></a> 描述标准库中的一些函数接口</h4>
 <p>java.util.function 包中有很多功能接口，更常见的包括但不限于：</p>
 <ul>
-<li>Function - 它接受一个参数并返回结果 T -&gt; R</li>
-<li>Consumer - 它需要一个参数并且不返回接口（表示副作用）T -&gt; void</li>
-<li>Supplier - 它不需要参数并返回结果 () -&gt; R</li>
-<li>Predicate - 它需要一个参数并返回一个布尔值 T -&gt; boolean</li>
-<li>BiFunction - 它需要两个参数并返回一个结果 (T, U) -&gt; R</li>
-<li>BinaryOperator - 它类似于 BiFunction，接受两个参数并返回结果。两个参数和结果都是相同的类型 (T, T) -&gt; T</li>
-<li>UnaryOperator - 它类似于 Function，只接受一个参数并返回相同类型的结果 T -&gt; T</li>
+<li><strong>Function</strong> - 它接受一个参数并返回结果 T -&gt; R</li>
+<li><strong>Consumer</strong> - 它需要一个参数并且不返回接口（表示副作用）T -&gt; void</li>
+<li><strong>Supplier</strong> - 它不需要参数并返回结果 () -&gt; R</li>
+<li><strong>Predicate</strong> - 它需要一个参数并返回一个布尔值 T -&gt; boolean</li>
+<li><strong>BiFunction</strong> - 它需要两个参数并返回一个结果 (T, U) -&gt; R</li>
+<li><strong>BinaryOperator</strong> - 它类似于 BiFunction，接受两个参数并返回结果。两个参数和结果都是相同的类型 (T, T) -&gt; T</li>
+<li><strong>UnaryOperator</strong> - 它类似于 Function，只接受一个参数并返回相同类型的结果 T -&gt; T</li>
 </ul>
 <h4 id="函数接口的作用"><a class="markdownIt-Anchor" href="#函数接口的作用"></a> 函数接口的作用</h4>
 <p>函数接口为可以为 <strong>lambda 表达式</strong>和<strong>方法引用</strong>提供目标类型。</p>
@@ -406,25 +406,53 @@ Lambda 表达式引入了 Java 中的函数式处理，并有助于编写紧凑�
 <h4 id="spring-ioc-容器"><a class="markdownIt-Anchor" href="#spring-ioc-容器"></a> Spring IOC 容器</h4>
 <p>ApplicationContext 是 Spring IOC 的核心容器，它是 BeanFactory 的超集。BeanFactory 是 Spring 的核心接口，其实现类必须支持 Bean 的生命周期接口，初始化的顺序如下：</p>
 <ul>
-<li>BeanNameAware’s {@code setBeanName}</li>
-<li>BeanClassLoaderAware’s {@code setBeanClassLoader}</li>
-<li>BeanFactoryAware’s {@code setBeanFactory}</li>
-<li>EnvironmentAware’s {@code setEnvironment}</li>
-<li>EmbeddedValueResolverAware’s {@code setEmbeddedValueResolver}</li>
-<li>ResourceLoaderAware’s {@code setResourceLoader}</li>
-<li>(ApplicationConetxt特有方法：)</li>
-<li>ApplicationEventPublisherAware’s {@code setApplicationEventPublisher}</li>
-<li>(ApplicationConetxt特有方法：)</li>
-<li>MessageSourceAware’s {@code setMessageSource}</li>
-<li>(ApplicationConetxt特有方法：)</li>
-<li>ApplicationContextAware’s {@code setApplicationContext}</li>
-<li>(ApplicationConetxt特有方法：)</li>
-<li>ServletContextAware’s {@code setServletContext}</li>
-<li>(ApplicationConetxt特有方法：)</li>
-<li>{@code postProcessBeforeInitialization} methods of BeanPostProcessors</li>
-<li>InitializingBean’s {@code afterPropertiesSet}</li>
-<li>a custom init-method definition 自定义的 init 方法</li>
-<li>{@code postProcessAfterInitialization} methods of BeanPostProcessors</li>
+<li>
+<p>BeanNameAware’s {@code setBeanName}</p>
+</li>
+<li>
+<p>BeanClassLoaderAware’s {@code setBeanClassLoader}</p>
+</li>
+<li>
+<p>BeanFactoryAware’s {@code setBeanFactory}</p>
+</li>
+<li>
+<p>EnvironmentAware’s {@code setEnvironment}</p>
+</li>
+<li>
+<p>EmbeddedValueResolverAware’s {@code setEmbeddedValueResolver}</p>
+</li>
+<li>
+<p>ResourceLoaderAware’s {@code setResourceLoader}</p>
+</li>
+<li>
+<p>(ApplicationConetxt特有方法：)</p>
+<p>ApplicationEventPublisherAware’s {@code setApplicationEventPublisher}</p>
+</li>
+<li>
+<p>(ApplicationConetxt特有方法：)</p>
+<p>MessageSourceAware’s {@code setMessageSource}</p>
+</li>
+<li>
+<p>(ApplicationConetxt特有方法：)</p>
+<p>ApplicationContextAware’s {@code setApplicationContext}</p>
+</li>
+<li>
+<p>(ApplicationConetxt特有方法：)</p>
+<p>ServletContextAware’s {@code setServletContext}</p>
+</li>
+<li>
+<p>(ApplicationConetxt特有方法：)</p>
+<p>{@code postProcessBeforeInitialization} methods of BeanPostProcessors</p>
+</li>
+<li>
+<p>InitializingBean’s {@code afterPropertiesSet}</p>
+</li>
+<li>
+<p>a custom init-method definition 自定义的 init 方法</p>
+</li>
+<li>
+<p>{@code postProcessAfterInitialization} methods of BeanPostProcessors</p>
+</li>
 </ul>
 <p>关闭bean工厂时，以下生命周期方法适用：<br />
  * {@ code postProcessBeforeDestruction} DestructionAwareBeanPostProcessors 的方法<br />
@@ -540,16 +568,16 @@ Lambda 表达式引入了 Java 中的函数式处理，并有助于编写紧凑�
 <p><code>@Bean</code> 注解大多用在 <code>@Configuration</code> 配置类中；<br />
 使用注解时，我们可以显式的去返回对象的实例来进行配置，实例时也可以传入其他实例方法来依赖Bean，比如：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line">  <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AppConfig</span> </span>&#123;</span><br><span class="line">      <span class="meta">@Bean</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> Foo <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">new</span> Foo(bar());</span><br><span class="line">      &#125;</span><br><span class="line">  </span><br><span class="line">      <span class="meta">@Bean</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> Bar <span class="title">bar</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">new</span> Bar();</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>** 在 bean 直接调用同一个类中的其他 @Bean 方法时，不得将@Configuration 类及其工厂方法标记为 final 或 private，因为它需要在运行时对每个这样的配置类进行 CGLIB 子类化。<br />
-在 @Component 组件或者普通对象中直接调用其它 @Bean 方法也不可行，因为这是标准的Java方法调用，Spring不会通过 CGLIB 代理拦截调用。**</p>
+<p><strong>在 bean 直接调用同一个类中的其他 @Bean 方法时，不得将@Configuration 类及其工厂方法标记为 final 或 private，因为它需要在运行时对每个这样的配置类进行 CGLIB 子类化。<br />
+在 @Component 组件或者普通对象中直接调用其它 @Bean 方法也不可行，因为这是标准的Java方法调用，Spring不会通过 CGLIB 代理拦截调用。</strong></p>
 <p>也可以加入其它注解来共同配置 Bean，比如：</p>
 <ul>
-<li>@Profile – 允许选择性地根据配置包含某些bean</li>
-<li>@Scope – 更改 bean 的范围</li>
-<li>@Lazy – 仅在默认单例范围的情况下起作用</li>
-<li>@DependsOn – 在创建此 bean 之前强制创建特定的其他bean。</li>
-<li>@Primary – 是一种解决注入点级别歧义的机制，如果需要按类型匹配来注入Bean，但是符合类型的有多个。</li>
-<li>@Order – 设置优先级</li>
+<li><strong>@Profile</strong> – 允许选择性地根据配置包含某些bean</li>
+<li><strong>@Scope</strong> – 更改 bean 的范围</li>
+<li><strong>@Lazy</strong> – 仅在默认单例范围的情况下起作用</li>
+<li><strong>@DependsOn</strong> – 在创建此 bean 之前强制创建特定的其他bean。</li>
+<li><strong>@Primary</strong> – 是一种解决注入点级别歧义的机制，如果需要按类型匹配来注入Bean，但是符合类型的有多个。</li>
+<li><strong>@Order</strong> – 设置优先级</li>
 </ul>
 <h4 id="已经有了-ref-引用依赖为什么需要-depend-on"><a class="markdownIt-Anchor" href="#已经有了-ref-引用依赖为什么需要-depend-on"></a> 已经有了 ref 引用依赖，为什么需要 Depend-on</h4>
 <ul>
@@ -569,7 +597,7 @@ Setter 注入应主要仅用于可在类中指定合理默认值的可选依赖�
 <h4 id="spring-aop-的编织是在什么时候"><a class="markdownIt-Anchor" href="#spring-aop-的编织是在什么时候"></a> Spring AOP 的编织是在什么时候</h4>
 <p>运行时，也就是说都是动态代理。 AspectJ 是在编译时。</p>
 <h3 id="如何扩展-spring-容器"><a class="markdownIt-Anchor" href="#如何扩展-spring-容器"></a> 如何扩展 Spring 容器</h3>
-<p>通常，我们不需要子类化 <code>ApplicationContext</code> 实现类。相反，可以通过插入特殊集成接口的实现来扩展 Spring IoC 容器。</p>
+<p>通常，我们不需要子类化 <code>ApplicationContext</code> 实现类。相反，可以通过插入特殊集成接口的实现来扩展 Spring IOC 容器。</p>
 <ul>
 <li>
 <p>使用 <code>BeanPostProcessor</code> 来自定义 Beans</p>
@@ -583,7 +611,7 @@ Setter 注入应主要仅用于可在类中指定合理默认值的可选依赖�
 </li>
 <li>
 <p>使用 <code>BeanFactoryPostProcessor</code> 来自定义配置元数据</p>
-<p>BeanFactoryPostProcessor 对 bean 的配置元数据进行操作。也就是说，Spring IoC 容器允许 BeanFactoryPostProcessor 读取配置元数据，并允许在容器实例化除 BeanFactoryPostProcessor 实例之外的任何 bean 之前更改元数据。</p>
+<p>BeanFactoryPostProcessor 对 bean 的配置元数据进行操作。也就是说，Spring IOC 容器允许 BeanFactoryPostProcessor 读取配置元数据，并允许在容器实例化除 BeanFactoryPostProcessor 实例之外的任何 bean 之前更改元数据。</p>
 <p>比如：<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/config/PropertyPlaceholderConfigurer.html"><code>PropertyPlaceholderConfigurer</code></a> 该配置器可以读取配置文件中的占位符，并从外部文件或环境变量等拿到相应的值替换占位符：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">&quot;org.springframework.beans.factory.config.PropertyPlaceholderConfigurer&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;locations&quot;</span> <span class="attr">value</span>=<span class="string">&quot;classpath:com/something/jdbc.properties&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;dataSource&quot;</span> <span class="attr">destroy-method</span>=<span class="string">&quot;close&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">class</span>=<span class="string">&quot;org.apache.commons.dbcp.BasicDataSource&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;driverClassName&quot;</span> <span class="attr">value</span>=<span class="string">&quot;$&#123;jdbc.driverClassName&#125;&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;url&quot;</span> <span class="attr">value</span>=<span class="string">&quot;$&#123;jdbc.url&#125;&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;username&quot;</span> <span class="attr">value</span>=<span class="string">&quot;$&#123;jdbc.username&#125;&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;password&quot;</span> <span class="attr">value</span>=<span class="string">&quot;$&#123;jdbc.password&#125;&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <p>然后我们可以在指定的外部文件中定义相应的属性：</p>
@@ -592,7 +620,7 @@ Setter 注入应主要仅用于可在类中指定合理默认值的可选依赖�
 </li>
 <li>
 <p>使用 <code>FactoryBean</code> 自定义实例化逻辑</p>
-<p>FactoryBean 接口是 Spring IoC 容器实例化逻辑的可插拔点。如果你有一个复杂的初始化代码，用 Java 表示比较好，而不是（可能）冗长的XML，你可以创建自己的 FactoryBean，在该类中编写复杂的初始化，然后将自定义 FactoryBean 插入容器。</p>
+<p>FactoryBean 接口是 Spring IOC 容器实例化逻辑的可插拔点。如果你有一个复杂的初始化代码，用 Java 表示比较好，而不是（可能）冗长的 XML，你可以创建自己的 FactoryBean，在该类中编写复杂的初始化，然后将自定义 FactoryBean 插入容器。</p>
 </li>
 </ul>
 <h3 id="注解是否比-xml-配置-spring-更好"><a class="markdownIt-Anchor" href="#注解是否比-xml-配置-spring-更好"></a> 注解是否比 XML 配置 Spring 更好？</h3>
@@ -835,20 +863,20 @@ Setter 注入应主要仅用于可在类中指定合理默认值的可选依赖�
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-count">90</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

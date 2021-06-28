@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Java Instrumentation API，提供允许 Java 编程语言代理人（agent）检测（instrument）在 JVM 上运行的程序的服务。 检测（Instrumennt）设计的目的是将字节码添加到方法中，收集工具使用的数据。出于这个目的，因为更改纯粹是附加的，因此这些工具不会修改应用程序状态或行为。此类良性工具的示例包括监控代理、分析器、覆盖分析器和事件记录器。 由于这种检测机">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java Agent">
+<meta property="og:url" content="https://www.zeral.cn/java/Java-Agent/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Java Instrumentation API，提供允许 Java 编程语言代理人（agent）检测（instrument）在 JVM 上运行的程序的服务。 检测（Instrumennt）设计的目的是将字节码添加到方法中，收集工具使用的数据。出于这个目的，因为更改纯粹是附加的，因此这些工具不会修改应用程序状态或行为。此类良性工具的示例包括监控代理、分析器、覆盖分析器和事件记录器。 由于这种检测机">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-05T08:03:00.000Z">
+<meta property="article:modified_time" content="2021-06-28T01:50:56.525Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Instrumentation">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.zeral.cn/java/Java-Agent/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java Agent | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java-Agent/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java Agent
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-06-05 16:03:00" itemprop="dateCreated datePublished" datetime="2021-06-05T16:03:00+08:00">2021-06-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-28 09:50:56" itemprop="dateModified" datetime="2021-06-28T09:50:56+08:00">2021-06-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/Java-Agent/" class="post-meta-item leancloud_visitors" data-flag-title="Java Agent" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html">Java Instrumentation API</a>，提供允许 Java 编程语言代理人（agent）检测（instrument）在 JVM 上运行的程序的服务。</p>
+<p>检测（Instrumennt）设计的目的是将字节码添加到方法中，收集工具使用的数据。出于这个目的，因为更改纯粹是附加的，因此这些工具不会修改应用程序状态或行为。此类良性工具的示例包括监控代理、分析器、覆盖分析器和事件记录器。</p>
+<p>由于这种检测机制提供了修改现有已编译 Java 类的字节码或添加字节码的能力，所以我们也可以动态修改运行的程序代码。</p>
+<span id="more"></span>
+<blockquote>
+<p>注意：开发人员/管理员负责验证他们部署的 Java 代理的内容和结构的可信度，因为它们能够任意转换来自其他 JAR 文件的字节码。由于这是在包含字节码的 Jars 被验证为可信之后发生的，因此 Java 代理的可信度将确定整个程序的可信度。</p>
+</blockquote>
+<p>agent 代理，以下文章中的所述代理都是指 agent。</p>
+<h1 id="启动-java-agent"><a class="markdownIt-Anchor" href="#启动-java-agent"></a> 启动 Java Agent</h1>
+<p>代理人（agent）通常部署为 JAR 文件。 JAR 文件清单（MANIFEST.MF）中的属性指定将加载以启动代理的代理类。可以通过多种方式启动代理：</p>
+<ul>
+<li>对于支持命令行接口的实现，可以通过在命令行上指定一个选项来启动代理。</li>
+<li>也支持在 VM 启动一段时间后启动代理的机制的实现。例如，实现可以提供一种机制，允许工具附加到正在运行的应用程序，并初始化加载工具代理到正在运行的应用程序中。</li>
+<li>代理也可以与应用程序一起打包在一个可执行的 JAR 文件中。</li>
+</ul>
+<p>下面描述了 <strong>Java 11</strong> 中这些启动代理的方式：</p>
+<h2 id="通过命令行接口启动代理"><a class="markdownIt-Anchor" href="#通过命令行接口启动代理"></a> 通过命令行接口启动代理</h2>
+<p>如果实现提供了从命令行接口启动代理的方法，则可以通过向命令行添加以下选项来启动代理，这种实现一般称为<strong>静态加载</strong>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-javaagent:&lt;jarpath&gt;[=&lt;options&gt;]</span><br></pre></td></tr></table></figure>
+<p>其中 <jarpath> 是代理 JAR 文件的路径，<options> 是代理选项。</p>
+<p>代理 JAR 文件的清单必须在其主清单中包含属性 <code>Premain-Class</code>。该属性的值是代理类的名称。代理类必须实现一个与主应用程序入口点原则相似的 <code>public static premain</code> 方法。在 Java 虚拟机 (JVM) 初始化之后，将调用 <code>premain</code> 方法，然后才是真正的应用程序 <code>main</code> 方法。 <code>premain</code> 方法必须返回才能继续启动。</p>
+<p><code>premain</code> 方法具有两个可能的签名之一。 JVM 首先尝试在代理类上调用以下方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">premain</span><span class="params">(String agentArgs, Instrumentation inst)</span></span></span><br></pre></td></tr></table></figure>
+<p>如果代理类未实现此方法，则 JVM 将尝试调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">premain</span><span class="params">(String agentArgs)</span></span></span><br></pre></td></tr></table></figure>
+<p>代理类可能还有一个 <code>agentmain</code> 方法，用于在 VM 启动后启动代理时使用（见下文）。当使用命令行选项启动代理时，不会调用 <code>agentmain</code> 方法。</p>
+<p>每个代理都通过 <code>agentArgs</code> 参数传递其代理选项。代理选项作为单个字符串传递，任何额外的解析都应该由代理本身执行。</p>
+<p>如果无法启动代理（例如，无法加载代理类，或者代理类没有合适的 <code>premain</code> 方法），<strong>JVM 将中止</strong>。如果 <code>premain</code> 方法抛出未捕获的异常，JVM 将中止。</p>
+<p><code>-javaagent</code> 选项可以在同一命令行上多次使用，从而启动多个代理。<code>premain</code> 方法将按照代理在命令行上指定的顺序调用。多个代理可能使用相同的 <jarpath>。</p>
+<p>代理 <code>premain</code> 方法可以做什么没有建模限制。应用程序 <code>main</code> 可以做的任何事情，包括创建线程，在 <code>premain</code> 中都是合法的。</p>
+<h2 id="在-vm-启动后启动代理"><a class="markdownIt-Anchor" href="#在-vm-启动后启动代理"></a> 在 VM 启动后启动代理</h2>
+<p>实现也可以提供一种机制来在 VM 启动后的某个时间启动代理，一般称为<strong>动态加载</strong>。关于如何启动的细节是特定于实现的，但通常应用程序已经启动并且它的 <code>main</code> 方法已经被调用。</p>
+<p>我们可以使用 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/jdk.attach/module-summary.html">Java Attach API</a> 来将代理附加到应用程序：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">VirtualMachine jvm = VirtualMachine.attach(jvmPid);</span><br><span class="line">jvm.loadAgent(agentFile.getAbsolutePath());</span><br><span class="line">jvm.detach();</span><br></pre></td></tr></table></figure>
+<p>如果实现支持在 VM 启动后启动代理，则以下适用：</p>
+<ul>
+<li>代理 JAR 的清单必须在其清单中包含属性 <code>Agent-Class</code>。该属性的值是代理类的名称。</li>
+<li>代理类必须实现 <code>public static agentmain</code> 方法。</li>
+</ul>
+<p>agentmain 方法具有两种可能的签名之一。 JVM 首先尝试在代理类上调用以下方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">agentmain</span><span class="params">(String agentArgs, Instrumentation inst)</span></span></span><br></pre></td></tr></table></figure>
+<p>如果代理类未实现此方法，则 JVM 将尝试调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">agentmain</span><span class="params">(String agentArgs)</span></span></span><br></pre></td></tr></table></figure>
+<p>当使用命令行选项启动代理时，代理类也可能有一个 <code>premain</code> 方法。在 VM 启动后启动代理时，不会调用 <code>premain</code> 方法。</p>
+<p>代理通过 <code>agentArgs</code> 参数传递其代理选项。代理选项作为单个字符串传递，任何额外的解析都应该由代理本身执行。</p>
+<p><code>agentmain</code> 方法应该执行启动代理所需的任何必要初始化。启动完成后，该方法应返回。如果无法启动代理（例如，因为无法加载代理类，或者因为代理类没有符合的 <code>agentmain</code> 方法），<strong>JVM 不会中止</strong>。如果 <code>agentmain</code> 方法抛出未捕获的异常，它将被忽略（但可能会被 JVM 记录以进行故障排除）。</p>
+<h2 id="在可执行-jar-文件中包含代理"><a class="markdownIt-Anchor" href="#在可执行-jar-文件中包含代理"></a> 在可执行 JAR 文件中包含代理</h2>
+<p>JAR 文件规范定义了打包为可执行 JAR 文件的独立应用程序的清单属性。</p>
+<p>如果实现支持将应用程序作为可执行 JAR 启动的机制，则主清单可能包含 <code>Launcher-Agent-Class</code> 属性，以指定要在调用应用程序主方法之前启动的代理的类名。 Java 虚拟机尝试在代理类上调用以下方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">agentmain</span><span class="params">(String agentArgs, Instrumentation inst)</span></span></span><br></pre></td></tr></table></figure>
+<p>如果代理类未实现此方法，则 JVM 将尝试调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">agentmain</span><span class="params">(String agentArgs)</span></span></span><br></pre></td></tr></table></figure>
+<p><code>agentmain</code> 方法应该执行启动代理和返回所需的任何必要初始化。如果无法启动代理，例如无法加载代理类，代理类没有定义符合规范的 <code>agentmain</code> 方法，或者 <code>agentmain</code> 方法抛出未捕获的异常或错误，<strong>JVM 将中止</strong>。</p>
+<h2 id="加载代理类和代理类可用的模块类"><a class="markdownIt-Anchor" href="#加载代理类和代理类可用的模块类"></a> 加载代理类和代理类可用的模块/类</h2>
+<blockquote>
+<p>这里的模块是指 Java 11 的模块化系统的模块。</p>
+</blockquote>
+<p>从代理 JAR 文件加载的类由<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ClassLoader.html#getSystemClassLoader()">系统类加载器</a>加载，并且是系统类加载器的<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ClassLoader.html#getUnnamedModule()">未命名模块</a>的成员。系统类加载器通常也定义包含应用程序 <code>main</code> 方法的类。</p>
+<p>代理类可见的类是系统类加载器可见的类，至少包括：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ModuleLayer.html#boot()">引导层</a>模块导出的包中的类。引导层是否包含所有平台模块将取决于初始模块或应用程序的启动方式。</li>
+<li>可以由系统类加载器（通常是类路径）定义为未命名模块成员的类。</li>
+<li>代理安排由引导类加载器定义的任何类，作为其未命名模块的成员。</li>
+</ul>
+<p>如果代理类需要链接到不在引导层中的平台（或其他）模块中的类，那么应用程序可能需要在启动确保这些模块在引导层中。例如，在 JDK 实现中，<code>--add-modules</code> 命令行选项可用于将模块添加到要在启动时解析的根模块集中。</p>
+<p>支持安排由引导类加载器加载的代理类（通过 <code>appendToBootstrapClassLoaderSearch</code> 或下面指定的 <code>Boot-Class-Path</code> 属性），必须只链接到定义到引导类加载器的类。不能保证所有平台类都可以由引导类加载器定义。</p>
+<p>如果配置了自定义系统类加载器（通过 <code>getSystemClassLoader</code> 方法中指定的系统属性 <code>java.system.class.loader</code>），则它必须定义 <code>appendToSystemClassLoaderSearch</code> 中指定的 <code>appendToClassPathForInstrumentation</code> 方法。 换句话说，自定义系统类加载器必须支持将代理 JAR 文件添加到系统类加载器搜索的机制。</p>
+<h2 id="清单属性manifest-attributes"><a class="markdownIt-Anchor" href="#清单属性manifest-attributes"></a> 清单属性(Manifest Attributes)</h2>
+<p>为代理 JAR 文件定义了以下清单属性：</p>
+<ul>
+<li>
+<p><code>Premain-Class</code></p>
+<p>在 JVM 启动时指定代理时，此属性指定代理类。也就是说，包含 <code>premain</code> 方法的类。在 JVM 启动时指定代理时，此属性是必需的。如果该属性不存在，JVM 将中止。注意：这是一个类名，而不是文件名或路径。</p>
+</li>
+<li>
+<p><code>Agent-Class</code></p>
+<p>如果实现支持在 VM 启动后某个时间启动代理的机制，则该属性指定代理类。即包含 <code>agentmain</code> 方法的类。如果此属性不存在，代理将不会启动。注意：这是一个类名，而不是文件名或路径。</p>
+</li>
+<li>
+<p><code>Launcher-Agent-Class</code></p>
+<p>如果实现支持将应用程序作为可执行 JAR 启动的机制，则主清单可能包含此属性，以指定要在调用应用程序主方法之前启动的代理的类名。</p>
+</li>
+<li>
+<p><code>Boot-Class-Path</code></p>
+<p>引导类加载器要搜索的路径列表。路径代表目录或库（在许多平台上通常称为 JAR 或 zip 库）。在定位类的平台特定机制失败后，引导类加载器会搜索这些路径。按照列出的顺序搜索路径。列表中的路径由一个或多个空格分隔。路径采用分层 URI 的路径组件的语法。如果路径以斜杠字符 (’/’) 开头，则该路径是绝对路径，否则它是相对路径。根据代理 JAR 文件的绝对路径解析相对路径。格式错误和不存在的路径将被忽略。在 VM 启动后某个时间启动代理时，不代表 JAR 文件的路径将被忽略。该属性是可选的。</p>
+</li>
+<li>
+<p><code>Can-Redefine-Classes</code></p>
+<p>布尔值（true 或 false，大小写无关）。是否能够重新定义此代理所需的类。 true 以外的值被认为是 false。该属性是可选的，默认为 false。</p>
+</li>
+<li>
+<p><code>Can-Retransform-Classes</code></p>
+<p>布尔值（true 或 false，大小写无关）。是否能够重新转换此代理所需的类。 true 以外的值被认为是 false。该属性是可选的，默认为 false。</p>
+</li>
+<li>
+<p><code>Can-Set-Native-Method-Prefix</code></p>
+<p>布尔值（true 或 false，大小写无关）。是否能够设置此代理所需的本机方法前缀。 true 以外的值被认为是 false。该属性是可选的，默认为 false。</p>
+</li>
+</ul>
+<p>代理 JAR 文件可能在清单中同时具有 <code>Premain-Class</code> 和 <code>Agent-Class</code> 属性。当使用 <code>-javaagent</code> 选项在命令行上启动代理时，<code>Premain-Class</code> 属性指定代理类的名称，而 <code>Agent-Class</code> 属性将被忽略。同样，如果代理在 VM 启动后的某个时间启动，则 <code>Agent-Class</code> 属性指定代理类的名称（忽略 <code>Premain-Class</code> 属性的值）。</p>
+<h1 id="修改代码"><a class="markdownIt-Anchor" href="#修改代码"></a> 修改代码</h1>
+<p>要修改已有类的代码，我们主要是通过传入的 <code>Instrumentation</code> 实例注册 <code>ClassFileTransformer</code> 转换器来实现。在转换器实现内我们通过类名和类加载器共同来判断是否是我们需要修改的类，然后去修改字节码，可以使用一些类库轻松实现字节码的修改。如果我们注册的是具有重新转换能力的转换器，则可以使用 <code>retransformClasses</code> 立即修改转换类，否则会在类定义、加载或重新定义时调用。</p>
+<blockquote>
+<p>对于任意一个类，都需要由加载它的类加载器和这个类本身一同确立其在 Java 虚拟机中的唯一性，每一个类加载器，都拥有一个独立的类名称空间。</p>
+<p>也就是说要比较两个类是否“相等”，只有在这两个类是由同一个类加载器加载的前提下才有意义。</p>
+<p>这里所指的“相等”，包括代表类的 Class 对象的 equals() 方法、isAssignableFrom() 方法、isInstance() 方法的返回结果，也包括使用 instanceof 关键字做对象的所属关系判定等情况。</p>
+</blockquote>
+<h2 id="instrumentation"><a class="markdownIt-Anchor" href="#instrumentation"></a> Instrumentation</h2>
+<p>在上面列出的方法签名的参数中，不管是静态加载的 <code>premain</code> 还是动态加载的 <code>agentmain</code>，都传递了一个 <code>Instrumentation</code> 实例给我们。一旦我们的代理获得了 <code>Instrumentation</code> 实例，就可以随时调用该实例上的方法。</p>
+<p>该实例主要包含以下方法：</p>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#addTransformer(java.lang.instrument.ClassFileTransformer)">addTransformer</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/ClassFileTransformer.html">ClassFileTransformer</a> transformer)</td>
+<td>注册提供的转换器。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#addTransformer(java.lang.instrument.ClassFileTransformer,boolean)">addTransformer</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/ClassFileTransformer.html">ClassFileTransformer</a> transformer, boolean canRetransform)</td>
+<td>注册提供的转换器，当 canRetransform 为 true 时，代表该转换器具有重新转换能力。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#removeTransformer(java.lang.instrument.ClassFileTransformer)">removeTransformer</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/ClassFileTransformer.html">ClassFileTransformer</a> transformer)</td>
+<td>取消注册提供的转换器。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#getAllLoadedClasses()">getAllLoadedClasses</a></strong>()</td>
+<td>返回 JVM 当前加载的所有类的数组。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#getInitiatedClasses(java.lang.ClassLoader)">getInitiatedClasses</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ClassLoader.html">ClassLoader</a> loader)</td>
+<td>返回 loader 启动加载器所有类的数组。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#isModifiableClass(java.lang.Class)">isModifiableClass</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html">Class</a>&lt;?&gt; theClass)</td>
+<td>测试一个类是否可以通过 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#retransformClasses(java.lang.Class...)">retransformation</a> 或 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#redefineClasses(java.lang.instrument.ClassDefinition...)">redefinition</a> 来修改。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#isRetransformClassesSupported()">isRetransformClassesSupported</a></strong>()</td>
+<td>返回当前 JVM 配置是否支持类的重新转换。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#retransformClasses(java.lang.Class...)">retransformClasses</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html">Class</a>&lt;?&gt;… classes)</td>
+<td>重新转换提供的类集合。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#isRedefineClassesSupported()">isRedefineClassesSupported</a></strong>()</td>
+<td>返回当前 JVM 配置是否支持重新定义类。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#redefineClasses(java.lang.instrument.ClassDefinition...)">redefineClasses</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/ClassDefinition.html">ClassDefinition</a>… definitions)</td>
+<td>使用给定的类文件重新定义提供的类集合。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#isModifiableModule(java.lang.Module)">isModifiableModule</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Module.html">Module</a> module)</td>
+<td>测试是否可以使用 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#redefineModule(java.lang.Module,java.util.Set,java.util.Map,java.util.Map,java.util.Set,java.util.Map)">redefineModule</a> 修改模块。</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#redefineModule(java.lang.Module,java.util.Set,java.util.Map,java.util.Map,java.util.Set,java.util.Map)"><strong>redefineModule</strong></a>(…)</td>
+<td>重新定义模块以扩展它读取的模块集、它导出或打开的包集或其使用或提供的服务。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#getObjectSize(java.lang.Object)">getObjectSize</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html">Object</a> objectToSize)</td>
+<td>返回指定对象消耗的存储量的特定于实现的近似值。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#appendToBootstrapClassLoaderSearch(java.util.jar.JarFile)">appendToBootstrapClassLoaderSearch</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/jar/JarFile.html">JarFile</a> jarfile)</td>
+<td>指定一个 JAR 文件，其中包含要由引导程序类加载器定义的检测类。</td>
+</tr>
+<tr>
+<td><strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html#appendToSystemClassLoaderSearch(java.util.jar.JarFile)">appendToSystemClassLoaderSearch</a></strong>(<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/jar/JarFile.html">JarFile</a> jarfile)</td>
+<td>指定一个 JAR 文件，其中包含要由系统类加载器定义的检测类。</td>
+</tr>
+</tbody>
+</table>
+<h2 id="classfiletransformer"><a class="markdownIt-Anchor" href="#classfiletransformer"></a> ClassFileTransformer</h2>
+<p>如果我们要转换一个类，则可以通过注册一个自定义的 <code>ClassFileTransformer</code> 来实现，Java 虚拟机会在***加载***、***重新定义***或***重新转换类***时调用该实例的 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/ClassFileTransformer.html#transform(java.lang.Module,java.lang.ClassLoader,java.lang.String,java.lang.Class,java.security.ProtectionDomain,byte%5B%5D)"><code>transform</code></a> 方法。转换器是在 Java 虚拟机***定义类之前***被调用。</p>
+<p><code>ClassFileTransformer</code> 可以实现为具有重新转换能力的转换器，通过在注册时将 <code>canRetransform</code> 参数传入为 <code>true</code> 告诉注册器自己有重新转换的能力。</p>
+<p>一旦使用 <code>addTransformer</code> 注册了转换器，将在每个新的类定义时和每个类重新定义时调用转换器。在每个类重新转换时，也将调用具有重新转换能力的转换器。对新类定义的请求是使用 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ClassLoader.html#defineClass(byte%5B%5D,int,int)"><code>ClassLoader.defineClass</code></a> 或其原生等效方法进行的。类重新定义的请求是使用  <code>Instrumentation.redefineClasses</code> 或其原生等效方法进行的。类重新转换的请求是使用 <code>Instrumentation.retransformClasses</code> 或其原生等效方法进行的。在处理请求期间，<strong>转换器是在类的文件字节被验证和应用之前调用</strong>。当有多个转换器时，转换操作是通过转换器调用链组成的。也就是说，一次调用返回的字节数组成为下一次调用的输入（通过 <code>classfileBuffer</code> 参数）。</p>
+<p>转换器将按以下顺序生效：</p>
+<ul>
+<li>没有再转换能力的转换器</li>
+<li>没有再转换能力的原生转换器</li>
+<li>有再转换能力的转换器</li>
+<li>有再转换能力的原生转换器</li>
+</ul>
+<p>对于再转换，不调用没有再转换能力的转换器，而是重用前一次转换的结果。其他情况，该转换方式始终被调用。在这些所有分组中，转换器都是按照注册的顺序被调用。本机转换器由 Java 虚拟机工具接口（<code>JVMTI</code>）中的 <code>ClassFileLoadHook</code> 事件提供）。</p>
+<p>传给第一个转换器的输入（<code>classfileBuffer</code> 参数）是：</p>
+<ul>
+<li>对于新的类定义，传递其 <code>ClassLoader.defineClass</code> 的字节</li>
+<li>对于类重新定义，是 <code>Instrumentation.redefineClasses</code> 时传入的参数 <code>ClassDefinition</code> 实例的 <code>getDefinitionClassFile()</code> 返回结果</li>
+<li>对于类重新转换，传递的是新类定义的字节。或者，如果是重新定义，则是最后一次重新定义的字节。</li>
+</ul>
+<p>如果实现方法确定不需要转换，则应返回 <code>null</code>。否则，它应该创建一个新的 byte[] 数组，将输入的 <code>classfileBuffer</code> 连同所有所需的转换复制到其中，并返回新数组。不得修改输入的 <code>classfileBuffer</code>。</p>
+<p>在重新转换和重新定义的情况下，转换器必须支持重新定义语义：如果转换器在初始定义期间更改的类后来被重新转换或重新定义，则转换器必须确保第二个类输出类文件是第一个输出类文件的合法重新定义。</p>
+<p>如果转换器抛出异常（它没有捕获），后续转换器仍将被调用，并且仍将尝试加载、重新定义或重新转换。因此，抛出异常与返回 null 具有相同的效果。为了防止在转换器代码中生成未经检查的异常时出现意外行为，转换器可以捕获 <code>Throwable</code>。如果转换器认为 <code>classFileBuffer</code> 不代表有效格式化的类文件，它应该抛出一个 <code>IllegalClassFormatException</code>；虽然这与返回 null 具有相同的效果。它有助于记录或调试格式损坏。</p>
+<h2 id="字节码操作库"><a class="markdownIt-Anchor" href="#字节码操作库"></a> 字节码操作库</h2>
+<p>字节码的操作库有的偏重性能，有的偏重更友好的 API 操作，下面介绍几种常见的字节码操作库：</p>
+<h3 id="byte-buddy"><a class="markdownIt-Anchor" href="#byte-buddy"></a> <a target="_blank" rel="noopener" href="http://bytebuddy.net/">Byte Buddy</a></h3>
+<p>Byte Buddy 是一个代码生成和操作库，用于在 Java 应用程序运行时创建和修改 Java 类，无需编译器的帮助。</p>
+<p>Byte Buddy 是一个相当新的库，但提供了 CGLIB 或 Javassist 提供的任何功能等等。Byte Buddy 可以完全定制到字节码级别，并带有一个富有表现力的领域特定语言（DSL），在操作字节码时，它可能是最安全、最合理的选择，而且代码可读性很高。</p>
+<p>Byte Buddy 也提供了一个方便的 API 来定义 Java 代理（agent），比如下面这个统计代码时间的 Demo：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TimerAgent</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">premain</span><span class="params">(String arguments, </span></span></span><br><span class="line"><span class="params"><span class="function">                             Instrumentation instrumentation)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">new</span> AgentBuilder.Default()</span><br><span class="line">      .type(ElementMatchers.nameEndsWith(<span class="string">&quot;Timed&quot;</span>))</span><br><span class="line">      .transform((builder, type, classLoader, <span class="keyword">module</span>) -&gt; </span><br><span class="line">          builder.method(ElementMatchers.any())</span><br><span class="line">                 .intercept(MethodDelegation.to(TimingInterceptor.class))</span><br><span class="line">      ).installOn(instrumentation);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TimingInterceptor</span> </span>&#123;</span><br><span class="line">  <span class="meta">@RuntimeType</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">intercept</span><span class="params">(<span class="meta">@Origin</span> Method method, </span></span></span><br><span class="line"><span class="params"><span class="function">                                 <span class="meta">@SuperCall</span> Callable&lt;?&gt; callable)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> callable.call();</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      System.out.println(method + <span class="string">&quot; took &quot;</span> + (System.currentTimeMillis() - start));</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="javassist"><a class="markdownIt-Anchor" href="#javassist"></a> <a target="_blank" rel="noopener" href="http://jboss-javassist.github.io/javassist/">Javassist</a></h3>
+<p>它是 Java 中用于编辑字节码的类库；它使 Java 程序能够在运行时定义一个新类，并在 JVM 加载类文件时修改它。与其他类似的字节码编辑器不同，Javassist 提供了两个级别的 API：源代码级和字节码级。如果用户使用源代码级 API，他们可以在不了解 Java 字节码规范的情况下编辑类文件。</p>
+<h3 id="cglib"><a class="markdownIt-Anchor" href="#cglib"></a> <a target="_blank" rel="noopener" href="https://github.com/cglib/cglib">CGLIB</a></h3>
+<p>CGLIB 速度非常快，这是它仍然存在的主要原因之一。</p>
+<p>一般来说，允许在运行时重写类的库必须避免在重写相应的类之前加载任何类型。 因此，它们不能使用 Java 反射 API 来加载反射中使用的任何类型，所以他们必须通过 IO（这是一个性能破坏者）读取类文件。 这使得 Javassist 或 Proxetta 比 Cglib 慢得多，CGLIB 只是通过反射 API 读取方法并覆盖它们。</p>
+<h3 id="asm"><a class="markdownIt-Anchor" href="#asm"></a> <a target="_blank" rel="noopener" href="http://asm.ow2.org/">ASM</a></h3>
+<p>CGLIB、Byte Buddy 和几乎所有其他库都建立在 ASM 之上，ASM 本身在非常低的级别上操作字节码。这对大多数人来说是个障碍，因为您必须了解字节码和一点点 <a target="_blank" rel="noopener" href="http://docs.oracle.com/javase/specs/">JVMS</a> 才能正确使用它。</p>
+<p>但是掌握 ASM 无疑是非常有趣的。 但是请注意，虽然有一个很棒的 <a target="_blank" rel="noopener" href="http://download.forge.objectweb.org/asm/asm4-guide.pdf">ASM 4 指南</a>，但在 API 的某些部分中，javadoc 文档可能非常简洁，ASM 正在改进它的文档。</p>
+<p>它紧跟 JVM 版本以支持新功能。</p>
+<h1 id="java-agent-和-jvm-native-agent"><a class="markdownIt-Anchor" href="#java-agent-和-jvm-native-agent"></a> Java Agent 和 JVM Native Agent</h1>
+<p>虽然两者都以几乎相同的方式加载到 <code>JVM</code> 中（使用特殊的 <code>JVM</code> 启动参数），但它们的构建方式几乎完全不同。</p>
+<p>native agent 一般使用 <code>-agentlib</code> 或 <code>-agentpath</code> 命令行参数指定，Java agent 静态加载是通过 <code>-javaagent</code> 指定。</p>
+<p>Java Agent 底层也是通过 JVMTI 接口来驱动的。</p>
+<h2 id="native-agents"><a class="markdownIt-Anchor" href="#native-agents"></a> Native Agents</h2>
+<p>Native 代理是完全不同的野兽。如果您认为 Java 代理可以让您做很酷的事情，那么请抓紧时间，因为本地代理在完全不同的层面上运行。本机代理不是用 Java 编写的，而是主要用 C++ 编写的，并且不受普通 Java 代码运行的规则和限制的约束。不仅如此，它们还提供了一组极其强大的功能，称为 JVM 工具接口 (JVMTI)。</p>
+<h3 id="它能做什么"><a class="markdownIt-Anchor" href="#它能做什么"></a> 它能做什么</h3>
+<p>jvmti.h 公开的这组 API 使 JVM 动态加载的 C++ 库能够获得对 JVM 实时工作的极高级别的可见性。这跨越了广泛的领域，包括 GC、locking、代码操作、同步、线程管理、编译调试等等。JVMTI 旨在使 JVM 尽可能透明，同时仍保持设计灵活性，以允许 JVM 供应商提供不同的底层实现。这组 API 非常广泛，包含数百个关于 JVM 的回调和函数。您可以使用这些来做 Java 代理无法做的非常强大的事情，例如编写自己的调试器，或者构建低级、实时错误分析工具，比如 JRebel 和 JProfiler 等。</p>
+<p>JRebel 通过 JVMTI 构建一种在运行时提供类的平滑热交换而无需重新启动 JVM 的技术。</p>
+<p>JProfiler 通过 JVMTI 修改目标框架的代码以注入收集性能指标的新代码。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Instrumentation/" rel="tag"># Instrumentation</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" rel="prev" title="Redis 分布式锁">
+      <i class="fa fa-chevron-left"></i> Redis 分布式锁
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" rel="next" title="双向关联最佳实践">
+      双向关联最佳实践 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8-java-agent"><span class="nav-number">1.</span> <span class="nav-text"> 启动 Java Agent</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%8E%A5%E5%8F%A3%E5%90%AF%E5%8A%A8%E4%BB%A3%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text"> 通过命令行接口启动代理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-vm-%E5%90%AF%E5%8A%A8%E5%90%8E%E5%90%AF%E5%8A%A8%E4%BB%A3%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text"> 在 VM 启动后启动代理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E5%8F%AF%E6%89%A7%E8%A1%8C-jar-%E6%96%87%E4%BB%B6%E4%B8%AD%E5%8C%85%E5%90%AB%E4%BB%A3%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text"> 在可执行 JAR 文件中包含代理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E8%BD%BD%E4%BB%A3%E7%90%86%E7%B1%BB%E5%92%8C%E4%BB%A3%E7%90%86%E7%B1%BB%E5%8F%AF%E7%94%A8%E7%9A%84%E6%A8%A1%E5%9D%97%E7%B1%BB"><span class="nav-number">1.4.</span> <span class="nav-text"> 加载代理类和代理类可用的模块&#x2F;类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B8%85%E5%8D%95%E5%B1%9E%E6%80%A7manifest-attributes"><span class="nav-number">1.5.</span> <span class="nav-text"> 清单属性(Manifest Attributes)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E4%BB%A3%E7%A0%81"><span class="nav-number">2.</span> <span class="nav-text"> 修改代码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#instrumentation"><span class="nav-number">2.1.</span> <span class="nav-text"> Instrumentation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#classfiletransformer"><span class="nav-number">2.2.</span> <span class="nav-text"> ClassFileTransformer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E8%8A%82%E7%A0%81%E6%93%8D%E4%BD%9C%E5%BA%93"><span class="nav-number">2.3.</span> <span class="nav-text"> 字节码操作库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#byte-buddy"><span class="nav-number">2.3.1.</span> <span class="nav-text"> Byte Buddy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#javassist"><span class="nav-number">2.3.2.</span> <span class="nav-text"> Javassist</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cglib"><span class="nav-number">2.3.3.</span> <span class="nav-text"> CGLIB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#asm"><span class="nav-number">2.3.4.</span> <span class="nav-text"> ASM</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#java-agent-%E5%92%8C-jvm-native-agent"><span class="nav-number">3.</span> <span class="nav-text"> Java Agent 和 JVM Native Agent</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#native-agents"><span class="nav-number">3.1.</span> <span class="nav-text"> Native Agents</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%83%E8%83%BD%E5%81%9A%E4%BB%80%E4%B9%88"><span class="nav-number">3.1.1.</span> <span class="nav-text"> 它能做什么</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">90</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : '3484a35295aeb1c9e109613f6270e950',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

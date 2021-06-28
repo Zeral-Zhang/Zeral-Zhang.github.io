@@ -25,17 +25,20 @@
   <meta name="description" content="概述 MyBatis 是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。MyBatis 免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects）为数据库中的记录。 MyBatis 作为一款持久层框架，它趋向于以数据库为中心，因此主">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Mybatis 快速入门">
-<meta property="og:url" content="https://www.zeral.cn/persistence/Mybatis%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:url" content="https://www.zeral.cn/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/index.html">
 <meta property="og:site_name" content="Zeral&#39;s Blog">
 <meta property="og:description" content="概述 MyBatis 是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。MyBatis 免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects）为数据库中的记录。 MyBatis 作为一款持久层框架，它趋向于以数据库为中心，因此主">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/jpa/mybatis/640.png">
+<meta property="og:image" content="https://www.zeral.cn/images/jpa/mybatis/mybatis-mapper-proxy.svg">
 <meta property="article:published_time" content="2020-09-23T16:02:58.000Z">
-<meta property="article:modified_time" content="2020-10-20T02:02:43.945Z">
+<meta property="article:modified_time" content="2021-05-30T09:57:07.873Z">
 <meta property="article:author" content="Zeral">
 <meta property="article:tag" content="Mybatis">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/jpa/mybatis/640.png">
 
-<link rel="canonical" href="https://www.zeral.cn/persistence/Mybatis%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">
+<link rel="canonical" href="https://www.zeral.cn/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">
 
 
 <script id="page-configurations">
@@ -198,7 +201,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/Mybatis%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
@@ -228,7 +231,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-20 10:02:43" itemprop="dateModified" datetime="2020-10-20T10:02:43+08:00">2020-10-20</time>
+                <time title="修改时间：2021-05-30 17:57:07" itemprop="dateModified" datetime="2021-05-30T17:57:07+08:00">2021-05-30</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -241,7 +244,7 @@
             </span>
 
           
-            <span id="/persistence/Mybatis%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Mybatis 快速入门" title="阅读次数">
+            <span id="/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Mybatis 快速入门" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -259,12 +262,13 @@
 
       
         <h1 id="概述"><a class="markdownIt-Anchor" href="#概述"></a> 概述</h1>
-<p>MyBatis 是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。MyBatis 免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects）为数据库中的记录。</p>
-<p><code>MyBatis</code> 作为一款持久层框架，它趋向于以数据库为中心，因此主要的关注点会落在 SQL 定义、结果映射上，相对来说比较轻量，也更容易入手，但也正是由于偏重 SQL，将会和使用的数据库强关联。</p>
+<p><code>MyBatis</code> 是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。MyBatis 免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects）为数据库中的记录。</p>
+<p><code>MyBatis</code> 作为一款持久层框架，它趋向于以数据库为中心，因此主要的关注点会落在 SQL 定义、结果映射上，相对来说比较轻量，也更容易入手，对于 SQL 优化也比较容易，但也正是由于偏重 SQL，将会和使用的数据库强关联。</p>
 <h1 id="对比-orm-框架"><a class="markdownIt-Anchor" href="#对比-orm-框架"></a> 对比 ORM 框架</h1>
+<p>同时使用面向对象的软件和关系数据库既麻烦又费时。由于对象和关系数据库中的数据表示方式之间存在<strong>范式不匹配</strong>，因此开发成本要高得多。</p>
 <p>相比 <code>ORM</code> 框架，<code>ORM</code> 框架更多的将关注点放在面向对象的域模型和业务逻辑层，<code>ORM</code> 框架一般会遵循 <code>JPA</code> 标准，比如最常见的实现 <code>Hibernate</code>。</p>
-<p><code>ORM</code> 框架的主要目的之一是降低与特定数据库的耦合性，它抽象了数据库系统，因此在不同数据库切换、移植时会更加容易，抽象的代价是与之而来的复杂性的增加，但也提供了更多丰富的功能特性：数据变更追踪、审计、一/二级缓存、并发版本控制、数据懒加载、级联操作，以及丰富的查询方式：SQL、HQL、Criteria API、Query DSL等；</p>
-<a id="more"></a>
+<p><code>ORM</code> 框架的主要目的之一是降低与特定数据库的耦合性，它抽象了数据库系统，因此在不同数据库切换、移植时会更加容易，抽象的代价是与之而来的复杂性的增加，但也提供了更多丰富的功能特性：数据变更追踪、审计、一/二级缓存、并发版本控制、数据懒加载、级联操作，以及丰富的查询方式：<code>SQL</code>、<code>HQL</code>、<code>JPQL</code>、<code>Criteria API</code>、<code>Query DSL</code> 等；</p>
+<span id="more"></span>
 <h1 id="xml-or-annotation"><a class="markdownIt-Anchor" href="#xml-or-annotation"></a> XML or Annotation</h1>
 <p>在使用 MyBatis 开发应用时，最大一部分工作是在和 <a target="_blank" rel="noopener" href="https://mybatis.org/mybatis-3/zh/sqlmap-xml.html"><code>Mapper（映射器）</code></a>打交道，Mapper 中主要又分为两部分：</p>
 <ul>
@@ -273,7 +277,7 @@
 </ul>
 <p>而这两部分既可以通过 XML 也可以通过注解来定义，同样是为代码运行提供元数据，使用哪种更好呢？</p>
 <p>每种方法都有其优点和缺点，通常，由开发人员决定哪种策略更适合他们。由于它们的定义方式，注解在其声明时提供了大量上下文，从而导致更短更简洁的配置。但是，XML 擅长在不触及源代码或重新编译它们的情况下连接组件。一些开发人员更喜欢将配置靠近源，而另一些开发人员则认为注解类不再是 POJO，而且配置变得分散且难以控制。</p>
-<p><strong>MyBatis 的 XML 提供了全量的功能，注解受限于灵活性不能覆盖所有方面，比如嵌套结果映射等，但是基本上能基本开发使用。</strong></p>
+<p><strong>MyBatis 的 XML 提供了全量的功能，注解受限于灵活性不能覆盖所有方面，比如嵌套结果映射等，但是能基本的满足开发使用。</strong></p>
 <blockquote>
 <p>个人建议：优先考虑使用 XML。</p>
 </blockquote>
@@ -345,34 +349,90 @@
 <table>
 <thead>
 <tr>
-<th>&lt;</th>
-<th>&lt;</th>
-<th>小于号</th>
+<th>符号</th>
+<th>转义符号</th>
+<th>说明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td>&lt;</td>
+<td><code>&amp;lt;</code></td>
+<td>小于号</td>
+</tr>
+<tr>
+<td>&lt;=</td>
+<td><code>&amp;lt;=</code></td>
+<td>小于等于号</td>
+</tr>
+<tr>
 <td>&gt;</td>
-<td>&gt;</td>
+<td><code>&amp;gt;</code></td>
 <td>大于号</td>
 </tr>
 <tr>
+<td>&gt;=</td>
+<td><code>&amp;gt;=</code></td>
+<td>大于等于号</td>
+</tr>
+<tr>
 <td>&amp;</td>
-<td>&amp;</td>
+<td><code>&amp;amp;</code></td>
 <td>和</td>
 </tr>
 <tr>
-<td>'</td>
 <td>’</td>
+<td><code>&amp;apos;</code></td>
 <td>单引号</td>
 </tr>
 <tr>
 <td>&quot;</td>
-<td>&quot;</td>
+<td><code>&amp;quot;</code></td>
 <td>双引号</td>
 </tr>
 </tbody>
 </table>
+<p>或者可以将包含特殊符号的语句用 <code>CDATA</code> 包裹起来</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;![CDATA[</span><br><span class="line">  sql statement </span><br><span class="line">]]&gt;</span><br></pre></td></tr></table></figure>
+<h1 id="核心处理流程"><a class="markdownIt-Anchor" href="#核心处理流程"></a> 核心处理流程</h1>
+<h2 id="构建-sqlsessionfactory"><a class="markdownIt-Anchor" href="#构建-sqlsessionfactory"></a> 构建 SqlSessionFactory</h2>
+<p>每个基于 MyBatis 的应用都是以一个 <code>SqlSessionFactory</code> 的实例为核心的。SqlSessionFactory 的实例可以通过 <code>SqlSessionFactoryBuilder</code> 获得。而 SqlSessionFactoryBuilder 则可以从 XML 配置文件或一个预先配置的 <code>Configuration</code> 实例来构建出 SqlSessionFactory 实例。</p>
+<p>在 <code>MyBatis-Spring</code> 中，可使用 <code>SqlSessionFactoryBean</code>来创建 <code>SqlSessionFactory</code>。</p>
+<h2 id="从-sqlsessionfactory-中获取-sqlsession"><a class="markdownIt-Anchor" href="#从-sqlsessionfactory-中获取-sqlsession"></a> 从 SqlSessionFactory 中获取 SqlSession</h2>
+<p>既然有了 SqlSessionFactory，顾名思义，我们可以从中获得 <code>SqlSession</code> 的实例，通过 SqlSessionFactory 的 <code>openSession</code> 方法。</p>
+<p><strong>SqlSession 提供了在数据库执行 SQL 命令所需的所有方法。你可以通过 SqlSession 实例来直接执行已映射的 SQL 语句。</strong></p>
+<h2 id="使用-mapper-定义语句和结果映射"><a class="markdownIt-Anchor" href="#使用-mapper-定义语句和结果映射"></a> 使用 Mapper 定义语句和结果映射</h2>
+<p>映射器主要定义了语句和结果映射。</p>
+<p>通过映射器接口，我们可以与 XML 配置形成分离，使用和指定语句的参数和返回值相匹配的接口（比如 BlogMapper.class），使我们的代码不仅更清晰，更加类型安全，还不用担心可能出错的字符串字面值以及强制类型转换。</p>
+<p>Mybatis 本身可以通过配置文件定义 Mapper 的位置来帮助程序定位和查找映射器。</p>
+<p>在 <code>Mybatis-Spring</code> 中，最简单的方法是委托给 Spring 帮我们扫描注册 Bean，具体在下一节中详细介绍。</p>
+<p>扫描到的 Mapper，语句，结果映射（ResultMap）等都会放到 <code>Configuration</code> 类中，在后面的执行中我们将会从这里查找。</p>
+<h2 id="执行语句和结果映射"><a class="markdownIt-Anchor" href="#执行语句和结果映射"></a> 执行语句和结果映射</h2>
+<p>通过 Mapper 的定义我们拿到了要执行的语句，也知道了结果要如何映射。在我们调用 Mapper 的接口时，会反射调用 <code>MapperProxy</code> 代理类，该代理类又委托给 <code>MapperMethod</code> 代理类，最终方法代理类将使用 <code>SqlSession</code> 实例去执行，SqlSession 使用从 <code>Configuration</code> 类拿到的语句，交给 <code>Executor</code> 执行器去执行查询，如果定义了 <code>ResultHandler</code> 则使用该处理器处理结果，否则将使用从 <code>Configuration</code> 中找到的 <code>ResultMap</code> 来处理映射，ResultMap 对不同的字段类型使用 <code>TypeHandlerRegistry</code> 查找已注册的合适的 <code>TypeHandler</code> 进行处理。</p>
+<h1 id="spring-mybatis-mapper-注册机制"><a class="markdownIt-Anchor" href="#spring-mybatis-mapper-注册机制"></a> Spring Mybatis Mapper 注册机制</h1>
+<p><strong>Mybatis</strong> 结合 <strong>Spring</strong> 将 <strong>Mapper</strong> 注册到 <strong>Spring IoC</strong> 的机制是这样的：</p>
+<p><img src="../../images/jpa/mybatis/640.png" alt="640" /></p>
+<p>其实里面涉及到 <strong>Spring</strong> 和 <strong>Mybatis</strong> 的知识点还是比较多的，但是我们只要梳理出来流程就比较容易理解和掌握。</p>
+<h2 id="importbeandefinitionregistrar"><a class="markdownIt-Anchor" href="#importbeandefinitionregistrar"></a> ImportBeanDefinitionRegistrar</h2>
+<p><code>ImportBeanDefinitionRegistrar</code> 是一个非常重要的接口，凡是要把第三方整合到 <strong>Spring</strong> 的开发者都应该掌握这个接口。这接口用来动态的注册某一些具有相同特征的一批类到 <strong>Spring IoC</strong>，借助于<code>@Import</code>注解“附着在”自定义的注解上，就像 <strong>Mybatis-Spring</strong> 的用法一样。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Import(MapperScannerRegistrar.class)</span></span><br><span class="line"><span class="meta">@Repeatable(MapperScans.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> MapperScan &#123;</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后将该注解附着到标记有<code>@Configuration</code>或者具有相同功能的配置类上，Spring 会在处理配置类时处理我们的 <code>Import</code> 注解。</p>
+<p><code>MapperScannerRegistrar</code> 实现了该接口，该接口只定义了一个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 根据导入的 <span class="doctag">@Configuration</span> 类上给定的注解元数据，根据需要注册 Bean 的定义。</span></span><br><span class="line"><span class="comment"> * 请注意，由于与 <span class="doctag">@Configuration</span> 类处理相关的生命周期限制，可能无法在此处注册 BeanDefinitionRegistryPostProcessor 类型。</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> importingClassMetadata 导入类注解的元数据</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> registry 当前的 bean 定义注册表</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>其中参数 <code>importingClassMetadata</code> 包含了 <code>@Import</code> 所依附的配置类上的所有注解。这意味着我们可以拿到对应注解的元信息并作为我们动态导入的判断依据，上面就是从 <code>@MapperScan</code> 获取了 <strong>Mapper</strong> 所在的包以及其它信息。</p>
+<p>在拿到 <code>MapperScan</code> 注解的元数据后，我们为 <code>MapperScannerConfigurer</code> 提供了配置信息，该配置类又实现了 <code>BeanDefinitionRegistryPostProcessor</code> ，其继承于 <code>BeanDefinitionRegistry</code>。</p>
+<p><code>BeanDefinitionRegistry</code> 就是用来注册 <strong>Spring Bean</strong> 的。那么到底是如何注册的呢？这就该下一个主角登场了。</p>
+<h2 id="beandefinitionregistrypostprocessor"><a class="markdownIt-Anchor" href="#beandefinitionregistrypostprocessor"></a> BeanDefinitionRegistryPostProcessor</h2>
+<p><code>BeanDefinitionRegistryPostProcessor</code> 是 <code>BeanFactoryPostProcessor</code> 的子接口。</p>
+<p><code>BeanFactoryPostProcessor</code> 的作用是在 <strong>Spring Bean</strong> 的定义信息已经加载但还没有实例化的时候执行 <code>postProcessBeanFactory()</code> 来处理一些额外的逻辑，比如对 Bean 配置元数据进行操作。也就是说，Spring IoC 容器允许 <code>BeanFactoryPostProcessor</code> 读取配置元数据，并有可能在容器实例化除 <code>BeanFactoryPostProcessor</code> 实例之外的任何 bean之前更改它。</p>
+<p>而 <code>BeanDefinitionRegistryPostProcessor</code> 的作用是在 <code>BeanFactoryPostProcessor</code> 增加了一个前置处理，当一个 <strong>Bean</strong> 实现了该接口后，始化前先执行该接口的 <code>postProcessBeanDefinitionRegistry()</code> 方法，然后再执行其父类的方法 <code>postProcessBeanFactory()</code>。这样就把一个 <strong>Spring Bean</strong> 的初始化周期更加细化，让我们在各个阶段有定制它的可能。</p>
+<p><code>MapperScannerRegistrar</code> 并没有在该后置处理中注册 Bean，它将注册动作委托给 <code>ClassPathMapperScanner</code> 去扫描注册。</p>
+<h2 id="classpathbeandefinitionscanner"><a class="markdownIt-Anchor" href="#classpathbeandefinitionscanner"></a> ClassPathBeanDefinitionScanner</h2>
+<p>从名字上来看这个类就是在类路径下扫描 <strong>Bean</strong> 定义并将符合条件的批量通过 <code>BeanDefinitionRegistry</code> 注册到 <strong>Spring IoC</strong>。</p>
+<p>它提供了可配置的过滤器来检出需要被注入 <strong>Spring IoC</strong> 的 <strong>Bean</strong>，默认的过滤器包括用 Spring 的 <code>@Component</code>、<code>@Repository</code>、 <code>@Service</code>、<code>@Controller</code> 注释的类 。还支持 Java EE 6 的 <code>javax.annotation.ManagedBean</code> 和 JSR-330 的 <code>javax.inject.Named</code> 注解，如果这些注解可用。当然你可以通过 <code>addIncludeFilter</code> 来新增被包含的 <strong>Bean</strong>，或者 <code>addExcludeFilter</code> 来排除一些 Bean。然后只需要调用其 <code>scan</code> 方法对特定的包进行扫描注入。</p>
+<p>Mybatis 的 <code>ClassPathMapperScanner</code> 继承于 Spring 的 <code>ClassPathBeanDefinitionScanner</code> ，它为 Mapper 提供了 Mybatis 需要的参数变量，比如：<code>SqlSessionFactory</code> 以及 封装了 <code>SqlSession</code> 后线程安全的 <code>SqlSessionTemplate</code>，<code>SqlSessionTemplate</code> 还提供与 Spring 事物管理一起工作的能力。</p>
+<p>在扫描到特定包下的 Mapper 对象时，会选择用实现 <code>FactoryBean</code> 接口的 <code>MapperFactoryBean</code> 作为该 Mapper 的工厂类，工厂类对其 Mapper 的获取最终委托给 Mybatis 的 <code>Configuration</code> 类来获取，Configuration 内部维护了已找到的 Mapper、结果映射配置等，Configuration 通过使用 <code>MapperProxyFactory</code> 实例化一个该 Mapper 的 <code>MapperProxy</code> 代理类，最终在我们调用 Mapper 接口时，会通过实现了 InvokeHandler 的代理类的 Invoke 去真正执行逻辑，流程如下图：</p>
+<p><img src="../../images/jpa/mybatis/mybatis-mapper-proxy.svg" alt="mybatis-mapper-proxy" /></p>
 
     </div>
 
@@ -486,7 +546,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text"> 概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94-orm-%E6%A1%86%E6%9E%B6"><span class="nav-number">2.</span> <span class="nav-text"> 对比 ORM 框架</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#xml-or-annotation"><span class="nav-number">3.</span> <span class="nav-text"> XML or Annotation</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8A%A8%E6%80%81-sql"><span class="nav-number">4.</span> <span class="nav-text"> 动态 SQL</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E6%97%B6%E5%8A%A8%E6%80%81-sql-%E5%AE%9A%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text"> 编译时动态 SQL 定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8A%A8%E6%80%81-sql-%E5%AE%9A%E4%B9%89"><span class="nav-number">4.2.</span> <span class="nav-text"> 运行时动态 SQL 定义</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E8%B1%A1%E5%85%B3%E7%B3%BB%E6%98%A0%E5%B0%84"><span class="nav-number">5.</span> <span class="nav-text"> 对象关系映射</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%AF%B9%E4%B8%80"><span class="nav-number">5.1.</span> <span class="nav-text"> 一对一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%AF%B9%E5%A4%9A"><span class="nav-number">5.2.</span> <span class="nav-text"> 一对多</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F"><span class="nav-number">6.</span> <span class="nav-text"> 使用注意</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text"> 概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94-orm-%E6%A1%86%E6%9E%B6"><span class="nav-number">2.</span> <span class="nav-text"> 对比 ORM 框架</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#xml-or-annotation"><span class="nav-number">3.</span> <span class="nav-text"> XML or Annotation</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8A%A8%E6%80%81-sql"><span class="nav-number">4.</span> <span class="nav-text"> 动态 SQL</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E6%97%B6%E5%8A%A8%E6%80%81-sql-%E5%AE%9A%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text"> 编译时动态 SQL 定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8A%A8%E6%80%81-sql-%E5%AE%9A%E4%B9%89"><span class="nav-number">4.2.</span> <span class="nav-text"> 运行时动态 SQL 定义</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E8%B1%A1%E5%85%B3%E7%B3%BB%E6%98%A0%E5%B0%84"><span class="nav-number">5.</span> <span class="nav-text"> 对象关系映射</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%AF%B9%E4%B8%80"><span class="nav-number">5.1.</span> <span class="nav-text"> 一对一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%AF%B9%E5%A4%9A"><span class="nav-number">5.2.</span> <span class="nav-text"> 一对多</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F"><span class="nav-number">6.</span> <span class="nav-text"> 使用注意</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B"><span class="nav-number">7.</span> <span class="nav-text"> 核心处理流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA-sqlsessionfactory"><span class="nav-number">7.1.</span> <span class="nav-text"> 构建 SqlSessionFactory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E-sqlsessionfactory-%E4%B8%AD%E8%8E%B7%E5%8F%96-sqlsession"><span class="nav-number">7.2.</span> <span class="nav-text"> 从 SqlSessionFactory 中获取 SqlSession</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-mapper-%E5%AE%9A%E4%B9%89%E8%AF%AD%E5%8F%A5%E5%92%8C%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84"><span class="nav-number">7.3.</span> <span class="nav-text"> 使用 Mapper 定义语句和结果映射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E8%AF%AD%E5%8F%A5%E5%92%8C%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84"><span class="nav-number">7.4.</span> <span class="nav-text"> 执行语句和结果映射</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#spring-mybatis-mapper-%E6%B3%A8%E5%86%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">8.</span> <span class="nav-text"> Spring Mybatis Mapper 注册机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#importbeandefinitionregistrar"><span class="nav-number">8.1.</span> <span class="nav-text"> ImportBeanDefinitionRegistrar</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#beandefinitionregistrypostprocessor"><span class="nav-number">8.2.</span> <span class="nav-text"> BeanDefinitionRegistryPostProcessor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#classpathbeandefinitionscanner"><span class="nav-number">8.3.</span> <span class="nav-text"> ClassPathBeanDefinitionScanner</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -502,20 +562,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-count">90</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -720,7 +780,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'Zeral.github.io',
       owner       : 'Zeral-Zhang',
       admin       : ['Zeral-Zhang'],
-      id          : 'f2b902b626cbfd9f85f8a2bf9a931689',
+      id          : '47ef9a5cc647135937b1c5ae52b32d73',
         language: '',
       distractionFreeMode: true
     });

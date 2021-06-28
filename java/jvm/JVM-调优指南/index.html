@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="从桌面上的小 applet 到大型服务器上的 Web 服务，各种各样的应用程序都使用 Java。为了支持这种多样化的部署场景，Java HotSpot VM 提供了多个垃圾收集器，每个垃圾收集器旨在满足不同的需求。Java 根据运行应用程序的计算机的类别选择最合适的垃圾收集器。但是，此选择可能并非对每个应用程序都是最佳的。具有严格性能目标或其他要求的用户，开发人员和管理员可能需要明确选择垃圾回收器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM 调优指南">
+<meta property="og:url" content="https://www.zeral.cn/java/jvm/JVM-%E8%B0%83%E4%BC%98%E6%8C%87%E5%8D%97/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="从桌面上的小 applet 到大型服务器上的 Web 服务，各种各样的应用程序都使用 Java。为了支持这种多样化的部署场景，Java HotSpot VM 提供了多个垃圾收集器，每个垃圾收集器旨在满足不同的需求。Java 根据运行应用程序的计算机的类别选择最合适的垃圾收集器。但是，此选择可能并非对每个应用程序都是最佳的。具有严格性能目标或其他要求的用户，开发人员和管理员可能需要明确选择垃圾回收器">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/jsgct_dt_003_alc_vs_srvng.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/jsgct_dt_001_armgnt_gn_new.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/jsgct_dt_006_prm_gn_sz_new.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/jsgct_dt_004_grbg_frst_hp.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/jsgct_dt_001_grbgcltncyl.png">
+<meta property="article:published_time" content="2021-05-23T13:21:00.000Z">
+<meta property="article:modified_time" content="2021-05-26T07:24:04.459Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="JVM">
+<meta property="article:tag" content="G1">
+<meta property="article:tag" content="CMG">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/jvm/jsgct_dt_003_alc_vs_srvng.png">
+
+<link rel="canonical" href="https://www.zeral.cn/java/jvm/JVM-%E8%B0%83%E4%BC%98%E6%8C%87%E5%8D%97/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JVM 调优指南 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/jvm/JVM-%E8%B0%83%E4%BC%98%E6%8C%87%E5%8D%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM 调优指南
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-05-23 21:21:00" itemprop="dateCreated datePublished" datetime="2021-05-23T21:21:00+08:00">2021-05-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-26 15:24:04" itemprop="dateModified" datetime="2021-05-26T15:24:04+08:00">2021-05-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/java/jvm/JVM-%E8%B0%83%E4%BC%98%E6%8C%87%E5%8D%97/" class="post-meta-item leancloud_visitors" data-flag-title="JVM 调优指南" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>从桌面上的小 applet 到大型服务器上的 Web 服务，各种各样的应用程序都使用 Java。为了支持这种多样化的部署场景，Java HotSpot VM 提供了多个垃圾收集器，每个垃圾收集器旨在满足不同的需求。Java 根据运行应用程序的计算机的类别选择最合适的垃圾收集器。但是，此选择可能并非对每个应用程序都是最佳的。具有严格性能目标或其他要求的用户，开发人员和管理员可能需要明确选择垃圾回收器并调整某些参数以实现所需的性能水平。本文档提供了有助于完成这些任务的信息。</p>
+<p>首先，在串行，stop-the-world 收集器的上下文中描述了垃圾收集器的一般功能和基本的调整选项。然后介绍了其他收集器的特定功能以及选择收集器时要考虑的因素。</p>
+<span id="more"></span>
+<h1 id="什么是垃圾收集器"><a class="markdownIt-Anchor" href="#什么是垃圾收集器"></a> 什么是垃圾收集器？</h1>
+<p>垃圾收集器（GC）自动管理应用程序的动态内存分配请求。</p>
+<p>垃圾收集器通过以下操作执行自动动态内存管理：</p>
+<ul>
+<li>从操作系统分配内存并将其还给操作系统。</li>
+<li>根据请求将内存分发给应用程序。</li>
+<li>确定应用程序仍在使用该内存的哪些部分。</li>
+<li>回收未使用的内存，以供应用程序重新使用。</li>
+</ul>
+<p>Java HotSpot 垃圾收集器采用了各种技术来提高这些操作的效率：</p>
+<ul>
+<li>将分代清理与老化结合使用，可以将精力集中在堆中最有可能包含大量可回收内存区域的区域上。</li>
+<li>使用多个线程积极地使操作并行化，或者在后台与应用程序并发执行一些长时间运行的操作。</li>
+<li>尝试通过压缩活动对象来恢复较大的连续可用内存。</li>
+</ul>
+<h1 id="为什么选择垃圾收集器很重要"><a class="markdownIt-Anchor" href="#为什么选择垃圾收集器很重要"></a> 为什么选择垃圾收集器很重要？</h1>
+<p>垃圾收集器的目的是使应用程序开发人员从手动动态内存管理中解放出来。开发人员摆脱了将分配与释放分配相匹配的要求，并密切注意分配的动态内存的生命周期。这完全消除了一些与内存管理有关的错误操作，但付出了一些额外的运行时开销。 Java HotSpot VM 提供了一系列垃圾回收算法供您选择。</p>
+<p>什么时候选择垃圾收集器很重要？对于某些应用程序，答案永远是不重要。也就是说，在存在垃圾收集的情况下，应用程序可以很好地执行，并具有适度的收集频率和持续暂停时间。但是，对于大型应用程序却不是这种情况，特别是那些具有大量数据（数 GB），许多线程和高事务处理率的应用程序。</p>
+<p>阿姆达尔（Amdahl）定律（给定问题中的可并行加速部分受到问题的可顺序部分的限制）意味着大多数工作负载无法完美并行化。某些部分始终是顺序的，不能从并行性中受益。在 Java 平台中，当前有四种受支持的垃圾收集替代方案，除了其中一种（串行 GC），并行化工作以提高性能。尽可能减少垃圾收集的开销非常重要。</p>
+<h1 id="人机工程学"><a class="markdownIt-Anchor" href="#人机工程学"></a> 人机工程学</h1>
+<p>人机工程学是 Java 虚拟机（JVM）和垃圾收集启发法（例如基于行为的启发法）提高应用程序性能的过程。</p>
+<p>JVM 作为垃圾收集器，堆大小和运行时编译器提供了依赖于平台的默认选择。这些选择可满足不同类型应用程序的需求，同时需要较少的命令行调整。此外，基于行为的调整可动态优化堆的大小，以满足应用程序的指定行为。</p>
+<p>本节描述了这些默认选择和基于行为的调整。在使用后续各节中介绍的更详细的控件之前，请使用这些默认值。</p>
+<h2 id="垃圾收集器堆和运行时编译器的默认选择"><a class="markdownIt-Anchor" href="#垃圾收集器堆和运行时编译器的默认选择"></a> 垃圾收集器，堆和运行时编译器的默认选择</h2>
+<p>这些是垃圾收集器，堆大小和运行时编译器的默认选择：</p>
+<h3 id="java-8"><a class="markdownIt-Anchor" href="#java-8"></a> Java 8</h3>
+<p>具有以下属性的机器被认为是服务器类型机器：</p>
+<ul>
+<li>2 个或更多物理处理器</li>
+<li>2 GB 或更多的物理内存</li>
+</ul>
+<p>在服务器级计算机上，默认情况下选择以下内容：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/technotes/guides/vm/gctuning/parallel.html">吞吐量垃圾收集器</a>（并行垃圾收集器 - Parallel Collector）</li>
+<li>初始堆大小为 1/64 的物理内存，最大为 1 GB</li>
+<li>最大堆大小为物理内存的 1/4，最大为 1 GB</li>
+<li>服务器运行时编译器</li>
+</ul>
+<h3 id="java-11"><a class="markdownIt-Anchor" href="#java-11"></a> Java 11</h3>
+<ul>
+<li>Garbage-First (G1) 收集器</li>
+<li>GC 线程的最大数量受堆大小和可用 CPU 资源的限制</li>
+<li>初始堆大小为物理内存的 1/64</li>
+<li>最大堆大小为物理内存的 1/4</li>
+<li>分层编译器，同时使用 C1 和 C2</li>
+</ul>
+<blockquote>
+<p><strong>C1 compiler</strong></p>
+<p>快速，轻度优化的字节码编译器。执行一些值编号，内联和类分析。使用简单的面向 CFG 的 SSA “high” IR，面向机器的 “low” IR，线性扫描寄存器分配以及模板样式的代码生成器。</p>
+<p><strong>C2 compiler</strong></p>
+<p>高度优化的字节码编译器，也称为 “opto”。使用 “sea of nodes” SSA “ideal” IR，它降低为同类机器特定的 IR。具有图形着色寄存器分配器；为所有机器状态上色，包括局部，全局和参数寄存器以及堆栈。</p>
+</blockquote>
+<h3 id="查看当前运行-jvm-收集器"><a class="markdownIt-Anchor" href="#查看当前运行-jvm-收集器"></a> 查看当前运行 JVM 收集器</h3>
+<ul>
+<li>
+<p>Java &lt;= 8</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmap -heap &lt;pid&gt; | grep GC</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>Java &gt; 9</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jhsdb jmap --heap --pid &lt;pid&gt; | grep GC</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="基于行为的调整"><a class="markdownIt-Anchor" href="#基于行为的调整"></a> 基于行为的调整</h2>
+<p>可以将 Java HotSpot VM 垃圾收集器配置为优先满足以下两个目标之一：<strong>最大暂停时间</strong>和<strong>应用程序吞吐量</strong>。如果达到了首选目标，则收集器将尝试使其他目标最大化。自然地，这些目标并不总是能够满足的：应用程序需要最小的堆来容纳至少所有实时数据，而其他配置可能会阻止达到某些或所有期望的目标。</p>
+<p>下面的配置适用于吞吐量并行收集器和 G1 收集器。</p>
+<h3 id="最大暂停时间目标"><a class="markdownIt-Anchor" href="#最大暂停时间目标"></a> 最大暂停时间目标</h3>
+<p>暂停时间是垃圾收集器停止应用程序并恢复不再使用的空间的持续时间。最大暂停时间目标的目的是限制这些暂停中的最长时间。</p>
+<p>垃圾回收器会保持平均的停顿时间和该平均值的方差。平均值是从执行开始时获取的，但会对其进行加权，以使最近的暂停次数变得更多。如果平均时间加上暂停时间的方差大于最大暂停时间目标，则垃圾收集器认为未达到目标。</p>
+<p>最大暂停时间目标是通过命令行选项 <code>-XX:MaxGCPauseMillis=&lt;nnn&gt;</code>  指定的。这被解释为向垃圾收集器的提示，要求暂停时间为 &lt;<em>nnn</em>&gt; 毫秒或更短。垃圾收集器会调整 Java 堆大小和与垃圾收集相关的其他参数，以使垃圾收集的暂停时间短于 &lt;<em>nnn</em>&gt; 毫秒。最大暂停时间目标的默认值因收集器而异。<strong>这些调整可能导致垃圾回收更加频繁地发生，从而降低了应用程序的整体吞吐量</strong>。</p>
+<h3 id="吞吐量目标"><a class="markdownIt-Anchor" href="#吞吐量目标"></a> 吞吐量目标</h3>
+<p>吞吐量目标是根据收集垃圾所花费的时间来衡量的，而在垃圾收集之外所花费的时间就是应用时间。</p>
+<p>该目标由命令行选项 <code>-XX:GCTimeRatio=&lt;nnn&gt;</code> 指定。垃圾收集时间与应用程序时间的比率为 1/(1 + <em><nnn></em>)。例如，<code>-XX:GCTimeRatio=19</code> 设置目标垃圾收集的时间占总时间的 1/20 或 5％。</p>
+<p>垃圾收集所花费的时间是所有垃圾收集引起的暂停的总时间。<strong>如果未达到吞吐量目标，那么垃圾收集器可能采取的一种措施是增加堆的大小，以便在两次收集暂停之间花费在应用程序中的时间可以更长。</strong></p>
+<h3 id="占用空间"><a class="markdownIt-Anchor" href="#占用空间"></a> 占用空间</h3>
+<p>如果已满足吞吐量和最大暂停时间目标，则垃圾收集器会减小堆的大小，直到无法满足其中一个目标（始终是吞吐量目标）。可以分别使用 <code>-Xms=&lt;nnn&gt;</code> 和 <code>-Xmx=&lt;mmm&gt;</code> 分别设置垃圾收集器可以使用的最小和最大堆大小。</p>
+<h2 id="调整策略"><a class="markdownIt-Anchor" href="#调整策略"></a> 调整策略</h2>
+<p>堆增大或缩小到支持所选吞吐量目标的大小。了解有关堆调整策略的信息，例如选择最大堆大小和选择最大暂停时间目标。</p>
+<p>除非您知道需要的堆大于默认的最大堆大小，否则不要为堆选择最大值。选择足以满足您的应用程序的吞吐量目标。</p>
+<p>应用程序行为的更改可能导致堆增大或缩小。例如，如果应用程序开始以更高的速率分配，则堆会增长以保持相同的吞吐量。</p>
+<p>如果堆增长到最大大小，并且无法满足吞吐量目标，则最大堆大小对于吞吐量目标而言太小。将最大堆大小设置为接近平台上总物理内存的值，再次执行该应用程序。如果仍然没有达到吞吐量目标，那么对于平台上的可用内存来说，应用程序时间目标就太高了。</p>
+<p>如果可以满足吞吐量目标，但是暂停时间太长，则选择最大暂停时间目标。选择最大暂停时间目标可能意味着您的吞吐量目标将无法实现，因此请选择对应用程序可接受的折衷值。</p>
+<p>当垃圾收集器试图满足竞争目标时，堆的大小通常会发生波动。即使应用程序已达到稳定状态，也是如此。达到吞吐量目标（可能需要更大的堆）的压力与以获得最大的暂停时间和最小的占用空间（这两者都可能需要一个小堆）的目标相互竞争。</p>
+<h1 id="垃圾收集器实现"><a class="markdownIt-Anchor" href="#垃圾收集器实现"></a> 垃圾收集器实现</h1>
+<p>Java 平台的优势之一在于，它使开发人员免受内存分配和垃圾回收的复杂性的困扰。</p>
+<p>但是，当垃圾收集是主要瓶颈时，了解实现的某些方面很有用。垃圾收集器对应用程序使用对象的方式进行了假设，并且这些反映在可调整的参数中，可以调整这些参数以提高性能而不会牺牲抽象的能力。</p>
+<h3 id="分代垃圾收集器"><a class="markdownIt-Anchor" href="#分代垃圾收集器"></a> 分代垃圾收集器</h3>
+<p>当无法从正在运行的程序中任何其他活动对象的任何引用中访问该对象时，该对象被视为垃圾，并且 VM 可以重用其内存。</p>
+<p>一种理论上最直接的垃圾回收算法，每次运行时都会遍历每个可到达的对象。任何剩余的对象都被视为垃圾。这种方法花费的时间与活动对象的数量成正比，这对于维护大量活动数据的大型应用程序是不允许的。</p>
+<p>Java HotSpot VM 包含许多不同的垃圾收集算法，这些算法均使用称为分代收集的技术。天真的垃圾收集每次都会检查堆中的每个活动对象，而分代收集则利用大多数应用程序的一些经验观察到的属性，以最大程度地减少回收未使用的（垃圾）对象所需的工作。这些观察到的特性中最重要的是<em>弱分代假设（weak generational hypothesis）</em>，该假设指出大多数物体只能存活很短的时间。</p>
+<p>下图中的蓝色区域是对象生命周期的典型分布。 x 轴显示以分配的字节为单位的对象生存期。 y 轴上的字节数是具有相应生存期的对象中的总字节数。左侧的尖峰表示分配后可以回收的对象（换句话说，已“死亡”）。例如，迭代器对象通常仅在单个循环期间才处于活动状态。</p>
+<p><img src="../../../images/java/jvm/jsgct_dt_003_alc_vs_srvng.png" alt="Typical Distribution for Lifetimes of Objects" /></p>
+<p>有些对象的寿命更长，因此分布向右延伸。例如，通常在初始化时分配一些对象，这些对象一直存在直到 VM 退出。在这两个极端之间是在某些中间计算期间仍处于活动状态的对象，在此处被视为初始峰值右侧的区域。一些应用程序的外观分布非常不同，但是令人惊讶的是，大量应用程序具有这种总体形状。通过关注大多数对象“早逝”这一事实，可以进行有效的收集。</p>
+<h3 id="分代"><a class="markdownIt-Anchor" href="#分代"></a> 分代</h3>
+<p>为了针对这种情况进行优化，内存是分代管理的（存储着不同年龄对象的内存池）。当一分代填满时，垃圾收集会发生在每一代中。</p>
+<p>绝大多数对象分配在专用于年轻对象（<em>新生代</em>）的池中，并且大多数对象都死在那里。当新生代填满时，将导致***次要收集（Minor GC）***  ，其中仅收集新生代，不会回收其他代的垃圾。首先，这种收集的费用与所收集的存活对象的数量成正比；新生代中死亡对象的收集非常快。通常，在每个 Minor GC 期间，来自新生代的幸存对象中有一部分会转移到老年代。最终，因为老年代填满并必须被收集，从而导致一个  ***主要收集（Major GC）***，整个堆都会被收集。Major GC 的持续时间通常比 Minor GC 的持续时间长得多，因为涉及的对象数量很多。下图显示了串行垃圾收集器中各代的默认排列：</p>
+<p><img src="../../../images/java/jvm/jsgct_dt_001_armgnt_gn_new.png" alt="Default Arrangement of Generations in the Serial Collector" /></p>
+<p>启动时，Java HotSpot VM 会在地址空间中保留整个 Java 堆，但除非需要，否则不会为其分配任何物理内存。覆盖 Java 堆的整个地址空间被逻辑分为新生代和老年代。</p>
+<p>新生代由 <code>伊甸园（eden）</code> 和两个 <code>幸存者（survivor）</code> 空间组成。大多数对象最初是在 eden 中分配的。在垃圾收集期间，一个 survivor 空间可能随时被清空用作 eden 和其他 survivor 空间中活动对象的目的地，而另一个幸存者空间则用作垃圾收集者的目的地；垃圾回收后，eden 和源 survivor 空间被清空。在下一次垃圾收集中，将交换两个幸存者空间。最近填充满的一个空间中的活动对象是将要复制到的另一个幸存者的来源。以这种方式在幸存者空间之间复制对象，直到它们被复制了一定次数或空间不足为止，这些对象将被复制到老年代中，此过程也称为<em>老化｜晋升（aging</em>）。</p>
+<h3 id="性能考量"><a class="markdownIt-Anchor" href="#性能考量"></a> 性能考量</h3>
+<p>垃圾收集的主要衡量指标是吞吐量和延迟。</p>
+<ul>
+<li>
+<p>吞吐量是长时间内未花费在垃圾回收上的总时间的百分比。吞吐量包括分配所花费的时间（但是通常不需要调整分配速度）。</p>
+</li>
+<li>
+<p>延迟是应用程序的响应能力。垃圾回收暂停会影响应用程序的响应速度。</p>
+</li>
+</ul>
+<p>用户对垃圾回收有不同的要求。例如，有些人认为 Web 服务器的正确度量标准是吞吐量，因为垃圾回收期间的暂停可能是可以容忍的，或者可能被网络延迟所掩盖。但是，在交互式图形程序中，即使短暂的暂停也会对用户体验产生负面影响。</p>
+<p>一些用户对其他注意事项敏感。占用空间是进程的工作集，以页和缓存行计算而来。在物理内存有限或有许多进程的系统上，占用空间可能决定可伸缩性。*即时性（Promptness）*是指对象死掉到内存可用之间的时间，这是分布式系统（包括远程方法调用（RMI））的重要考虑因素。</p>
+<p>通常，为特定分代选择大小是这些考虑之间的权衡。例如，一个非常大的新生代可以使吞吐量最大化，但是这样做会占用空间，及时性和暂停时间。也可以通过使用少量的新生代来最小化新生代停顿，但会降低吞吐量。一个分代的大小不会影响另一分代的收集频率和暂停时间。</p>
+<p>没有选择分代大小的绝对的正确方法。最佳选择取决于应用程序使用内存的方式以及用户需求。因此，虚拟机对垃圾收集器的选择并非总是最佳选择，并且可能会被命令行选项所替代。请参阅影响垃圾收集性能的因素。</p>
+<h3 id="吞吐量和空间占用测量"><a class="markdownIt-Anchor" href="#吞吐量和空间占用测量"></a> 吞吐量和空间占用测量</h3>
+<p>吞吐量和占用空间最好使用特定于应用程序的指标来衡量。</p>
+<p>通过检查虚拟机本身的诊断输出，很容易估计由于垃圾收集而引起的暂停。</p>
+<p>命令行选项 <code>-verbose:gc</code> 在每次收集中输出有关堆和垃圾回收的信息。这是一个例子：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[15,651s][info ][gc] GC(36) Pause Young (G1 Evacuation Pause) 239M-&gt;57M(307M) (15,646s, 15,651s) 5,048ms</span><br><span class="line">[16,162s][info ][gc] GC(37) Pause Young (G1 Evacuation Pause) 238M-&gt;57M(307M) (16,146s, 16,162s) 16,565ms</span><br><span class="line">[16,367s][info ][gc] GC(38) Pause Full (System.gc()) 69M-&gt;31M(104M) (16,202s, 16,367s) 164,581ms</span><br></pre></td></tr></table></figure>
+<p>输出显示了两个新生代的收集，然后是由应用程序调用 System.gc() 启动的完整收集。这些行以一个时间戳开始，该时间戳指示从应用程序启动开始的时间。接下来是有关此行的日志级别（info）和标签（gc）的信息。其后是 GC 标识号。在这种情况下，存在三个 GC，其编号分别为 36、37 和 38。然后记录 GC 的类型和说明 GC 的原因。此后，将记录有关内存消耗的一些信息。该日志使用格式 “GC 之前使用情况”-&gt;“ GC 之后使用情况”（“堆总大小”）。</p>
+<p>在示例的第一行中，239M-&gt;57M(307M)，这意味着在 GC 之前该区域使用了 239 MB，GC 清除了大部分内存，但仍有 57 MB 存活。堆总大小为 307 MB。请注意，在此示例中，完整的 GC 将堆从 307 MB 减小到 104 MB。在内存使用情况信息之后，将记录 GC 的开始和结束时间以及持续时间（结束-开始）。</p>
+<p><code>-verbose:gc</code> 命令是 <code>-Xlog:gc</code> 的别名。 -Xlog 是用于 HotSpot JVM 的常规日志记录配置选项。这是一个基于标签的系统，其中 gc 是标签之一。要获取有关 GC 正在执行的操作的更多信息，您可以配置日志记录以打印具有 gc 标记和任何其他标记的任何消息。命令行选项是 <code>-Xlog:gc*</code>。</p>
+<p>这是一个用 <code>-Xlog:gc*</code> 记录的 G1 新生代收集的示例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[10.178s][info][gc,start ] GC(36) Pause Young (G1 Evacuation Pause) </span><br><span class="line">[10.178s][info][gc,task ] GC(36) Using 28 workers of 28 for evacuation </span><br><span class="line">[10.191s][info][gc,phases ] GC(36) Pre Evacuate Collection Set: 0.0ms</span><br><span class="line">[10.191s][info][gc,phases ] GC(36) Evacuate Collection Set: 6.9ms </span><br><span class="line">[10.191s][info][gc,phases ] GC(36) Post Evacuate Collection Set: 5.9ms </span><br><span class="line">[10.191s][info][gc,phases ] GC(36) Other: 0.2ms </span><br><span class="line">[10.191s][info][gc,heap ] GC(36) Eden regions: 286-&gt;0(276) </span><br><span class="line">[10.191s][info][gc,heap ] GC(36) Survivor regions: 15-&gt;26(38)</span><br><span class="line">[10.191s][info][gc,heap ] GC(36) Old regions: 88-&gt;88 </span><br><span class="line">[10.191s][info][gc,heap ] GC(36) Humongous regions: 3-&gt;1 </span><br><span class="line">[10.191s][info][gc,metaspace ] GC(36) Metaspace: 8152K-&gt;8152K(1056768K)</span><br><span class="line">[10.191s][info][gc ] GC(36) Pause Young (G1 Evacuation Pause) 391M-&gt;114M(508M) 13.075ms </span><br><span class="line">[10.191s][info][gc,cpu ] GC(36) User=0.20s Sys=0.00s Real=0.01s</span><br></pre></td></tr></table></figure>
+<h1 id="影响垃圾收集性能的因素"><a class="markdownIt-Anchor" href="#影响垃圾收集性能的因素"></a> 影响垃圾收集性能的因素</h1>
+<h2 id="总堆大小"><a class="markdownIt-Anchor" href="#总堆大小"></a> 总堆大小</h2>
+<p>影响垃圾收集性能的最重要因素是总可用内存。由于收集是在分代填满时发生的，因此吞吐量与可用内存量成反比。</p>
+<blockquote>
+<p>以下有关堆的增长和收缩，堆布局和默认值的讨论以串行收集器为例。尽管其他收集器使用类似的机制，但此处介绍的详细信息可能不适用于其他收集器。有关其他收集器的类似信息，请参阅相应主题。</p>
+</blockquote>
+<h3 id="影响分代大小的堆选项"><a class="markdownIt-Anchor" href="#影响分代大小的堆选项"></a> 影响分代大小的堆选项</h3>
+<p>许多选项会影响分代大小。下图说明了堆中已提交空间和虚拟空间之间的区别。在虚拟机初始化时，将保留堆的整个空间。可以使用 <code>-Xmx</code> 选项指定保留空间的大小。如果 <code>-Xms</code> 参数的值小于 <code>-Xmx</code> 参数的值，则并非所有保留的空间都会立即提交给虚拟机。在此图中，未使用的空间标记为 “virtual”。堆的不同部分，即老年代和新生代，可以根据需要增长到虚拟空间的极限。</p>
+<p>一些参数是堆的一部分与另一部分的比率。例如，参数 <code>–XX:NewRatio</code> 表示老年代与新生代的相对大小。</p>
+<p><img src="../../../images/java/jvm/jsgct_dt_006_prm_gn_sz_new.png" alt="Heap Options" /></p>
+<h3 id="堆大小的默认选项值"><a class="markdownIt-Anchor" href="#堆大小的默认选项值"></a> 堆大小的默认选项值</h3>
+<p>默认情况下，虚拟机会在每次收集增加或缩小堆，以尝试将每次收集中活动对象的可用空间比例保持在特定范围内。</p>
+<p>该目标范围由 <code>-XX:MinHeapFreeRatio=</code>&lt;<em>minimum</em>&gt; 和 <code>-XX:MaxHeapFreeRatio</code>=&lt;<em>maximum</em>&gt; 选项设置为百分比，总大小的下限为 <code>–Xms&lt;min&gt;</code>，上限为 <code>–Xmx&lt;max&gt;</code> 。下表中显示了 64 位 Solaris 操作系统（SPARC 平台版本）的默认选项。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Option</th>
+<th style="text-align:left">Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>-XX:MinHeapFreeRatio</code></td>
+<td style="text-align:left">40</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:MaxHeapFreeRatio</code></td>
+<td style="text-align:left">70</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-Xms</code></td>
+<td style="text-align:left">6656 KB</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-Xmx</code></td>
+<td style="text-align:left">calculated</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>其他参数和选项可能会影响这些默认值。要验证默认值，请使用 <code>-XX:+PrintFlagsFinal</code> 选项。</p>
+</blockquote>
+<p>使用这些选项，如果某代中的可用空间百分比降到 40％ 以下，则该代将扩展以维持 40％ 的可用空间，直到该代最大允许的大小。同样，如果可用空间超过 70％，则分代会收缩，因此只有 70％ 的空间可用，这取决于分代的最小大小。</p>
+<p>如表所述，默认的最大堆大小是由 JVM 计算的值。 Java SE 中为 Parallel 收集器使用的计算方式现在已用于所有垃圾收集器。计算的一部分因素是 64 位平台的最大堆大小的上限。请参见<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/gctuning/parallel-collector1.html#GUID-74BE3BC9-C7ED-4AF8-A202-793255C864C4">并行收集器默认堆大小</a>。客户端 JVM 的计算与此类似，这导致最大堆大小小于服务器 JVM。</p>
+<p>以下是有关服务器应用程序堆大小的一般准则：</p>
+<ul>
+<li>除非您在暂停方面遇到问题，否则请尝试为虚拟机分配尽可能多的内存。默认大小通常太小。</li>
+<li>将 <code>-Xms</code> 和 <code>-Xmx</code> 设置为相同的值可以提高可预测性，因为消除了虚拟机最重要的确定大小的决策。但是，如果选择不当，虚拟机将无法补偿。</li>
+<li>通常，随着处理器数量的增加，内存也会增加，因为分配可以并行进行。</li>
+</ul>
+<h2 id="新生代"><a class="markdownIt-Anchor" href="#新生代"></a> 新生代</h2>
+<p>在总可用内存之后，影响垃圾收集性能的第二大影响因素是专用于新生代的堆的比例。</p>
+<p>**新生代越大，Minor-次要 收集的次数就越少。**但是，对于有限的堆大小，较大的新生代意味着较小的老年代，<strong>这将增加 Major-主要 收集的频率</strong>。最佳选择取决于应用程序分配的对象的生命周期分布。</p>
+<h3 id="新生代大小选项"><a class="markdownIt-Anchor" href="#新生代大小选项"></a> 新生代大小选项</h3>
+<p>通常，新生代的大小受 <code>-XX:NewRatio</code> 该选项控制。</p>
+<p>比如，设置 <code>-XX:NewRatio=3</code> 表示新生代与老年代之间的比率为 1:3。换句话说，伊甸园-eden 空间和 幸存者-survivor 空间的总大小将是堆总大小的四分之一。</p>
+<p>选项 <code>-XX:NewSize</code> 和 <code>-XX:MaxNewSize</code> 从下方和上方限制了新生代的大小。将这些值设置为相同的值可以修复新生代，就像将 <code>-Xms</code> 和 <code>-Xmx</code> 设置为相同的值可以修复总堆大小一样。与 <code>-XX:NewRatio</code> 允许的整数倍相比，这对于以更精细的粒度调整新生代很有用。</p>
+<h3 id="幸存者-survivor-空间大小"><a class="markdownIt-Anchor" href="#幸存者-survivor-空间大小"></a> 幸存者-Survivor 空间大小</h3>
+<p>您可以使用选项 <code>-XX:SurvivorRatio</code> 来调整幸存者空间的大小，但这通常对性能并不重要。</p>
+<p>例如，<code>-XX:SurvivorRatio=6</code> 将伊甸园和幸存空间之间的比率设置为 6:1。换句话说，每个幸存者空间将是伊甸园大小的六分之一，因此是新生代的八分之一（而不是七分之一，因为有两个幸存者空间）。</p>
+<p>如果幸存者空间太小，那么收集时复制将直接溢出到老年代中。如果幸存者空间太大，那么它们将毫无用处。在每次垃圾回收时，虚拟机都会选择一个阈值数，该阈值是对象在变旧之前可以复制的次数。选择该阈值可使幸存者半满。您可以使用日志配置 <code>-Xlog:gc,age</code> 可用于显示此阈值和新生代对象的寿命。</p>
+<p><strong>64 位 Solaris 幸存者空间大小的默认选项值</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Option</th>
+<th style="text-align:left">Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>-XX:NewRatio</code></td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:NewSize</code></td>
+<td style="text-align:left">1310 MB</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:MaxNewSize</code></td>
+<td style="text-align:left">not limited</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:SurvivorRatio</code></td>
+<td style="text-align:left">8</td>
+</tr>
+</tbody>
+</table>
+<p>从总堆的最大大小和 <code>-XX:NewRatio</code> 参数的值计算出新生代的最大大小。</p>
+<p><code>-XX:MaxNewSize</code> 参数的 “not limited” 默认值意味着，除非在命令行上指定了 <code>-XX:MaxNewSize</code> 的值，否则计算所得值不受 <code>-XX:MaxNewSize</code> 的限制。</p>
+<p>以下是服务器应用程序的一般准则：</p>
+<ul>
+<li>首先确定您可以负担得起的虚拟机的最大堆大小。然后，针对新生代绘制性能指标，以找到最佳设置。
+<ul>
+<li>请注意，最大堆大小应始终小于计算机上安装的内存量，以避免过多的页面错误和崩溃。</li>
+</ul>
+</li>
+<li>如果总堆大小是固定的，则增加新生代大小需求减少老年代大小。保留足够大的老年代以容纳应用程序在任何给定时间使用的所有存活对象，以及一定数量的空闲空间（10％ 到 20％ 或更多）。</li>
+<li>遵循先前对老年代的约束：
+<ul>
+<li>为新生代留出充裕的内存。</li>
+<li>随着处理器数量的增加，可以增加新生代的大小，因为分配动作可以并行化。</li>
+</ul>
+</li>
+</ul>
+<h1 id="可用的收集器"><a class="markdownIt-Anchor" href="#可用的收集器"></a> 可用的收集器</h1>
+<p>到目前为止，讨论的都是串行收集器。 Java HotSpot VM 包括三种不同类型的收集器，每种收集器具有不同的性能特征。</p>
+<h2 id="串行收集器"><a class="markdownIt-Anchor" href="#串行收集器"></a> 串行收集器</h2>
+<p>串行收集器使用单个线程来执行所有垃圾收集工作，这使之相对高效，因为线程之间没有通信开销。</p>
+<p>它最适合单处理器计算机，因为它不能利用多处理器硬件，尽管它在多处理器上对于数据量较小（最大约 100 MB）的应用程序很有用。默认情况下，在某些硬件和操作系统配置上选择了串行收集器，或者可以通过选项 <code>-XX:+UseSerialGC</code> 显式启用串行收集器。</p>
+<h2 id="并行收集器"><a class="markdownIt-Anchor" href="#并行收集器"></a> 并行收集器</h2>
+<p>并行收集器也称为吞吐量收集器，它是类似于串行收集器的分代收集器。串行收集器和并行收集器之间的主要区别是并行收集器具有多个线程，这些线程用于加速垃圾收集。</p>
+<p>并行收集器旨在用于具有在多处理器或多线程硬件上运行的中型到大型数据集的应用程序。您可以使用 <code>-XX:+UseParallelGC</code> 选项启用它。</p>
+<p>并行压缩是使并行收集器能够并行执行 Major-主要 收集的功能。如果没有并行压缩，则使用单个线程执行 Major 收集，这会大大限制可伸缩性。如果已指定选项 <code>-XX:+UseParallelGC</code>，则默认情况下启用并行压缩。您可以使用 <code>-XX:-UseParallelOldGC</code> 选项禁用并行压缩。</p>
+<h2 id="最主要的大部分并发收集器"><a class="markdownIt-Anchor" href="#最主要的大部分并发收集器"></a> 最主要的大部分并发收集器</h2>
+<p>并发标记清除（CMS）收集器和 Garbage-First（G1）垃圾收集器是两个最主要的大部分并发收集器。通常，并发收集器会与应用程序同时执行一些昂贵的工作。</p>
+<ul>
+<li>
+<p>G1 垃圾收集器：<strong>此服务器形式的收集器用于具有大量内存的多处理器计算机。它极有可能满足垃圾收集暂停时间目标，同时实现高吞吐量。</strong></p>
+<p>G1 在某些硬件和操作系统配置上默认为选中，或者可以使用 <code>-XX:+UseG1GC</code> 明确启用。</p>
+</li>
+<li>
+<p>CMS 收集器：<strong>此收集器适用于那些希望更短的垃圾收集暂停时间并能够与垃圾收集共享处理器资源的应用程序。</strong></p>
+<p>使用选项 <code>-XX:+UseConcMarkSweepGC</code> 启用 CMS 收集器。</p>
+</li>
+</ul>
+<p><strong>从 JDK 9 开始不推荐使用 CMS 收集器。</strong></p>
+<h3 id="z-垃圾收集器"><a class="markdownIt-Anchor" href="#z-垃圾收集器"></a> Z 垃圾收集器</h3>
+<p>Z 垃圾收集器（ZGC）是可伸缩的低延迟垃圾收集器。 ZGC 同时执行所有昂贵的工作，而不会停止执行应用程序线程。</p>
+<p>ZGC <strong>适用于需要低延迟（少于 10 毫秒的暂停）和/或使用非常大的堆（数 TB）的应用程序</strong>。您可以通过使用 <code>-XX:+UseZGC</code> 选项来启用。</p>
+<p><strong>从 JDK 11 开始，ZGC 可以作为实验功能使用。</strong></p>
+<h2 id="选择收集器"><a class="markdownIt-Anchor" href="#选择收集器"></a> 选择收集器</h2>
+<p>除非您的应用程序有非常严格的暂停时间要求，否则请先运行您的应用程序并允许 VM 选择收集器。</p>
+<p>如有必要，请调整堆大小以提高性能。如果性能仍然不能满足您的目标，请使用以下准则作为选择收集器的开始：</p>
+<ul>
+<li>
+<p>如果应用程序的数据集较小（最大约 100 MB），则选择带有选项 <code>-XX:+UseSerialGC</code> 的串行收集器。</p>
+</li>
+<li>
+<p>如果应用程序将在单个处理器上运行并且没有暂停时间要求，则选择带有选项 <code>-XX:+UseSerialGC</code> 的串行收集器。</p>
+</li>
+<li>
+<p>如果（a）应用程序性能峰值是第一优先级，并且（b）没有暂停时间要求或一秒钟或更长时间的暂停是可接受的，则让 VM 选择收集器或使用 <code>-XX:+UseParallelGC</code> 选择并行收集器。</p>
+</li>
+<li>
+<p>如果响应时间比总体吞吐量更重要，并且垃圾收集暂停时间必须短于大约一秒钟，则选择带有 <code>-XX:+UseG1GC</code> 或 <code>-XX:+UseConcMarkSweepGC</code> 的并发收集器。</p>
+</li>
+<li>
+<p>如果响应时间是高优先级，和/或您使用的堆非常大，请使用 <code>-XX:UseZGC</code> 选择完全并发的收集器。</p>
+</li>
+</ul>
+<p>这些准则只是选择收集器的开始，因为性能<strong>取决于堆的大小，应用程序维护的实时数据量以及可用处理器的数量和速度</strong>。</p>
+<p>如果推荐的收集器没有达到所需的性能，则首先尝试调整堆和分代大小以满足所需的目标。如果性能仍然不足，请尝试使用其他收集器：<strong>使用并发收集器可以减少暂停时间，并可以使用并行收集器来提高多处理器硬件上的总体吞吐量</strong>。</p>
+<h1 id="garbage-first-垃圾收集器"><a class="markdownIt-Anchor" href="#garbage-first-垃圾收集器"></a> Garbage-First 垃圾收集器</h1>
+<h2 id="g1-收集器简介"><a class="markdownIt-Anchor" href="#g1-收集器简介"></a> G1 收集器简介</h2>
+<p>Garbage-First（G1）垃圾收集器的目标是具有大量内存的多处理器计算机。它试图以极高的可能性满足垃圾收集暂停时间的目标，同时在几乎不需要配置的情况下实现高吞吐量。G1 的目标是使用当前目标应用程序和环境在延迟和吞吐量之间达到最佳平衡，其特点包括：</p>
+<ul>
+<li>堆大小最大为 10 GB 或更大，其中超过 50％ 的 Java 堆被存活数据占用。</li>
+<li>对象分配和晋升的速率可能会随时间而显著变化。</li>
+<li>堆中有大量碎片。</li>
+<li>可预测的暂停时间目标目标不超过几百毫秒，避免了长时间的垃圾收集暂停。</li>
+</ul>
+<p>G1 替代了并发标记清除（CMS）收集器。它也是 Java 11 默认的收集器。</p>
+<p>G1 收集器可实现高性能，并尝试通过以下各节中描述的几种方式满足暂停时间目标。</p>
+<h2 id="启用-g1"><a class="markdownIt-Anchor" href="#启用-g1"></a> 启用 G1</h2>
+<p>Garbage-First 垃圾收集器是 Java 11 默认的收集器，因此通常不必执行任何其他操作。您可以通过在命令行上提供 <code>-XX:+UseG1GC</code> 来显式启用它。</p>
+<h2 id="基本概念"><a class="markdownIt-Anchor" href="#基本概念"></a> 基本概念</h2>
+<p>G1是分代，增量，并行，大部分并发的，stop-the-world 的并且 evacuating（撤离） 的垃圾收集器，它在每次 stop-the-world 暂停中监视暂停时间为目标。与其他收集器类似，G1 将堆分成（虚拟的）新生代和老年代。空间回收工作主要集中在最有效的新生代，而老年代则偶尔进行空间回收。</p>
+<p>某些操作总是在 stop-the-world 的暂停中执行，以提高吞吐量。在应用程序停止时会花费更多时间在其他操作（例如整个堆的全局标记之类的操作）但是与应用程序并行并发执行的。为了使 stop-the-world 停顿的时间足够短来做空间回收，G1 分步并行执行。G1 通过跟踪有关先前应用程序的行为和垃圾收集暂停的信息来建立可关联性模型，从而实现可预测性。它使用此信息来确定暂停中要完成的工作。例如，G1 首先回收最高效区域中的空间（也就是大部分被垃圾填充的区域）。</p>
+<p>G1 主要通过撤离（evacuating）来回收空间：将在选定存储区域中收集的活动对象复制到新的存储区域，并在此过程中对其进行压缩。evacuating 完成后，活动对象先前占用的空间将重新用于应用程序分配。</p>
+<p>G1 收集器不是实时收集器。它会尝试在更长的时间内以较高的概率达到设定的暂停时间目标，但对于给定的暂停时间却并非总是绝对有把握。</p>
+<h3 id="堆布局"><a class="markdownIt-Anchor" href="#堆布局"></a> 堆布局</h3>
+<p>G1 将堆划分为一组大小相等的堆区域，每个堆区域都有一个连续的虚拟内存范围，如图所示。区域是内存分配和回收的单位。在任何给定时间，这些区域中的每个区域都可以为空（浅灰色），或分配给特定的年龄段（新生或老年）。随着内存请求的到来，内存管理器将释放可用区域。内存管理器将它们分配给一个分代，然后将它们作为可分配自身的可用空间返回给应用程序。</p>
+<p><img src="../../../images/java/jvm/jsgct_dt_004_grbg_frst_hp.png" alt="G1 Garbage Collector Heap Layout" /></p>
+<p>新生代包含 伊甸园-eden 区域（红色）和 幸存者-survivor 区域（红色带有“ S”）。这些区域提供的功能与其他收集器中相应的连续空间相同，不同的是，在 G1 中，这些区域通常以不连续的模式布置在内存中。浅蓝色区域构成了老年代。对于跨越多个区域的对象，老年代区域可能是巨大的（浅蓝色，带有“ H”）。</p>
+<p>应用程序总是分配给新生代，即伊甸园区域，但庞大对象将直接分配为老年代。</p>
+<p>G1 垃圾收集暂停时可以回收整个新生代中的空间，并且可以在任何收集暂停时回收任何其他老年代区域。在暂停期间，G1 将对象从该次收集批次中复制到堆中的一个或多个不同区域。对象的目标区域取决于该对象的源区域：整个新生代都被复制到幸存者或老年代区域中，并通过老化将对象从老年代区域复制到其他不同的老年代区域。</p>
+<h3 id="垃圾回收周期"><a class="markdownIt-Anchor" href="#垃圾回收周期"></a> 垃圾回收周期</h3>
+<p>在较高级别上，G1 收集器在两个阶段之间交替。Young-only 阶段包含垃圾回收，这些垃圾回收逐渐将老年代中的对象填充到当前可用的内存中。在空间回收（Space Reclamation）阶段，G1 除了处理新生代外，还逐步回收老年代的空间。然后，循环以仅年轻阶段重新开始。</p>
+<p>下图给出了有关此循环的概述，并举例说明了可能发生的垃圾收集暂停的顺序：</p>
+<p><img src="../../../images/java/jvm/jsgct_dt_001_grbgcltncyl.png" alt="Garbage Collection Cycle Overview" /></p>
+<p>以下列表详细描述了 G1 垃圾回收周期的各个阶段，它们的暂停以及各阶段之间的过渡：</p>
+<ol>
+<li>仅新生代（Young-only）阶段：这个阶段从一些普通的新生代收集开始，这些收集将对象晋升到老年代。当新生代的占用率达到某个阈值（初始堆占用阈值）时，Young-only 阶段和空间回收阶段之间的过渡开始。此时，G1 开始并发收集新生代，而不是普通收集。</li>
+</ol>
+<ul>
+<li>并发开始：这种类型的收集除了执行“正常”收集新生代外，还会启动标记过程。并发标记确定了在下一个空间回收阶段中要保留的老年代区域中所有当前可到达的（活动）对象。尽管收集标记尚未完全完成，但可能会出现正常的新生代收集。标记结束时有两个特殊的 stop-the-world 暂停：“标记-Remark” 和 “清除-Cleanup”。</li>
+<li>Remark：此<strong>暂停</strong>将最终完成标记本身，执行全局引用处理和类卸载，回收完全为空的区域并清理内部数据结构。在“标记-Remark”和“清除-Cleanup”之间，G1 计算信息以便以后能够同时回收选定的老年代区域中的可用空间，这些信息将在清除暂停中最终确定。</li>
+<li>Cleanup：此<strong>暂停</strong>确定是否将实际进行空间回收阶段。如果随后进行空间回收阶段，则 Young-only 阶段将以单个预混合（Prepare Mixed）新生代收集结束。</li>
+</ul>
+<ol start="2">
+<li>空间回收阶段：此阶段包括多个混合收集，这些收集除了新生代区域外，还 evacuating-撤离 了老年代区域中的活动对象。当 G1 确定撤离更多老年代区域不会产生值得努力的足够自由空间时，空间回收阶段结束。</li>
+</ol>
+<p>在进行空间回收之后，收集周期会从另一个 Young-only 阶段开始重新启动。作为备份，如果应用程序在收集活动信息时内存不足，则 G1 会像其他收集器一样执行 in-place stop-the-world 的全堆压缩（Full GC）。</p>
+<h2 id="g1-内部"><a class="markdownIt-Anchor" href="#g1-内部"></a> G1 内部</h2>
+<p>本节描述了垃圾优先（G1）垃圾收集器的一些重要细节。</p>
+<h3 id="确定初始堆占用率"><a class="markdownIt-Anchor" href="#确定初始堆占用率"></a> 确定初始堆占用率</h3>
+<p><em>初始堆占用率</em>（<em>Initiating Heap Occupancy Percent</em> - IHOP）定义为老年代大小的百分比，它是触发初始标记收集的阈值。</p>
+<p>默认情况下，G1 通过观察<strong>标记所需的时间</strong>以及<strong>标记周期内老年代分配的内存量</strong>来自动确定最佳的 IHOP。此功能称为自适应 IHOP。如果启用此功能，就会将 <code>-XX:InitiatingHeapOccupancyPercent</code> 选项初始值确定为当前老年代大小的百分比，直到没有足够的观测值可以很好地预测初始堆占用阈值。使用选项 <code>-XX:-G1UseAdaptiveIHOP</code> 关闭 G1 的这种行为。在这种情况下，<code>-XX:InitiatingHeapOccupancyPercent</code> 的值将会确定此阈值。</p>
+<p>在内部，当老年代占用率为当前最大的老年代大小减去 <code>-XX:G1HeapReservePercent</code> 作为额外的缓冲区值时，自适应 IHOP 尝试设置初始堆占用率，以便开始空间回收阶段的第一个混合垃圾收集。</p>
+<h3 id="标记"><a class="markdownIt-Anchor" href="#标记"></a> 标记</h3>
+<p>G1 标记使用称为<em>开始时快照</em>（<em>Snapshot-At-The-Beginning</em> - SATB）的算法。当初始标记暂停时，它会为堆创建虚拟快照，此时在标记开始时所有处于活动状态的对象都被认为在其余标记时间也处于活动状态。这意味着出于空间回收的目的（在某些情况下例外），在标记过程中变成死（不可到达）的对象仍被认为是活动的。与其他收集器相比，这可能导致错误地保留了一些额外的内存。但是，这也潜在的使 SATB 在 Remark 暂停期间提供了更好的延迟。在该标记过程中过于保守地认为存活的对象将在下一次标记期间回收。有关标记问题的更多信息，请参见 G1 垃圾收集器优化主题。</p>
+<h3 id="堆非常紧张时的行为"><a class="markdownIt-Anchor" href="#堆非常紧张时的行为"></a> 堆非常紧张时的行为</h3>
+<p>当应用程序了保留大量内存导致撤离（evacuation）无法找到足够的空间复制到该空间时，就会发生撤离失败。撤离失败意味着 G1 通过将所有已移动的对象保留在新位置，并且不复制任何尚未移动的对象，仅调整对象之间的引用的方式来尝试完成当前的垃圾收集，撤离失败可能会产生一些额外的开销，但通常应与其他新生代收集一样快。在撤离失败的垃圾收集之后，G1 将正常恢复应用程序，而无需采取任何其他措施。G1 假定撤离失败发生在垃圾收集即将结束时； 也就是说，大多数对象已被移动，并且剩余空间足以继续运行应用程序，直到标记完成并开始空间回收。</p>
+<p>如果这种假设不成立，那么 G1 最终将安排一个完全 GC。这种类型的收集执行整个堆的  in-place 压缩。这可能很慢。</p>
+<p>有关在内存不足之前发出分配失败或完整GC的问题的更多信息，请参见 G1 垃圾收集器优化。</p>
+<h3 id="大型对象"><a class="markdownIt-Anchor" href="#大型对象"></a> 大型对象</h3>
+<p>大型对象是大于或等于一半区域大小的对象。除非使用 <code>-XX:G1HeapRegionSize</code> 选项进行设置，否则当前区域的大小将按照 G1 GC 的<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/gctuning/garbage-first-garbage-collector.html#GUID-082C967F-2DAC-4B59-8A81-0CEC6EEB9016">人机工程学默认值</a>中的说明按人机工程学确定。</p>
+<p>这些大型对象有时会以特殊方式处理：</p>
+<ul>
+<li>在老年代中，每个大型对象都被分配为一系列连续的区域。对象本身的起点始终按该顺序位于第一个区域的起点。最后一个区域中的所有剩余空间都将浪费，直到回收整个对象时才会进行分配。</li>
+<li>通常，大型对象只能在 清理-Cleanup 暂停期间的标记结束时回收，或者如果变得无法访问，则可以在完整 GC 期间回收。但是，对于大型对象有特殊的规定，用于原始类型的数组，例如 bool，各种整数和浮点值，如果在任何类型的垃圾回收暂停中许多对象都未引用大型对象，则 G1 机会尝试回收大型对象。默认情况下启用此行为，但是您可以使用选项 <code>-XX:G1EagerReclaimHumongousObjects</code> 禁用它。</li>
+<li>分配大型对象可能会导致垃圾回收暂停提前发生。 G1 会在每次大型对象分配时检查“初始堆占用”阈值，如果当前占用量超过该阈值，则可能会立即强制执行初始标记新生代收集。</li>
+<li>大型永远不会移动，即使在 Full GC 期间也不会移动。这可能会导致 Full GC 提前到来，或者由于区域空间因大量浪费的空间碎片而导致意外内存不足情况。</li>
+</ul>
+<h3 id="young-only-阶段分代大小确定"><a class="markdownIt-Anchor" href="#young-only-阶段分代大小确定"></a> Young-Only 阶段分代大小确定</h3>
+<p><strong>在仅新生代阶段，要收集的区域批次（收集批次）仅由新生代区域组成。</strong> G1 总是在正常的新生代收集结束时为下一个阶段确定新生代大小。这样，G1 可以通过使用 <code>-XX:MaxGCPauseTimeMillis</code> 和 <code>-XX:PauseTimeIntervalMillis</code> 基于对实际暂停时间的长期观察来达成暂停时间目标。它考虑了撤离规模相似的新生代需要多长时间。这包括诸如在收集过程中必须复制多少个对象以及这些对象之间关联的信息。</p>
+<p>如果没有其他限制，则 G1 在 <code>-XX:G1NewSizePercent</code> 和 <code>-XX:G1MaxNewSizePercent</code> 确定满足暂停时间的值之间自适应地调整新生代大小。有关如何解决长时间停顿的更多信息，请参见 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/gctuning/garbage-first-garbage-collector-tuning.html#GUID-90E30ACA-8040-432E-B3A0-1E0440AB556A">G1 垃圾收集器优化</a>。</p>
+<h3 id="空间回收阶段分代大小确定"><a class="markdownIt-Anchor" href="#空间回收阶段分代大小确定"></a> 空间回收阶段分代大小确定</h3>
+<p>在空间回收阶段，G1 尝试在单个垃圾收集暂停中最大化老年代中回收的空间量。它会将新生代的大小设置为允许的最小值（通常由 <code>-XX:G1NewSizePercent</code> 确定），并将任何老年区域添加到回收空间，直到 G1 确定添加更多区域将超过暂停时间目标为止。在特定的垃圾收集暂停中，G1 按照回收效率的顺序添加老年代区域，回收效率高的优先，然后用剩余可用时间来获取最终的收集批次。</p>
+<p>每次垃圾收集所能使用的老年代区域的数量受到要收集的潜在候选老年代区域（收集批次候选区域）的数量除以 <code>-XX:G1MixedGCCountTarget</code> 确定的空间回收阶段的长度的限制。<em>收集批次候选区域</em>是该阶段开始时占用率低于 -<code>XX:G1MixedGCLiveThresholdPercent</code> 的所有老年代区域。</p>
+<p>当可在收集批次候选区域中回收的剩余空间量小于 <code>-XX:G1HeapWastePercent</code> 设置的百分比时，该阶段结束。</p>
+<p>有关 G1 将使用多少个老年代区域以及如何避免长时间的混合收集暂停的更多信息，请参见 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/gctuning/garbage-first-garbage-collector-tuning.html#GUID-90E30ACA-8040-432E-B3A0-1E0440AB556A">G1 的垃圾收集器优化。</a></p>
+<h2 id="g1-gc-的人机工程学默认值"><a class="markdownIt-Anchor" href="#g1-gc-的人机工程学默认值"></a> G1 GC 的人机工程学默认值</h2>
+<p>本主题概述了特定于 G1 的最重要参数及其默认值。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">选项和默认值</th>
+<th style="text-align:left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>-XX:MaxGCPauseMillis=200</code></td>
+<td style="text-align:left">最大暂停时间的目标。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:GCPauseTimeInterval</code>=<em><ergo></em></td>
+<td style="text-align:left">最大暂停时间间隔的目标。默认情况下，G1 不设置任何目标，允许 G1 在极端情况下连续执行垃圾收集。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:ParallelGCThreads</code>=<em><ergo></em></td>
+<td style="text-align:left">垃圾回收暂停期间用于并行工作的最大线程数。这是通过以下方式从运行 VM 的计算机的可用线程数得出的：如果该进程可用的 CPU 线程数小于或等于 8，则使用该数量。否则，将线程数的八分之五增加到最终线程数。<br />在每次暂停开始时，使用的最大线程数进一步受最大总堆大小的限制：对于配置了每个线程能使用的最大堆内存 <code>-XX:HeapSizePerGCThread</code>，达到内存要求时 G1 不会使用多个线程。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:ConcGCThreads</code>=<em><ergo></em></td>
+<td style="text-align:left">用于并发工作的最大线程数。默认情况下，此值为 <code>-XX:ParallelGCThreads</code> 除以 4。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:+G1UseAdaptiveIHOP</code><br /><code>-XX:InitiatingHeapOccupancyPercent=45</code></td>
+<td style="text-align:left">用于控制初始堆占用率的默认值，以及指示自适应 IHOP 为启用，并且对于前几个收集周期，G1 将使用老年代占用率的 45％ 作为标记开始阈值。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:G1HeapRegionSize=&lt;ergo&gt;</code></td>
+<td style="text-align:left">基于初始堆大小和最大堆大小确定的堆区域大小。因此，该堆包含大约 2048 个堆区域。堆区域的大小可以从 1 到 32 MB 不等，并且必须为 2 的幂。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:G1NewSizePercent=5</code><br /><code>-XX:G1MaxNewSizePercent=60</code></td>
+<td style="text-align:left">总体上，新生代的大小在这两个值之间变化，以当前使用的 Java 堆的百分比表示。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:G1HeapWastePercent=5</code></td>
+<td style="text-align:left">集合中允许的候选未回收空间百分比。如果收集批次候选中的可用空间低于该比值，则 G1 停止空间回收阶段。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:G1MixedGCCountTarget=8</code></td>
+<td style="text-align:left">预期空间回收阶段收集的次数。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>-XX:G1MixedGCLiveThresholdPercent=85</code></td>
+<td style="text-align:left">在此空间回收阶段，高于该老年代存活对象占比时将不会被收集。</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>注意：<ergo> 表示实际值是根据环境和人机工程学确定的。</p>
+</blockquote>
+<h2 id="与其他收集器的比较"><a class="markdownIt-Anchor" href="#与其他收集器的比较"></a> 与其他收集器的比较</h2>
+<p>这是 G1 与其他收集器之间主要区别的摘要：</p>
+<ul>
+<li>并行 GC 只能从整体上压缩和回收老年代中的空间。 G1 将这项工作逐步分配到多个较短的收集中。这大大缩短了暂停时间也潜在的提高了吞吐量。</li>
+<li>与 CMS 相似，G1 并发执行部分老年代空间回收。但是，CMS 无法对老年代的堆进行碎片整理，最终会遇到较长的 Full GC。</li>
+<li>G1 可能表现出比其他收集器更高的开销，由于其并发性而影响吞吐量。</li>
+</ul>
+<p>由于其工作方式，G1 具有一些独特的机制来提高垃圾收集效率：</p>
+<ul>
+<li>G1 可以在任何收集过程中回收一些老年代的完全空的，较大的区域。这样可以避免许多其他不必要的垃圾收集，而无需付出很多努力即可释放大量空间。</li>
+<li>G1 可以选择尝试并发的对 Java 堆上的重复字符串进行重复数据删除。</li>
+</ul>
+<p>始终启用从老年代中回收空的大型对象的功能。您可以使用选项 <code>-XX:-G1EagerReclaimHumongousObjects</code> 禁用此功能。默认情况下，字符串重复数据删除功能处于禁用状态。您可以使用选项 <code>-XX:+G1EnableStringDeduplication</code> 启用它。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+              <a href="/tags/G1/" rel="tag"># G1</a>
+              <a href="/tags/CMG/" rel="tag"># CMG</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/spring/Spring-Boot-Starter-%E7%AE%80%E4%BB%8B/" rel="prev" title="Spring Boot Starter 简介">
+      <i class="fa fa-chevron-left"></i> Spring Boot Starter 简介
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/java/Java-NIO/" rel="next" title="Java NIO">
+      Java NIO <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text"> 什么是垃圾收集器？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%BE%88%E9%87%8D%E8%A6%81"><span class="nav-number">2.</span> <span class="nav-text"> 为什么选择垃圾收集器很重要？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%BA%E6%9C%BA%E5%B7%A5%E7%A8%8B%E5%AD%A6"><span class="nav-number">3.</span> <span class="nav-text"> 人机工程学</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%A0%86%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E7%BC%96%E8%AF%91%E5%99%A8%E7%9A%84%E9%BB%98%E8%AE%A4%E9%80%89%E6%8B%A9"><span class="nav-number">3.1.</span> <span class="nav-text"> 垃圾收集器，堆和运行时编译器的默认选择</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#java-8"><span class="nav-number">3.1.1.</span> <span class="nav-text"> Java 8</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#java-11"><span class="nav-number">3.1.2.</span> <span class="nav-text"> Java 11</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%BD%93%E5%89%8D%E8%BF%90%E8%A1%8C-jvm-%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">3.1.3.</span> <span class="nav-text"> 查看当前运行 JVM 收集器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E8%A1%8C%E4%B8%BA%E7%9A%84%E8%B0%83%E6%95%B4"><span class="nav-number">3.2.</span> <span class="nav-text"> 基于行为的调整</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E5%A4%A7%E6%9A%82%E5%81%9C%E6%97%B6%E9%97%B4%E7%9B%AE%E6%A0%87"><span class="nav-number">3.2.1.</span> <span class="nav-text"> 最大暂停时间目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%9E%E5%90%90%E9%87%8F%E7%9B%AE%E6%A0%87"><span class="nav-number">3.2.2.</span> <span class="nav-text"> 吞吐量目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%A0%E7%94%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.3.</span> <span class="nav-text"> 占用空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E6%95%B4%E7%AD%96%E7%95%A5"><span class="nav-number">3.3.</span> <span class="nav-text"> 调整策略</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text"> 垃圾收集器实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E4%BB%A3%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">4.0.1.</span> <span class="nav-text"> 分代垃圾收集器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E4%BB%A3"><span class="nav-number">4.0.2.</span> <span class="nav-text"> 分代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E8%80%83%E9%87%8F"><span class="nav-number">4.0.3.</span> <span class="nav-text"> 性能考量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%9E%E5%90%90%E9%87%8F%E5%92%8C%E7%A9%BA%E9%97%B4%E5%8D%A0%E7%94%A8%E6%B5%8B%E9%87%8F"><span class="nav-number">4.0.4.</span> <span class="nav-text"> 吞吐量和空间占用测量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BD%B1%E5%93%8D%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E6%80%A7%E8%83%BD%E7%9A%84%E5%9B%A0%E7%B4%A0"><span class="nav-number">5.</span> <span class="nav-text"> 影响垃圾收集性能的因素</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E5%A0%86%E5%A4%A7%E5%B0%8F"><span class="nav-number">5.1.</span> <span class="nav-text"> 总堆大小</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BD%B1%E5%93%8D%E5%88%86%E4%BB%A3%E5%A4%A7%E5%B0%8F%E7%9A%84%E5%A0%86%E9%80%89%E9%A1%B9"><span class="nav-number">5.1.1.</span> <span class="nav-text"> 影响分代大小的堆选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%E5%A4%A7%E5%B0%8F%E7%9A%84%E9%BB%98%E8%AE%A4%E9%80%89%E9%A1%B9%E5%80%BC"><span class="nav-number">5.1.2.</span> <span class="nav-text"> 堆大小的默认选项值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E7%94%9F%E4%BB%A3"><span class="nav-number">5.2.</span> <span class="nav-text"> 新生代</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B0%E7%94%9F%E4%BB%A3%E5%A4%A7%E5%B0%8F%E9%80%89%E9%A1%B9"><span class="nav-number">5.2.1.</span> <span class="nav-text"> 新生代大小选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B9%B8%E5%AD%98%E8%80%85-survivor-%E7%A9%BA%E9%97%B4%E5%A4%A7%E5%B0%8F"><span class="nav-number">5.2.2.</span> <span class="nav-text"> 幸存者-Survivor 空间大小</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%AF%E7%94%A8%E7%9A%84%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">6.</span> <span class="nav-text"> 可用的收集器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%B2%E8%A1%8C%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">6.1.</span> <span class="nav-text"> 串行收集器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">6.2.</span> <span class="nav-text"> 并行收集器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E4%B8%BB%E8%A6%81%E7%9A%84%E5%A4%A7%E9%83%A8%E5%88%86%E5%B9%B6%E5%8F%91%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">6.3.</span> <span class="nav-text"> 最主要的大部分并发收集器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#z-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">6.3.1.</span> <span class="nav-text"> Z 垃圾收集器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">6.4.</span> <span class="nav-text"> 选择收集器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#garbage-first-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">7.</span> <span class="nav-text"> Garbage-First 垃圾收集器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#g1-%E6%94%B6%E9%9B%86%E5%99%A8%E7%AE%80%E4%BB%8B"><span class="nav-number">7.1.</span> <span class="nav-text"> G1 收集器简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E7%94%A8-g1"><span class="nav-number">7.2.</span> <span class="nav-text"> 启用 G1</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">7.3.</span> <span class="nav-text"> 基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%E5%B8%83%E5%B1%80"><span class="nav-number">7.3.1.</span> <span class="nav-text"> 堆布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%91%A8%E6%9C%9F"><span class="nav-number">7.3.2.</span> <span class="nav-text"> 垃圾回收周期</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#g1-%E5%86%85%E9%83%A8"><span class="nav-number">7.4.</span> <span class="nav-text"> G1 内部</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AE%E5%AE%9A%E5%88%9D%E5%A7%8B%E5%A0%86%E5%8D%A0%E7%94%A8%E7%8E%87"><span class="nav-number">7.4.1.</span> <span class="nav-text"> 确定初始堆占用率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0"><span class="nav-number">7.4.2.</span> <span class="nav-text"> 标记</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%E9%9D%9E%E5%B8%B8%E7%B4%A7%E5%BC%A0%E6%97%B6%E7%9A%84%E8%A1%8C%E4%B8%BA"><span class="nav-number">7.4.3.</span> <span class="nav-text"> 堆非常紧张时的行为</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%A7%E5%9E%8B%E5%AF%B9%E8%B1%A1"><span class="nav-number">7.4.4.</span> <span class="nav-text"> 大型对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#young-only-%E9%98%B6%E6%AE%B5%E5%88%86%E4%BB%A3%E5%A4%A7%E5%B0%8F%E7%A1%AE%E5%AE%9A"><span class="nav-number">7.4.5.</span> <span class="nav-text"> Young-Only 阶段分代大小确定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A9%BA%E9%97%B4%E5%9B%9E%E6%94%B6%E9%98%B6%E6%AE%B5%E5%88%86%E4%BB%A3%E5%A4%A7%E5%B0%8F%E7%A1%AE%E5%AE%9A"><span class="nav-number">7.4.6.</span> <span class="nav-text"> 空间回收阶段分代大小确定</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#g1-gc-%E7%9A%84%E4%BA%BA%E6%9C%BA%E5%B7%A5%E7%A8%8B%E5%AD%A6%E9%BB%98%E8%AE%A4%E5%80%BC"><span class="nav-number">7.5.</span> <span class="nav-text"> G1 GC 的人机工程学默认值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8E%E5%85%B6%E4%BB%96%E6%94%B6%E9%9B%86%E5%99%A8%E7%9A%84%E6%AF%94%E8%BE%83"><span class="nav-number">7.6.</span> <span class="nav-text"> 与其他收集器的比较</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">90</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : '171965e29e0c93638ab2b5d58bc7e193',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

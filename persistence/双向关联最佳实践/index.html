@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="下面的最佳实践都是从性能角度证明双向关联的正确性。  映射 @OneToMany 双向关联  一个作者对应多本发行书，Parent 端 为 Author，Child 端为 Book。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="双向关联最佳实践">
+<meta property="og:url" content="https://www.zeral.cn/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="下面的最佳实践都是从性能角度证明双向关联的正确性。  映射 @OneToMany 双向关联  一个作者对应多本发行书，Parent 端 为 Author，Child 端为 Book。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/jpa/one-to-many-author-book.png">
+<meta property="og:image" content="https://www.zeral.cn/images/jpa/many-to-many.png">
+<meta property="article:published_time" content="2021-06-08T06:07:00.000Z">
+<meta property="article:modified_time" content="2021-06-23T03:19:18.272Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Hibernate">
+<meta property="article:tag" content="ManyToMany">
+<meta property="article:tag" content="OneToMany">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/jpa/one-to-many-author-book.png">
+
+<link rel="canonical" href="https://www.zeral.cn/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>双向关联最佳实践 | Zeral's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          双向关联最佳实践
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-06-08 14:07:00" itemprop="dateCreated datePublished" datetime="2021-06-08T14:07:00+08:00">2021-06-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-23 11:19:18" itemprop="dateModified" datetime="2021-06-23T11:19:18+08:00">2021-06-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categoriesv/JPA/" itemprop="url" rel="index"><span itemprop="name">JPA</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" class="post-meta-item leancloud_visitors" data-flag-title="双向关联最佳实践" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>下面的最佳实践都是从性能角度证明双向关联的正确性。</p>
+<h1 id="映射-onetomany-双向关联"><a class="markdownIt-Anchor" href="#映射-onetomany-双向关联"></a> 映射 @OneToMany 双向关联</h1>
+<p><img src="../../images/jpa/one-to-many-author-book.png" alt="one-to-many-author-book" /></p>
+<p>一个作者对应多本发行书，<code>Parent</code> 端 为 <code>Author</code>，<code>Child</code> 端为 <code>Book</code>。</p>
+<span id="more"></span>
+<p>关键点：</p>
+<h2 id="总是从-parent-端到-child-端级联操作"><a class="markdownIt-Anchor" href="#总是从-parent-端到-child-端级联操作"></a> 总是从 Parent 端到 Child 端级联操作</h2>
+<p>父对象都不存在的情况下操作子，显然不合理。</p>
+<ul>
+<li>
+<p>对于<strong>新增操作</strong>，如果 Parent 和 Child 的都是瞬时状态的数据调用级联新增（<code>CascadeType.PERSIST</code>）则没有问题。</p>
+<blockquote>
+<p>如果传递的 Child 包含具有 ID 的分离（<code>Detached</code>）对象，persist 方法会抛出 <code>EntityExistsException</code>，因为（参见 <a target="_blank" rel="noopener" href="http://jcp.org/aboutJava/communityprocess/final/jsr220/index.html">JPA 1.0 规范</a>的第 3.2.1 节）明确指出，传入的对象不能是分离的实体。</p>
+</blockquote>
+<p>对于一对多关联我们一般也不会传入已有的 Child。</p>
+</li>
+<li>
+<p>对于<strong>修改操作</strong>。</p>
+<p>首先明确一点，Spring Data JPA 对有标识符的对象调用 <code>save</code> 时，其实是调用的 JPA 的 <code>EntityManager.merge</code> 合并操作。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">@Transactional</span><br><span class="line">@Override</span><br><span class="line">public &lt;S extends T&gt; S save(S entity) &#123;</span><br><span class="line">    if (entityInformation.isNew(entity)) &#123;</span><br><span class="line">        em.persist(entity);</span><br><span class="line">        return entity;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        return em.merge(entity);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>merge</code> 操作会先根据分离的实体的唯一标识查询出该实体的持久态，再去合并每一个字段。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Author <span class="title">merge</span><span class="params">(Author detached)</span> </span>&#123;</span><br><span class="line">	Author newReference = session.byId( Author.class ).load( detached.getId() );</span><br><span class="line">	<span class="comment">// 复制所有分离的对象属性到持久化的实体中</span></span><br><span class="line">	newReference.setName( detached.getName() );</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> newReference;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果启用了级联合并（<code>CascadeType.MERGE</code>），则会级联合并 Child 的字段，这要求我们传入的瞬时状态的数据得是完整的（级联合并下也包括 Child），否则就会被级联修改掉。</p>
+<blockquote>
+<p><strong>所以尽量不要使用 merge 操作，也不要使用级联合并，除非你知道他如何工作</strong></p>
+</blockquote>
+<p><strong>如果我们只是想修改 Author 的信息</strong>：</p>
+<p>为了更好的控制要更新的字段，最好的方法是直接使用 HQL 或 JPQL 进行更新 update 语句操作；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Query(&quot;UPDATE Author SET name = :name WHERE id =:authorId&quot;)</span></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="meta">@Modifying</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">updateName</span><span class="params">(String name, Long authorId)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>或者先查询对象，对查询出的持久化状态实体进行字段修改，在会话结束时或手动 flush 时会自动更新到数据库。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">authorRepository.findById(<span class="number">1L</span>).ifPresent(author -&gt; &#123;</span><br><span class="line">    author.setAge(<span class="number">38</span>);</span><br><span class="line">    author.setName(<span class="string">&quot;Zeral&quot;</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p><strong>如果需要同步数据库持久化的 Author、Children 和传入的分离的 Author、Children 的状态。这里分两种情况讨论：</strong></p>
+<ol>
+<li>
+<p>传入的数据是完整的，不管是要修改的 Author 部分变更字段还是无需变更字段，或者 Child 的变更字段和无需变更字段，即使我们只是想同步 Child 的关联状态。</p>
+<p>比如原始的数据为：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;id&quot;</span>: <span class="number">1</span>,</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;Mark Janel&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;genre&quot;</span>: <span class="string">&quot;Anthology&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;age&quot;</span>: <span class="number">23</span>,</span><br><span class="line">  <span class="attr">&quot;books&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="number">1</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;A History of Ancient Prague&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;isbn&quot;</span>: <span class="string">&quot;001-JN&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="number">2</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;A People&#x27;s History&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;isbn&quot;</span>: <span class="string">&quot;002-JN&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="number">3</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;The Beatles Anthology&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;isbn&quot;</span>: <span class="string">&quot;001-MJ&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>想要修改为：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;1&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;Alicia Tom&quot;</span>,  </span><br><span class="line">  <span class="attr">&quot;genre&quot;</span>: <span class="string">&quot;Anthology&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;age&quot;</span>: <span class="number">38</span>,</span><br><span class="line">  <span class="attr">&quot;books&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="number">1</span>,</span><br><span class="line">      <span class="attr">&quot;isbn&quot;</span>: <span class="string">&quot;001-JN&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;A History of Ancient Prague&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;isbn&quot;</span>: <span class="string">&quot;004-ZH&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;Zeral&#x27;s Life&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们既要修改 Author 的信息，也要修改 Book ID 为 1 的信息，然后新增一个 Child，并移除缺失的 ID 为 2、3 的 Book。</p>
+<p>可以直接使用 JPA <code>EntityManager.merge</code> 即可，通过级联修改（<code>CascadeType.MERGE</code>）操作，状态会正确被同步。</p>
+<blockquote>
+<p>在合并期间，实体的当前状态被复制到刚刚从数据库中获取的持久态实体版本上。这就是 Hibernate 会执行 SELECT 语句的原因，该语句获取 Author 实体及其子实体，和刚才描述的一样。</p>
+<p>如果查询不是发起抓取 Author 及其子实体的查询，则可能发生 N+1 查询，则最好自己调用查询抓取所有。</p>
+</blockquote>
+</li>
+<li>
+<p>如果数据不完整，我们只想修改传入的变更字段。</p>
+<p>如果需要同步状态，并且保留已有的关联，可以先通过 Fetch JOIN 或 EntityGraph 操作将 Author 及其子实体查询出来，再去手动同步合并变更状态，<strong>这时不需要依赖级联合并操作。</strong></p>
+<p>修改 Author 的信息如之前所述，对于一对多的 Child 集合的手动合并分为三步：</p>
+<p>​	detachedBooks 为传入的分离的 Author 的 Books。</p>
+<ul>
+<li>
+<p>删除在数据库中存在但在传入的集合中已经不存在的数据行</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">author.getBooks.removeIf(b -&gt; !detachedBooks.contains(b));</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>更新数据库中和传入集合 ID 相同的数据行</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Book&gt; newBooks = detachedBooks.stream()</span><br><span class="line">        .filter(b -&gt; !author.getBooks().contains(b))</span><br><span class="line">        .collect(Collectors.toList());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 其他分离的实体</span></span><br><span class="line">detachedBooks.stream().filter(b -&gt; !newBooks.contains(b)).forEach((b) -&gt; &#123;</span><br><span class="line">        b.setAuthor(author);</span><br><span class="line">        Book mergedBook = bookRepository.save(b);</span><br><span class="line">        author.getBooks().set(author.getBooks().indexOf(mergedBook), mergedBook);</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>添加传入集合新增的数据到数据库</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">newBooks.forEach(b -&gt; author.addBook(b));</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="在-parent-方使用-mappedby"><a class="markdownIt-Anchor" href="#在-parent-方使用-mappedby"></a> 在 Parent 方使用 <code>mappedBy</code></h2>
+<p><code>mappedBy</code> 指向 Child 端的 <code>@ManyToOne</code> 对象字段的名称，它表示双向 <code>@OneToMany</code> 其实是数据库维护方 <code>@ManyToOne</code> 子端的镜像。</p>
+<h2 id="在-parent-方使用-orphanremoval-以删除失去引用的-child"><a class="markdownIt-Anchor" href="#在-parent-方使用-orphanremoval-以删除失去引用的-child"></a> 在 Parent 方使用 <code>orphanRemoval</code> 以删除失去引用的 Child</h2>
+<p><code>orphanRemoval</code> 表明如果将 Child 从 Parent 中移除，该 Child 将成为孤子，失去了 Parent 的引用，这时候将会被删除。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@OneToMany(cascade = CascadeType.ALL, mappedBy = &quot;post&quot;, orphanRemoval = true)</span></span><br></pre></td></tr></table></figure>
+<h2 id="在-parent-端使用工具方法保持两边关联同步"><a class="markdownIt-Anchor" href="#在-parent-端使用工具方法保持两边关联同步"></a> 在 Parent 端使用工具方法保持两边关联同步</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addBook</span><span class="params">(Book book)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.books.add(book);</span><br><span class="line">    book.setAuthor(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">removeBook</span><span class="params">(Book book)</span> </span>&#123;</span><br><span class="line">    book.setAuthor(<span class="keyword">null</span>);</span><br><span class="line">    <span class="keyword">this</span>.books.remove(book);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">removeBooks</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Iterator&lt;Book&gt; iterator = <span class="keyword">this</span>.books.iterator();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (iterator.hasNext()) &#123;</span><br><span class="line">        Book book = iterator.next();</span><br><span class="line"></span><br><span class="line">        book.setAuthor(<span class="keyword">null</span>);</span><br><span class="line">        iterator.remove();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了防止前端传过来的数据没有设置 Child 对 Parent 的关联，可以将 Setter 方法设置如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBooks</span><span class="params">(List&lt;Book&gt; books)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (books != <span class="keyword">null</span> &amp;&amp; !books.isEmpty()) &#123;</span><br><span class="line">        books.forEach(book -&gt; book.setAuthor(<span class="keyword">this</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span>.books = books;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="在关联的两边都使用懒加载"><a class="markdownIt-Anchor" href="#在关联的两边都使用懒加载"></a> 在关联的两边都使用懒加载</h2>
+<p>Parent 端 <code>@OneToMany</code> 默认为懒加载，但是在 <code>@ManyToOne</code> 端使用懒加载可以获得比较好的性能，比如我们在获取 Parent 的 Childs 时可以防止 N+1 查询。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ManyToOne(fetch = FetchType.LAZY)</span></span><br></pre></td></tr></table></figure>
+<h2 id="正确实现-equals-和-hashcode"><a class="markdownIt-Anchor" href="#正确实现-equals-和-hashcode"></a> 正确实现 <code>equals</code> 和 <code>hashcode</code></h2>
+<p><code>equals</code> 和 <code>hashCode</code> 必须在所有<a target="_blank" rel="noopener" href="https://vladmihalcea.com/a-beginners-guide-to-jpa-hibernate-entity-state-transitions/">实体状态转换中</a>表现一致。所以不管是瞬时状态还是持久化状态，对象的比较总是一致的。</p>
+<p>因此，我们需要通过标识符来去比较对象，标识符分两种类型：</p>
+<ul>
+<li>分配的标识符</li>
+<li>数据库生成的标识符</li>
+</ul>
+<h3 id="分配的标识符"><a class="markdownIt-Anchor" href="#分配的标识符"></a> 分配的标识符</h3>
+<p>在刷新 Persistence Context 之前分配分配的标识符，使用 <code>@NaturalId</code> 标识，我们可以进一步将它们分为两个子类别：</p>
+<ul>
+<li>
+<p>自然标识符</p>
+<p>比如 Book 的 ISBN。</p>
+</li>
+<li>
+<p>与数据库无关的 UUID</p>
+<p>与数据库无关的 UUID 编号是在数据库之外生成的，就像调用 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/7/docs/api/java/util/UUID.html#randomUUID()"><code>java.util.UUID#randomUUID</code></a> 方法一样。</p>
+</li>
+</ul>
+<p>自然标识符和与数据库无关的 UUID 都可以在实体被持久化前被知道。因此，在 <code>equals</code> 和 <code>hashCode</code> 实现中使用它们是安全的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity(name = &quot;Book&quot;)</span></span><br><span class="line"><span class="meta">@Table(name = &quot;book&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Book</span> <span class="keyword">implements</span> <span class="title">Identifiable</span>&lt;<span class="title">Long</span>&gt; </span>&#123;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@GeneratedValue</span></span><br><span class="line">    <span class="keyword">private</span> Long id;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> String title;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@NaturalId</span></span><br><span class="line">    <span class="keyword">private</span> String isbn;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object o)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span> == o) <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">if</span> (!(o <span class="keyword">instanceof</span> Book)) <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        Book book = (Book) o;</span><br><span class="line">        <span class="keyword">return</span> Objects.equals(getIsbn(), book.getIsbn());</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Objects.hash(getIsbn());</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">//Getters and setters omitted for brevity</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="数据库生成的标识符"><a class="markdownIt-Anchor" href="#数据库生成的标识符"></a> 数据库生成的标识符</h3>
+<p>数据库生成的标识符是另一回事。因为标识符是在刷新时由数据库分配的，所以如果我们像分配标识符一样基于标识符实现 <code>equals</code> 和 <code>hashCode</code>，一致性保证就会中断。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity(name = &quot;Post&quot;)</span></span><br><span class="line"><span class="meta">@Table(name = &quot;post&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Post</span> <span class="keyword">implements</span> <span class="title">Identifiable</span>&lt;<span class="title">Long</span>&gt; </span>&#123;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@GeneratedValue</span></span><br><span class="line">    <span class="keyword">private</span> Long id;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> String title;</span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Post</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object o)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span> == o) <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">if</span> (!(o <span class="keyword">instanceof</span> Post))</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line"> </span><br><span class="line">        Post other = (Post) o;</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">return</span> id != <span class="keyword">null</span> &amp;&amp;</span><br><span class="line">               id.equals(other.getId());</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> getClass().hashCode();</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">//Getters and setters omitted for brevity</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="正确重写-tostring"><a class="markdownIt-Anchor" href="#正确重写-tostring"></a> 正确重写 <code>toString</code></h2>
+<p>如果 <code>toString()</code> 需要被覆盖，那么注意只涉及从数据库加载实体时获取的<strong>基本属性</strong>。</p>
+<h2 id="移除大量-child-时使用批量操作"><a class="markdownIt-Anchor" href="#移除大量-child-时使用批量操作"></a> 移除大量 Child 时使用批量操作</h2>
+<p>注意移除操作，尤其是移除子实体。 <code>CascadeType.REMOVE</code> 和 <code>orphanRemoval=true</code> 可能会产生过多的查询。在这种情况下，依赖批量操作在大多数情况下是删除的最佳方式。</p>
+<h1 id="映射-manytomany-双向关联"><a class="markdownIt-Anchor" href="#映射-manytomany-双向关联"></a> 映射 @ManyToMany 双向关联</h1>
+<p><img src="../../images/jpa/many-to-many.png" alt="image-005" /></p>
+<h2 id="选择关系的所有者"><a class="markdownIt-Anchor" href="#选择关系的所有者"></a> 选择关系的所有者</h2>
+<p>使用默认的 <code>@ManyToMany</code> 映射需要开发人员选择关系的所有者和 <code>mappedBy</code> 端（也称为反向端）。只有一侧可以是所有者，连接表在拥有方指定，并且更改仅从这一特定侧传播到数据库，则非拥有方必须使用 <code>@ManyToMany</code> 注释的 <code>mappedBy</code> 元素来指定拥有方的关系字段或属性。例如，<code>Author</code>  可以是所有者，而 <code>Book</code> 端添加了 <code>mappingBy</code> 指定拥有方 <code>Author</code> 的 <code>books</code> 字段。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ManyToMany(mappedBy = &quot;books&quot;)</span> </span><br><span class="line"><span class="keyword">private</span> Set&lt;Author&gt; authors = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br></pre></td></tr></table></figure>
+<h2 id="总是使用-set-而不是-list"><a class="markdownIt-Anchor" href="#总是使用-set-而不是-list"></a> 总是使用 Set 而不是 List</h2>
+<p>特别是如果涉及删除操作，建议依赖于 Set 而不是 List，因为 Set 的性能高于 List。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Set&lt;Book&gt; books = <span class="keyword">new</span> HashSet&lt;&gt;();     <span class="comment">// in Author </span></span><br><span class="line"><span class="keyword">private</span> Set&lt;Author&gt; authors = <span class="keyword">new</span> HashSet&lt;&gt;(); <span class="comment">// in Book</span></span><br></pre></td></tr></table></figure>
+<p>Hibernate 将 @ManyToMany 操作当作两个单向的 @OneToMany 操作处理，在此语句的上下文中，实体删除（或重新排序）导致从结表中删除所有关联条目，并重新插入它们以对照内存内容（当前持久性上下文内容）。</p>
+<p>如果是 Set 集合的话只会删除单个条目，因为它不保证顺序。</p>
+<p>要保留顺序可以使用 <code>@OrderBy</code> 语句，例如使用多个字段排序 ：<code>@OrderBy(&quot;age DESC, name ASC&quot;)</code>。</p>
+<h2 id="保持两边关联同步"><a class="markdownIt-Anchor" href="#保持两边关联同步"></a> 保持两边关联同步</h2>
+<p>同样，我们可以使用之前提及的 <code>addBook</code>、<code>removeBook</code>、<code>removeBooks</code>、<code>setBooks</code> 工具方法保持两边同步。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addBook</span><span class="params">(Book book)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.books.add(book);</span><br><span class="line">    book.getAuthors().add(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">removeBook</span><span class="params">(Book book)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.books.remove(book);</span><br><span class="line">    book.getAuthors().remove(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">removeBooks</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Iterator&lt;Book&gt; iterator = <span class="keyword">this</span>.books.iterator();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (iterator.hasNext()) &#123;</span><br><span class="line">        Book book = iterator.next();</span><br><span class="line"></span><br><span class="line">        book.getAuthors().remove(<span class="keyword">this</span>);</span><br><span class="line">        iterator.remove();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBooks</span><span class="params">(Set&lt;Book&gt; books)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!CollectionUtils.isEmpty(books)) &#123;</span><br><span class="line">        books.forEach(book -&gt; book.getAuthors().add(<span class="keyword">this</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span>.books = books;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="避免-cascadetypeall-和-cascadetyperemove"><a class="markdownIt-Anchor" href="#避免-cascadetypeall-和-cascadetyperemove"></a> 避免 CascadeType.ALL 和 CascadeType.REMOVE</h2>
+<p>在大多数情况下，级联删除是糟糕的想法。 例如，删除 <code>Author</code> 实体不应触发 <code>Book</code> 删除，因为这本书也可以由其他作者引用（一本书可以由几位作者编写）。所以，避免 <code>CascadeType.ALL</code> 和 <code>CascadeType.REMOVE</code> 并依赖于显式 <code>CascadeType.PERSIST</code> 和 <code>CascadeType.MERGE</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ManyToMany(cascade = &#123;CascadeType.PERSIST, CascadeType.MERGE&#125;)</span> </span><br><span class="line"><span class="keyword">private</span> Set&lt;Book&gt; books = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>
+<p>对于<strong>新增操作</strong>。这里分两种情况：</p>
+<ol>
+<li>
+<p>如果 Parent 和 Child 的都是瞬时状态的数据使用级联新增（<code>CascadeType.PERSIST</code>）则没有问题，比如下面的数据：</p>
+<ol>
+<li></li>
+</ol>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;Alicia Tom&quot;</span>,  </span><br><span class="line">  <span class="attr">&quot;age&quot;</span>: <span class="number">38</span>,</span><br><span class="line">  <span class="attr">&quot;genre&quot;</span>: <span class="string">&quot;Anthology&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;books&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;isbn&quot;</span>: <span class="string">&quot;003-OG&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;Zeral&#x27;s Life&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;isbn&quot;</span>: <span class="string">&quot;004-MJ&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;A People&#x27;s Life&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行 persist 会执行如下语句，级联新增会帮我们新增 Author 和两个 Book 及其关联。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> author (age, genre, name) <span class="keyword">values</span> (?, ?, ?)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> book (isbn, title) <span class="keyword">values</span> (?, ?)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> book (isbn, title) <span class="keyword">values</span> (?, ?)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> author_book (author_id, book_id) <span class="keyword">values</span> (?, ?)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> author_book (author_id, book_id) <span class="keyword">values</span> (?, ?)</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>如果我们的 Book 已存在，我们想在新增 Author 时让它帮我们绑定关系，使用级联新增会因为有分离的对象而报错，这时则可以<strong>只使用</strong> <code>CascadeType.MERGE</code> 来完成。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ManyToMany(cascade = &#123;CascadeType.MERGE&#125;)</span> </span><br><span class="line"><span class="keyword">private</span> Set&lt;Book&gt; books = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br></pre></td></tr></table></figure>
+<p>执行 <strong>persist</strong> 会执行如下语句，级联修改会帮我们新增 Author 和两个 Book 的关联。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> author (age, genre, name) <span class="keyword">values</span> (?, ?, ?)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> author_book (author_id, book_id) <span class="keyword">values</span> (?, ?)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> author_book (author_id, book_id) <span class="keyword">values</span> (?, ?)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+<li>
+<p>对于<strong>修改操作</strong>：</p>
+<p>对于 Parent 字段的修改和之前描述的一样，多对多的关系我们一般只修改关联，无需额外的设置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">authorRepository.findById(detachedAuthor.getId()).ifPresent(author -&gt; &#123;</span><br><span class="line">    <span class="comment">// 修改 Parent 字段</span></span><br><span class="line">    author.setName(detachedAuthor.getName());</span><br><span class="line">    author.setAge(detachedAuthor.getAge());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 我们只同步关系，不去新增修改 Book 的信息，这里传入的分离的 books 只包含 Id</span></span><br><span class="line">    author.setBooks(detachedAuthor.getBooks());</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="设置关联表"><a class="markdownIt-Anchor" href="#设置关联表"></a> 设置关联表</h2>
+<p>显式设置关联表名称和列名称允许开发人员在引用它们时避免混淆。 这可以通过 <code>@JoinTable</code> 完成，如下例所示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@JoinTable(name = &quot;author_book&quot;,           </span></span><br><span class="line"><span class="meta">					joinColumns = @JoinColumn(name = &quot;author_id&quot;),           </span></span><br><span class="line"><span class="meta">					inverseJoinColumns = @JoinColumn(name = &quot;book_id&quot;) </span></span><br><span class="line"><span class="meta">)</span></span><br></pre></td></tr></table></figure>
+<h2 id="在关联两边都使用懒加载"><a class="markdownIt-Anchor" href="#在关联两边都使用懒加载"></a> 在关联两边都使用懒加载</h2>
+<p>默认情况下，@ManyToMany 关联是惰性加载的，不要给他使用立即加载。</p>
+<h2 id="正确实现-equals-和-hashcode-2"><a class="markdownIt-Anchor" href="#正确实现-equals-和-hashcode-2"></a> 正确实现 <code>equals</code> 和 <code>hashcode</code></h2>
+<p>如上所述</p>
+<h2 id="正确重写-tostring-2"><a class="markdownIt-Anchor" href="#正确重写-tostring-2"></a> 正确重写 <code>toString</code></h2>
+<p>如上所述</p>
+<h2 id="需要时使用两个双向的-onetomany"><a class="markdownIt-Anchor" href="#需要时使用两个双向的-onetomany"></a> 需要时使用两个双向的 @OneToMany</h2>
+<p>如果双向 <code>@OneToMany</code> 关联在删除或更改子元素的顺序时表现更好，或者需要直接操作关联表，则没必要使用 <code>@ManyToMany</code> 关系，因为外键端不受控制。为了克服这个限制，必须直接公开关联表并将 <code>@ManyToMany</code> 关联拆分为两个双向的 <code>@OneToMany</code> 关系。</p>
+<p>最自然的 <code>@ManyToMany</code> 关联遵循数据库模式采用的相同逻辑，并且关联表的关联实体控制需要联接的双方的关系。</p>
+<p>在这里 Author 和 Book 都使用 @OneToMany mappedBy 到关系维护方中间表 AuthorBook，AuthorBook 使用 Author_Id 和 Book_Id 作为联合主键。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Author</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span></span><br><span class="line">    <span class="keyword">private</span> Long id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> String genre;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> age;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@OneToMany(</span></span><br><span class="line"><span class="meta">            mappedBy = &quot;author&quot;,</span></span><br><span class="line"><span class="meta">            cascade = CascadeType.ALL,</span></span><br><span class="line"><span class="meta">            orphanRemoval = true</span></span><br><span class="line"><span class="meta">    )</span></span><br><span class="line">    <span class="keyword">private</span> List&lt;AuthorBook&gt; books = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为了简洁期间省略 Getter 和 Setter</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addBook</span><span class="params">(Book book)</span> </span>&#123;</span><br><span class="line">        AuthorBook AuthorBook = <span class="keyword">new</span> AuthorBook( <span class="keyword">this</span>, book );</span><br><span class="line">        books.add( AuthorBook );</span><br><span class="line">        book.getAuthors().add( AuthorBook );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">removeBook</span><span class="params">(Book book)</span> </span>&#123;</span><br><span class="line">        AuthorBook AuthorBook = <span class="keyword">new</span> AuthorBook( <span class="keyword">this</span>, book );</span><br><span class="line">        book.getAuthors().remove( AuthorBook );</span><br><span class="line">        books.remove( AuthorBook );</span><br><span class="line">        AuthorBook.setAuthor( <span class="keyword">null</span> );</span><br><span class="line">        AuthorBook.setBook( <span class="keyword">null</span> );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object obj)</span> </span>&#123;     </span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span> == obj) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(obj == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (getClass() != obj.getClass()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> id != <span class="keyword">null</span> &amp;&amp; id.equals(((Author) obj).id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">2021</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Author&#123;&quot;</span> + <span class="string">&quot;id=&quot;</span> + id + <span class="string">&quot;, name=&quot;</span> + name</span><br><span class="line">                + <span class="string">&quot;, genre=&quot;</span> + genre + <span class="string">&quot;, age=&quot;</span> + age + <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AuthorBook</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Id</span></span><br><span class="line">	<span class="meta">@ManyToOne</span></span><br><span class="line">	<span class="keyword">private</span> Author author;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Id</span></span><br><span class="line">	<span class="meta">@ManyToOne</span></span><br><span class="line">	<span class="keyword">private</span> Book book;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 为了简洁期间省略 Getter 和 Setter</span></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object o)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> ( <span class="keyword">this</span> == o ) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> ( o == <span class="keyword">null</span> || getClass() != o.getClass() ) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		AuthorBook that = (AuthorBook) o;</span><br><span class="line">		<span class="keyword">return</span> Objects.equals(author, that.author) &amp;&amp;</span><br><span class="line">				Objects.equals(book, that.book);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> Objects.hash(author, book);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>JPA 不允许使用多个 Id 注解，可以使用组合 Id：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Embeddable</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AuthorBookId</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">  </span><br><span class="line">    <span class="meta">@Column(name = &quot;author_id&quot;)</span></span><br><span class="line">    <span class="keyword">private</span> Long authorId;</span><br><span class="line">  </span><br><span class="line">    <span class="meta">@Column(name = &quot;book_id&quot;)</span></span><br><span class="line">    <span class="keyword">private</span> Long bookId;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AuthorBookId</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AuthorBookId</span><span class="params">(Long authorId, Long bookId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.authorId = authorId;</span><br><span class="line">        <span class="keyword">this</span>.bookId = bookId;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 为了简洁省略 getter、setter、hashcode、equals...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AuthorBook</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">  </span><br><span class="line">    <span class="meta">@EmbeddedId</span></span><br><span class="line">    <span class="keyword">private</span> AuthorBookId id;</span><br><span class="line">  </span><br><span class="line">    <span class="meta">@MapsId(&quot;authorId&quot;)</span></span><br><span class="line">    <span class="meta">@ManyToOne(fetch = FetchType.LAZY)</span></span><br><span class="line">    <span class="keyword">private</span> Author author;</span><br><span class="line">  </span><br><span class="line">    <span class="meta">@MapsId(&quot;bookId&quot;)</span></span><br><span class="line">    <span class="meta">@ManyToOne(fetch = FetchType.LAZY)</span></span><br><span class="line">    <span class="keyword">private</span> Book book;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AuthorBook</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AuthorBook</span><span class="params">(Author author, Book book)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.author = author;</span><br><span class="line">        <span class="keyword">this</span>.book = book;</span><br><span class="line">        <span class="keyword">this</span>.id = <span class="keyword">new</span> AuthorBookId(author.getId(), book.getId());</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 为了简洁省略 getter、setter、hashcode、equals...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Book</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span></span><br><span class="line">    <span class="keyword">private</span> Long id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String title;</span><br><span class="line">    <span class="keyword">private</span> String isbn;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@OneToMany(</span></span><br><span class="line"><span class="meta">            mappedBy = &quot;book&quot;,</span></span><br><span class="line"><span class="meta">            cascade = CascadeType.ALL,</span></span><br><span class="line"><span class="meta">            orphanRemoval = true</span></span><br><span class="line"><span class="meta">    )</span></span><br><span class="line">    <span class="keyword">private</span> Set&lt;AuthorBook&gt; authors = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 为了简洁期间省略 Getter 和 Setter</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object obj)</span> </span>&#123;</span><br><span class="line">               </span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span> == obj) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (obj == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (getClass() != obj.getClass()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> id != <span class="keyword">null</span> &amp;&amp; id.equals(((Book) obj).id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">2021</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Book&#123;&quot;</span> + <span class="string">&quot;id=&quot;</span> + id + <span class="string">&quot;, title=&quot;</span> + title + <span class="string">&quot;, isbn=&quot;</span> + isbn + <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+            <span class="icon">
+              <i class="fab fa-twitter"></i>
+            </span>
+
+            <span class="label">Twitter</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Hibernate/" rel="tag"># Hibernate</a>
+              <a href="/tags/ManyToMany/" rel="tag"># ManyToMany</a>
+              <a href="/tags/OneToMany/" rel="tag"># OneToMany</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/java/Java-Agent/" rel="prev" title="Java Agent">
+      <i class="fa fa-chevron-left"></i> Java Agent
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%98%A0%E5%B0%84-onetomany-%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94"><span class="nav-number">1.</span> <span class="nav-text"> 映射 @OneToMany 双向关联</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E6%98%AF%E4%BB%8E-parent-%E7%AB%AF%E5%88%B0-child-%E7%AB%AF%E7%BA%A7%E8%81%94%E6%93%8D%E4%BD%9C"><span class="nav-number">1.1.</span> <span class="nav-text"> 总是从 Parent 端到 Child 端级联操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-parent-%E6%96%B9%E4%BD%BF%E7%94%A8-mappedby"><span class="nav-number">1.2.</span> <span class="nav-text"> 在 Parent 方使用 mappedBy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-parent-%E6%96%B9%E4%BD%BF%E7%94%A8-orphanremoval-%E4%BB%A5%E5%88%A0%E9%99%A4%E5%A4%B1%E5%8E%BB%E5%BC%95%E7%94%A8%E7%9A%84-child"><span class="nav-number">1.3.</span> <span class="nav-text"> 在 Parent 方使用 orphanRemoval 以删除失去引用的 Child</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-parent-%E7%AB%AF%E4%BD%BF%E7%94%A8%E5%B7%A5%E5%85%B7%E6%96%B9%E6%B3%95%E4%BF%9D%E6%8C%81%E4%B8%A4%E8%BE%B9%E5%85%B3%E8%81%94%E5%90%8C%E6%AD%A5"><span class="nav-number">1.4.</span> <span class="nav-text"> 在 Parent 端使用工具方法保持两边关联同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E5%85%B3%E8%81%94%E7%9A%84%E4%B8%A4%E8%BE%B9%E9%83%BD%E4%BD%BF%E7%94%A8%E6%87%92%E5%8A%A0%E8%BD%BD"><span class="nav-number">1.5.</span> <span class="nav-text"> 在关联的两边都使用懒加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%A3%E7%A1%AE%E5%AE%9E%E7%8E%B0-equals-%E5%92%8C-hashcode"><span class="nav-number">1.6.</span> <span class="nav-text"> 正确实现 equals 和 hashcode</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E9%85%8D%E7%9A%84%E6%A0%87%E8%AF%86%E7%AC%A6"><span class="nav-number">1.6.1.</span> <span class="nav-text"> 分配的标识符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E7%94%9F%E6%88%90%E7%9A%84%E6%A0%87%E8%AF%86%E7%AC%A6"><span class="nav-number">1.6.2.</span> <span class="nav-text"> 数据库生成的标识符</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%A3%E7%A1%AE%E9%87%8D%E5%86%99-tostring"><span class="nav-number">1.7.</span> <span class="nav-text"> 正确重写 toString</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E9%99%A4%E5%A4%A7%E9%87%8F-child-%E6%97%B6%E4%BD%BF%E7%94%A8%E6%89%B9%E9%87%8F%E6%93%8D%E4%BD%9C"><span class="nav-number">1.8.</span> <span class="nav-text"> 移除大量 Child 时使用批量操作</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%98%A0%E5%B0%84-manytomany-%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94"><span class="nav-number">2.</span> <span class="nav-text"> 映射 @ManyToMany 双向关联</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E5%85%B3%E7%B3%BB%E7%9A%84%E6%89%80%E6%9C%89%E8%80%85"><span class="nav-number">2.1.</span> <span class="nav-text"> 选择关系的所有者</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E6%98%AF%E4%BD%BF%E7%94%A8-set-%E8%80%8C%E4%B8%8D%E6%98%AF-list"><span class="nav-number">2.2.</span> <span class="nav-text"> 总是使用 Set 而不是 List</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%9D%E6%8C%81%E4%B8%A4%E8%BE%B9%E5%85%B3%E8%81%94%E5%90%8C%E6%AD%A5"><span class="nav-number">2.3.</span> <span class="nav-text"> 保持两边关联同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%BF%E5%85%8D-cascadetypeall-%E5%92%8C-cascadetyperemove"><span class="nav-number">2.4.</span> <span class="nav-text"> 避免 CascadeType.ALL 和 CascadeType.REMOVE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%85%B3%E8%81%94%E8%A1%A8"><span class="nav-number">2.5.</span> <span class="nav-text"> 设置关联表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E5%85%B3%E8%81%94%E4%B8%A4%E8%BE%B9%E9%83%BD%E4%BD%BF%E7%94%A8%E6%87%92%E5%8A%A0%E8%BD%BD"><span class="nav-number">2.6.</span> <span class="nav-text"> 在关联两边都使用懒加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%A3%E7%A1%AE%E5%AE%9E%E7%8E%B0-equals-%E5%92%8C-hashcode-2"><span class="nav-number">2.7.</span> <span class="nav-text"> 正确实现 equals 和 hashcode</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%A3%E7%A1%AE%E9%87%8D%E5%86%99-tostring-2"><span class="nav-number">2.8.</span> <span class="nav-text"> 正确重写 toString</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9C%80%E8%A6%81%E6%97%B6%E4%BD%BF%E7%94%A8%E4%B8%A4%E4%B8%AA%E5%8F%8C%E5%90%91%E7%9A%84-onetomany"><span class="nav-number">2.9.</span> <span class="nav-text"> 需要时使用两个双向的 @OneToMany</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">90</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"xscbbB5QhKlIenfLsvil037U-gzGzoHsz","app_key":"LLmCDfW8Pl0cKqCkjVJX6zL4","security":false,"betterPerformance":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'b6f41cb44d3ba22c9361',
+      clientSecret: '5867ad133bff941fada16af0e4bc81f939640f59',
+      repo        : 'Zeral.github.io',
+      owner       : 'Zeral-Zhang',
+      admin       : ['Zeral-Zhang'],
+      id          : '5f171120524fb11c526dc2622c581a83',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

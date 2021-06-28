@@ -22,17 +22,17 @@
     var CONFIG = {"hostname":"www.zeral.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="什么是缓存 术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。 在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。  JSR107(JCache)">
+  <meta name="description" content="什么是缓存 术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。 在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。  什么时候引入缓存 引入缓存会">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java Cache 入门">
-<meta property="og:url" content="https://www.zeral.cn/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:url" content="https://www.zeral.cn/java/Java-%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/index.html">
 <meta property="og:site_name" content="Zeral&#39;s Blog">
-<meta property="og:description" content="什么是缓存 术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。 在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。  JSR107(JCache)">
+<meta property="og:description" content="什么是缓存 术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。 在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。  什么时候引入缓存 引入缓存会">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://www.zeral.cn/images/cache/layered_architecture.png">
 <meta property="og:image" content="https://www.zeral.cn/images/cache/EhcacheTerminology.png">
 <meta property="article:published_time" content="2019-04-06T14:10:00.000Z">
-<meta property="article:modified_time" content="2021-05-17T11:38:13.027Z">
+<meta property="article:modified_time" content="2021-06-03T05:11:08.098Z">
 <meta property="article:author" content="Zeral">
 <meta property="article:tag" content="Hibernate">
 <meta property="article:tag" content="Cache">
@@ -40,7 +40,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://www.zeral.cn/images/cache/layered_architecture.png">
 
-<link rel="canonical" href="https://www.zeral.cn/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/">
+<link rel="canonical" href="https://www.zeral.cn/java/Java-%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/">
 
 
 <script id="page-configurations">
@@ -203,7 +203,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java-%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
@@ -233,7 +233,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-05-17 19:38:13" itemprop="dateModified" datetime="2021-05-17T19:38:13+08:00">2021-05-17</time>
+                <time title="修改时间：2021-06-03 13:11:08" itemprop="dateModified" datetime="2021-06-03T13:11:08+08:00">2021-06-03</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -246,7 +246,7 @@
             </span>
 
           
-            <span id="/java/Java%20%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Java Cache 入门" title="阅读次数">
+            <span id="/java/Java-%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/" class="post-meta-item leancloud_visitors" data-flag-title="Java Cache 入门" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -266,24 +266,53 @@
         <h2 id="什么是缓存"><a class="markdownIt-Anchor" href="#什么是缓存"></a> 什么是缓存</h2>
 <p>术语缓存在计算机中无处不在。在应用程序设计的上下文中，它经常被用来描述应用程序开发人员利用单独的内存或低延迟的数据结构。缓存，用于临时存储或缓存信息的副本或引用，应用程序可能会在稍后的某个时间点重复使用，从而减轻重新访问或重新创建它的成本。</p>
 <p>在 JCache 的上下文中，术语缓存描述了 Java 的技术开发人员使用缓存提供程序临时缓存 Java 对象。</p>
-<h3 id="jsr107jcache"><a class="markdownIt-Anchor" href="#jsr107jcache"></a> JSR107(JCache)</h3>
+<h2 id="什么时候引入缓存"><a class="markdownIt-Anchor" href="#什么时候引入缓存"></a> 什么时候引入缓存</h2>
+<p>引入缓存会提高系统复杂度，因为你要考虑缓存的失效、更新、一致性等问题。</p>
+<p>冒着上述种种风险，仍能说服你引入缓存的理由，总结起来无外乎以下两种：</p>
+<ul>
+<li>为缓解 CPU 压力而做缓存：譬如把方法运行结果存储起来、把原本要实时计算的内容提前算好、把一些公用的数据进行复用，这可以节省 CPU 算力，顺带提升响应性能。</li>
+<li>为缓解 I/O 压力而做缓存：譬如把原本对网络、磁盘等较慢介质的读写访问变为对内存等较快介质的访问，将原本对单点部件（如数据库）的读写访问变为到可扩缩部件（如缓存中间件）的访问，顺带提升响应性能。</li>
+</ul>
+<p>请注意，缓存虽然是典型以空间换时间来提升性能的手段，但它的出发点是缓解 CPU 和 I/O 资源在峰值流量下的压力，“顺带”而非“专门”地提升响应性能。这里的言外之意是如果可以通过增强 CPU、I/O 本身的性能（譬如扩展服务器的数量）来满足需要的话，那升级硬件往往是更好的解决方案，即使需要一些额外的投入成本，也通常要优于引入缓存后可能带来的风险。</p>
+<h2 id="缓存设计模式"><a class="markdownIt-Anchor" href="#缓存设计模式"></a> 缓存设计模式</h2>
+<h3 id="cache-aside"><a class="markdownIt-Anchor" href="#cache-aside"></a> Cache Aside</h3>
+<p>其中最简单、成本最低的 Cache Aside 模式是指：</p>
+<ul>
+<li>读数据时，先读缓存，缓存没有的话，再读数据源，然后将数据放入缓存，再响应请求。</li>
+<li>写数据时，先写数据源，然后失效（而不是更新）掉缓存。</li>
+</ul>
+<p>读数据方面一般没什么出错的余地，但是写数据时，就有必要专门强调两点：一是先后顺序是先数据源后缓存。试想一下，如果采用先失效缓存后写数据源的顺序，那一定存在一段时间缓存已经删除完毕，但数据源还未修改完成，此时新的查询请求到来，缓存未能命中，就会直接流到真实数据源中。这样请求读到的数据依然是旧数据，随后又重新回填到缓存中。当数据源的修改完成后，结果就成了数据在数据源中是新的，在缓存中是老的，两者就会有不一致的情况。另一点是应当失效缓存，而不是去尝试更新缓存，这很容易理解，如果去更新缓存，更新过程中数据源又被其他请求再次修改的话，缓存又要面临处理多次赋值的复杂时序问题。所以直接失效缓存，等下次用到该数据时自动回填，期间无论数据源中的值被改了多少次都不会造成任何影响。</p>
+<p>Cache Aside 模式依然是不能保证在一致性上绝对不出问题的，否则就无须设计出 <a target="_blank" rel="noopener" href="http://icyfenix.cn/distribution/consensus/paxos.html">Paxos</a> 这样复杂的共识算法了。典型的出错场景是如果某个数据是从未被缓存过，请求会直接流到真实数据源中，如果数据源中的写操作发生在查询请求之后，结果回填到缓存之前，也会出现缓存中回填的内容与数据库的实际数据不一致的情况。但这种情况的概率是很低的，Cache Aside 模式仍然是以低成本更新缓存，并且获得相对可靠结果的解决方案。</p>
+<h3 id="readwrite-through"><a class="markdownIt-Anchor" href="#readwrite-through"></a> Read/Write Through</h3>
+<p>Write Through 将数据同时写入高速缓存和相应的主内存位置。缓存的数据允许按需快速检索，而主存储器中的相同数据可确保在发生崩溃，电源故障或其他系统中断时不会丢失任何内容。</p>
+<p>尽管直写可以最大程度地减少数据丢失的风险，但是每个写操作必须执行两次，并且这种冗余需要时间。活动的应用程序必须等待，直到将每个数据块都写入主内存和高速缓存中，然后才能开始下一个操作。因此，“数据保险”是以牺牲系统速度为代价的。</p>
+<p>直写是无法容忍数据丢失的应用程序（例如银行和医疗设备控制）中首选的数据存储方法。</p>
+<h3 id="write-behind-caching"><a class="markdownIt-Anchor" href="#write-behind-caching"></a> Write Behind Caching</h3>
+<p>回写在每次发生更改时，数据都会先写入高速缓存，但仅在指定的时间间隔或特定条件下，数据才会写入主存储中的相应位置。</p>
+<h2 id="jsr107-jcache"><a class="markdownIt-Anchor" href="#jsr107-jcache"></a> JSR107 (JCache)</h2>
 <p>JCache 是 Java 的缓存 API。它由 JSR107 定义。它定义了供开发人员使用的标准 Java 缓存 API 和供实现者使用的标准 SPI（“服务提供者接口”）。</p>
 <p><a target="_blank" rel="noopener" href="https://docs.google.com/document/d/1ijduF_tmHvBaUS7VBBU2ZN8_eEBiFaXXg9OI0_ZxCrA/edit">标准定义文档</a></p>
 <span id="more"></span>
-<h2 id="jcache-核心概念"><a class="markdownIt-Anchor" href="#jcache-核心概念"></a> JCache 核心概念</h2>
+<h3 id="jcache-核心概念"><a class="markdownIt-Anchor" href="#jcache-核心概念"></a> JCache 核心概念</h3>
 <p>Java 的缓存 API 定义了五个核心接口：<code>CachingProvider</code>，<code>CacheManager</code>，<code>Cache</code>，<code>Entry</code>  和 <code>ExpiryPolicy</code>。</p>
 <p><em><strong><code>CachingProvider</code></strong></em></p>
-<p>定义了建立，配置，获取，管理和控制零个或多个 <code>CacheManager</code> 的机制。应用程序可以在运行期间访问和使用零个或多个 CacheProvider。</p>
+<p>定义了建立，配置，获取，管理和控制零个或多个 <code>CacheManager</code> 的机制。应用程序可以在运行期间访问和使用零个或多个 <code>CacheProvider</code>。</p>
 <p><em><strong><code>CacheManager</code></strong></em><br />
-定义在上下文中了建立，配置，获取，管理和控制零个或多个唯一命名的缓存的机制。 CacheManager 被单个 <code>CachingProvider</code> 拥有。</p>
+定义在上下文中了建立，配置，获取，管理和控制零个或多个唯一命名的缓存的机制。 <code>CacheManager</code> 被单个 <code>CachingProvider</code> 拥有。</p>
 <p><em><strong><code>Cache</code></strong></em><br />
 是一个像 Map 一样的数据结构，它允许基于 Key 的临时储存。缓存被单个 <code>CacheManager</code> 拥有。</p>
 <p><em><strong><code>Entry</code></strong></em><br />
 是被 <code>Cache</code> 存储的单个 key-value 对，JCache 允许我们定义按值或按引用来存储条目。</p>
 <p><em><strong><code>ExpiryPolicy</code></strong></em></p>
-<p>每一个被 Cache 存储的 entry 都定义了存活时间，被称作过期持续时间，在这个时间内他们可以访问、更新和删除。一旦这个过期时间到达，该条目就被认为是过期了。一旦过期，就会从缓存中驱逐出去，不能再访问，更新和删除条目。</p>
+<p>每一个被 Cache 存储的 entry 都定义了存活时间，被称作过期持续时间。**缓存过期时间是可以动态设置的，在执行某些缓存操作后，缓存条目将在设置的时间后过期。**一旦这个过期时间到达，该条目就被认为是过期了。一旦过期，就会从缓存中驱逐出去，不能再访问，更新和删除条目。</p>
+<ul>
+<li>getExpiryForCreation() - 创建条目时的持续时间</li>
+<li>getExpiryForAccess() - 条目被访问时的新持续时间</li>
+<li>getExpiryForUpdate() - 条目被更新时的新持续时间</li>
+</ul>
+<p>另外，getExpiryForUpdate() 和 getExpiryForAccess() 也可能返回 null，这表示缓存实现应保留创建时这些操作的条目的有效期限不变。</p>
 <h3 id="按值存储和按引用存储"><a class="markdownIt-Anchor" href="#按值存储和按引用存储"></a> 按值存储和按引用存储</h3>
-<p>条目由每个缓存使用两种机制之一存储。</p>
+<p>条目（Entry）由每个缓存使用两种机制之一存储。</p>
 <p><em><strong>默认的机制，称为值存储。</strong></em></p>
 <p>指示实现使副本应用程序在将它们储存在 Cache 中之前提供键和值，之后在访问缓存时再返回新的条目副本。复制条目的目的是存储在缓存和从缓存中再次返回时应用程序继续变异键和值的状态，不会对缓存持有的条目造成副作用。</p>
 <p>一个简单的方法实现可用于制作键和值的副本是 Java 序列化。</p>
@@ -293,6 +322,12 @@
 <h3 id="其它"><a class="markdownIt-Anchor" href="#其它"></a> 其它</h3>
 <p>除了定义核心接口， JCache 还为我们定义了：</p>
 <ul>
+<li>
+<p>缓存无效时的读写集成定义</p>
+<p>JCache 定义基本的配置，具体服务提供商可以提供相应的实现，以便：</p>
+<p>配置 <code>isReadThrough</code> 为 <code>true</code> 时，当请求的值不在高速缓存中时，配置的 <code>cacheLoaderFactory</code> 提供从 <code>CacheLoader</code> 读取值的功能（通过高速缓存读取）<br />
+配置 <code>isWriteThrough</code> 为 <code>true</code> 时，当从缓存中创建/更新/删除值时，配置的 <code>cacheWriterFactory</code> 提供将值写入 <code>CacheWriter</code> （通过缓存写入）</p>
+</li>
 <li>
 <p>缓存条目监听器接口</p>
 <p>我们可以注册条目不同事件的监听器在运行期或配置阶段，通过 <code>CacheEntryListenerConfiguration</code> 注册 <code>CacheEntryListener</code>。</p>
@@ -318,17 +353,28 @@
 </li>
 </ul>
 <h2 id="从-jcache-到-ehcache"><a class="markdownIt-Anchor" href="#从-jcache-到-ehcache"></a> 从 JCache 到 EhCache</h2>
-<p>使用 JCache 可以完成大部分的缓存操作，但是如果需要使用到 EhCache 的特性，则必须使用提供给程序的特定 API。比如需要用到持久化目录等。下图是 EhCache 的架构图：</p>
+<p>使用 JCache 可以完成大部分的缓存操作，但是如果需要使用到 EhCache 的特性，则必须使用提供给程序的特定 API。</p>
+<p>EhCache 的主要特性如下：</p>
+<ul>
+<li>**快速，简单。**EhCache 的线程机制是为大型高并发系统设计的，使用 EhCache 也不需要特别复杂的配置，很容易部署上线和运行。</li>
+<li>**多种缓存策略。**提供 LRU、LFU 和 FIFO 缓存策略。支持基于 Cache 和 Element 的过期策略。</li>
+<li>**缓存数据有两级。**内存和磁盘，因此无需担心容量问题。EhCache 为大数据存储做过优化。在大内存情况下，所有进程可以支持数百 GB 的吞吐，在单台虚拟机上可以支持多缓存管理器，还可以通过 Terracotta 服务器矩阵伸缩到数百个节点。</li>
+<li>**缓存数据会在虚拟机重启的过程中写入磁盘。**EhCache 是第一个引入缓存持久化存储到开源 Java 缓存框架，缓存的数据可以在机器重启后从磁盘上重新获得，可以根据需要使用 cache.flush 方法将缓存刷到磁盘上面。</li>
+<li><strong>可以通过 RMI、JMS、JGroups、可插入 API 等方式进行分布式缓存。</strong></li>
+<li><strong>具有缓存和缓存管理器的侦听接口。</strong></li>
+<li><strong>提供 Hibernate、Mysql 等框架的缓存实现。</strong></li>
+</ul>
+<p>下图是 EhCache 的架构图：</p>
 <p><img src="../../images/cache/layered_architecture.png" alt="Image result for ehcache architecture diagram" /></p>
 <h3 id="使用-ehcache-作为-jcache-供应商"><a class="markdownIt-Anchor" href="#使用-ehcache-作为-jcache-供应商"></a> 使用 EhCache 作为 JCache 供应商</h3>
 <p>JCache 作为标准有很多的实现，我们这里主要以 EhCache 来展开学习，要想使用 EhCache 作为 JCache 的供应商很简单，我们只要将 EhCache 的 jar 包和 JCache 放在一起便可以使用。</p>
 <p>通过 JCache 的接口，我们便可以操控缓存：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">CachingProvider provider = Caching.getCachingProvider();  </span><br><span class="line">CacheManager cacheManager = provider.getCacheManager();   </span><br><span class="line">MutableConfiguration&lt;Long, String&gt; configuration =</span><br><span class="line">    <span class="keyword">new</span> MutableConfiguration&lt;Long, String&gt;()  </span><br><span class="line">        .setTypes(Long.class, String.class)   </span><br><span class="line">        .setStoreByValue(<span class="keyword">false</span>)   </span><br><span class="line">        .setExpiryPolicyFactory(CreatedExpiryPolicy.factoryOf(Duration.ONE_MINUTE));  </span><br><span class="line">Cache&lt;Long, String&gt; cache = cacheManager.createCache(<span class="string">&quot;jCache&quot;</span>, configuration); </span><br><span class="line">cache.put(<span class="number">1L</span>, <span class="string">&quot;one&quot;</span>); </span><br><span class="line">String value = cache.get(<span class="number">1L</span>); </span><br></pre></td></tr></table></figure>
-<p>JCache 会从应用程序的类路径中检索默认的 CachingProvider 实现。但这必须保证类路径上只有一个 JCache 实现，否则必须指定具体的供应商名称，可以使用设置系统变量 <code>javax.cache.spi.CachingProvider</code> 或通过调用 <code>Caching.getCachingProvider(String)</code> 静态方法指定完整的类名称。</p>
-<p>上述代码中，我们获取到缓存的供应器，并从中得到一个默认的 CacheManager 实例，使用不可用的配置类设置了键和值的类型，条目的存储类型，以及过期方案来生成一个名称为 JCache 的缓存对象，并向缓存中添加了一组数据，并使用键获取值。</p>
+<p>JCache 会从应用程序的类路径中检索默认的 <code>CachingProvider</code> 实现。但这必须保证类路径上只有一个 JCache 实现，否则必须指定具体的供应商名称，可以使用设置系统变量 <code>javax.cache.spi.CachingProvider</code> 或通过调用 <code>Caching.getCachingProvider(String)</code> 静态方法指定完整的类名称。</p>
+<p>上述代码中，我们获取到缓存的供应器，并从中得到一个默认的 <code>CacheManager</code> 实例，使用不可用的配置类设置了键和值的类型，条目的存储类型，以及过期方案来生成一个名称为 JCache 的缓存对象，并向缓存中添加了一组数据，并使用键获取值。</p>
 <p>JCache 提供了一组最小配置，非常适合内存缓存。但是 EhCache 在拓扑和功能方面提供了更强大的实现。</p>
 <h3 id="从-jcache-配置访问基础-ehcache-配置"><a class="markdownIt-Anchor" href="#从-jcache-配置访问基础-ehcache-配置"></a> 从 JCache 配置访问基础 Ehcache 配置</h3>
-<p>当以使用 JCache 创建了配置时，你任然可以访问底层的 EhCache CacheRuntimeConfiguration。</p>
+<p>当以使用 JCache 创建了配置时，你任然可以访问底层的 EhCache <code>CacheRuntimeConfiguration</code>。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">MutableConfiguration&lt;Long, String&gt; configuration = <span class="keyword">new</span> MutableConfiguration&lt;&gt;();</span><br><span class="line">configuration.setTypes(Long.class, String.class);</span><br><span class="line">Cache&lt;Long, String&gt; cache = cacheManager.createCache(<span class="string">&quot;someCache&quot;</span>, configuration); </span><br><span class="line"></span><br><span class="line">CompleteConfiguration&lt;Long, String&gt; completeConfiguration = cache.getConfiguration(CompleteConfiguration.class); </span><br><span class="line"></span><br><span class="line">Eh107Configuration&lt;Long, String&gt; eh107Configuration = cache.getConfiguration(Eh107Configuration.class); </span><br><span class="line"></span><br><span class="line">CacheRuntimeConfiguration&lt;Long, String&gt; runtimeConfiguration = eh107Configuration.unwrap(CacheRuntimeConfiguration.class);</span><br></pre></td></tr></table></figure>
 <blockquote>
 <p>我们还可以使用 Ehcache CacheConfiguration 创建 JCache 缓存。</p>
@@ -357,14 +403,15 @@
 <h2 id="hibernate-缓存"><a class="markdownIt-Anchor" href="#hibernate-缓存"></a> Hibernate 缓存</h2>
 <p>数据库抽象层（如ORM（对象 - 关系映射）框架）的一个优点是它们能够透明地缓存从底层存储中检索的数据。这有助于消除频繁访问数据的数据库访问成本。</p>
 <p>在运行时，Hibernate 处理将数据移入和移出二级缓存以响应 Session 执行的操作，该操作充当持久数据的事务级缓存。<strong>一旦实体被管理，该对象就会被添加到当前持久化上下文（EntityManager 或 Session）的内部缓存中。持久化上下文也称为第一级缓存，默认情况下已启用。</strong></p>
-<p>但由于 Hibernate 会话（session）绑定到当前正在运行的逻辑事务，所以一旦事务结束，该会话也将被销毁，会话中持有的上下文也会消耗。</p>
+<p>但由于 Hibernate 会话（session）绑定到当前正在运行的逻辑事务，所以一旦事务结束，该会话也将被销毁，会话中持有的上下文也会消失。</p>
 <p>适当的缓存解决方案必须跨越多个 Hibernate 会话，这就是 Hibernate 也支持附加的二级缓存的原因。 **二级缓存是绑定到 SessionFactory 域的生命周期，意味着它由使用相同会话工厂创建的所有会话共享，仅在关闭 SessionFactory 时（通常是在应用程序关闭时）才销毁。**二级缓存主要基于实体，也支持可选的查询缓存解决方案。</p>
 <blockquote>
 <p>Hibernate 缓存不了解其他应用程序对持久性存储所做的更改。比如 EhCache 管理的缓存。要解决此限制，可以在二级缓存区域级别配置 TTL（生存时间）保留策略，以便底层缓存条目定期到期。</p>
 </blockquote>
 <h3 id="配置二级缓存"><a class="markdownIt-Anchor" href="#配置二级缓存"></a> 配置二级缓存</h3>
-<p>Hibernate 可以与各种缓存提供程序集成，以便在特定会话的上下文 (session) 之外缓存数据。要配置启用二级缓存，则需提供 RegionFactory 的实现类。</p>
+<p>Hibernate 可以与各种缓存提供程序集成，以便在特定会话的上下文 (session) 之外缓存数据。要配置启用二级缓存，则需提供 <code>RegionFactory</code> 的实现类。</p>
 <h4 id="regionfactory"><a class="markdownIt-Anchor" href="#regionfactory"></a> RegionFactory</h4>
+<p><code>RegionFactory</code> 是 <code>Region</code> 的工厂类，Region 不代表缓存中的特定概念，它只是定义一些具有共同特征的基本合同，而与打算在该区域内存储的数据类型无关。更具体的子类型是 DomainDataRegion（存储实体，集合和自然 ID 数据）和 DirectAccessRegion（存储查询结果和时间戳数据）。</p>
 <p><code>org.hibernate.cache.spi.RegionFactory</code> 定义了 Hibernate 与可插拔缓存提供程序之间的集成。Hibernate 二级缓存设计为让我们感觉不到所使用的实际缓存，SPI（服务提供者接口）为缓存实现者定义了接口，Hibernate 只需要提供 org.hibernate.cache.spi.RegionFactory 接口的实现，该接口封装了特定于实际缓存提供者的所有细节。基本上，它充当 Hibernate 和缓存提供者之间的桥梁。Hibernate 内置支持 Java 缓存标准 <code>JCache</code> 以及两个流行的缓存库：<code>Ehcache</code> 和 <code>Infinispan</code>。</p>
 <h4 id="缓存配置属性"><a class="markdownIt-Anchor" href="#缓存配置属性"></a> 缓存配置属性</h4>
 <p>除了提供程序特定的配置之外，集成的 Hibernate 端还有许多配置选项可控制各种缓存行为：</p>
@@ -489,20 +536,20 @@
 <h3 id="仅使用缓存"><a class="markdownIt-Anchor" href="#仅使用缓存"></a> 仅使用缓存</h3>
 <p>Spring Boot 使用缓存非常简单，我们只需要导入所需要的包即可开箱即用，如果我们仅仅想使用缓存，则直接引入：<code>org.springframework.boot:spring-boot-starter-cache</code> starter 便可使用。</p>
 <p>在配置类或启动类上加入  <a target="_blank" rel="noopener" href="https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/cache/annotation/EnableCaching.html"><code>@EnableCaching</code></a> 注解，该注解会触发一个后处理器（post processor）去检测每个 Spring Bean 上是否存在公共方法的缓存注解。如果找到这样的注解，则自动创建代理以拦截方法调用并相应地处理缓存行为。</p>
-<p>此后处理器管理的注释是 <code>Cacheable</code>，<code>CachePut</code> 和 <code>CacheEvict</code>。Spring Boot 会自动配置合适的 <code>CacheManager</code> 作为相关缓存的提供程序。如果只引入了该包，则默认只会使用 Spring 上下文 <strong><code>ConcurrentHashMap</code></strong> 结构来存储缓存，这完全符合 JCache 的标准。</p>
+<p>此后处理器管理的注解是 <code>Cacheable</code>，<code>CachePut</code> 和 <code>CacheEvict</code>。Spring Boot 会自动配置合适的 <code>CacheManager</code> 作为相关缓存的提供程序。如果只引入了该包，则默认只会使用 Spring 上下文 <strong><code>ConcurrentHashMap</code></strong> 结构来存储缓存，这完全符合 JCache 的标准。</p>
 <p>如果当前上下文中存在 JSR-107 API，即 <code>javax.cache:cache-api</code> 该 jar 包，将额外的为 JSR-107 API 注解的 bean 创建代理，这些注解是 <code>@CacheResult</code>，<code>@CachePut</code>，<code>@CacheRemove</code> 和 <code>@CacheRemoveAll</code>。</p>
-<h3 id="使用-hibernate-jcache-标准来构建二级缓存"><a class="markdownIt-Anchor" href="#使用-hibernate-jcache-标准来构建二级缓存"></a> 使用 Hibernate JCache 标准来构建二级缓存</h3>
-<p>要使用 JCache 的内置集成，您需要将 <code>org.hibernate:hibernate-jcache</code> jar 集成进去。此外，还需要添加 JCache 实现。</p>
+<h3 id="使用-jcache-来构建-hibernate-二级缓存"><a class="markdownIt-Anchor" href="#使用-jcache-来构建-hibernate-二级缓存"></a> 使用 JCache 来构建 Hibernate 二级缓存</h3>
+<p>要使用 JCache 的内置集成，您需要将 <code>hibernate-jcache</code> 模块 <code>org.hibernate:hibernate-jcache</code> jar 集成进去。此外，还需要添加 JCache 实现。</p>
 <p><code>hibernate-jcache</code> 模块定义了以下区域工厂：<code>JCacheRegionFactory</code>。</p>
 <p>要使用该 <code>JCacheRegionFactory</code>，只需配置该属性为：<code>hibernate.cache.region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory</code>。</p>
 <p>JCache 要求共享相同 URI 和类加载器的 CacheManagers 在 JVM 中是唯一的。如果未指定其他属性，JCacheRegionFactory 将加载默认的 JCache 提供程序并创建默认的 CacheManager。同样的，将使用默认的 <code>javax.cache.configuration.MutableConfiguration</code> 创建缓存。</p>
 <p>为了控制使用哪个提供程序为 CacheManager 和 Caches 指定配置，您可以使用以下两个属性：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">property</span></span></span><br><span class="line"><span class="tag">    <span class="attr">name</span>=<span class="string">&quot;hibernate.javax.cache.provider&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">value</span>=<span class="string">&quot;org.ehcache.jsr107.EhcacheCachingProvider&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span></span></span><br><span class="line"><span class="tag">    <span class="attr">name</span>=<span class="string">&quot;hibernate.javax.cache.uri&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">value</span>=<span class="string">&quot;file:/path/to/ehcache.xml&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
-<h3 id="使用-ehcache-20-构建二级缓存"><a class="markdownIt-Anchor" href="#使用-ehcache-20-构建二级缓存"></a> 使用 EhCache 2.0 构建二级缓存</h3>
+<h3 id="使用-ehcache-20-构建-hibernate-二级缓存"><a class="markdownIt-Anchor" href="#使用-ehcache-20-构建-hibernate-二级缓存"></a> 使用 EhCache 2.0 构建 Hibernate 二级缓存</h3>
 <p>使用 Ehcache 的内置集成要求我们引入 <code>org.hibernate:hibernate-ehcahe</code> jar 作为依赖。</p>
 <p>同样的我们需要配置 RegionFactory 为：<code>hibernate.cache.region.factory_class: org.hibernate.cache.ehcache.EhCacheRegionFactory</code> 。</p>
 <p>强制 Hibernate 使用单个 Ehcache CacheManager：<code>hibernate.cache.region.factory_class: org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</code> 。</p>
-<h3 id="使用-ehcache-30-构建二级缓存"><a class="markdownIt-Anchor" href="#使用-ehcache-30-构建二级缓存"></a> 使用 EhCache 3.0 构建二级缓存</h3>
+<h3 id="使用-ehcache-30-构建-hibernate-二级缓存"><a class="markdownIt-Anchor" href="#使用-ehcache-30-构建-hibernate-二级缓存"></a> 使用 EhCache 3.0 构建 Hibernate 二级缓存</h3>
 <p>使用 EhCache 3.0 时，hibernate 并没有默认的模块支持。但是我们可以通过 JCache 来指定具体的实现完成。</p>
 <p>我们同时引入 <code>org.ehcache:ehcache</code> 和 <code>org.hibernate:hibernate-jcache</code>，这里我们并没有指明具体版本，因为我们使用 spring boot starter 管理的版本，具体可以查看自己 spring boot starter 的版本和依赖版本。</p>
 <p>我们可以指定服务提供者 <code>hibernate.javax.cache.provider</code> 来完成配置。但是 <code>JCacheRegionFactory</code> 会使用默认的 <code>MutableConfiguration</code> 来创建 Cache，如果我们需要使用 EhCache 的配置来定义缓存，我们需要自己定义 RegionFactory 并以此作为 RegionFactory 配置。</p>
@@ -611,7 +658,7 @@
       <i class="fa fa-chevron-left"></i> 解决 Hibernate N+1 问题
     </a></div>
       <div class="post-nav-item">
-    <a href="/java/Java%20%E4%BB%A3%E7%90%86%E5%85%A5%E9%97%A8/" rel="next" title="Java 代理 入门">
+    <a href="/java/Java-%E4%BB%A3%E7%90%86%E5%85%A5%E9%97%A8/" rel="next" title="Java 代理 入门">
       Java 代理 入门 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -673,7 +720,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%BC%93%E5%AD%98"><span class="nav-number">1.</span> <span class="nav-text"> 什么是缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#jsr107jcache"><span class="nav-number">1.1.</span> <span class="nav-text"> JSR107(JCache)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#jcache-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">2.</span> <span class="nav-text"> JCache 核心概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E5%80%BC%E5%AD%98%E5%82%A8%E5%92%8C%E6%8C%89%E5%BC%95%E7%94%A8%E5%AD%98%E5%82%A8"><span class="nav-number">2.1.</span> <span class="nav-text"> 按值存储和按引用存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E5%AE%83"><span class="nav-number">2.2.</span> <span class="nav-text"> 其它</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E-jcache-%E5%88%B0-ehcache"><span class="nav-number">3.</span> <span class="nav-text"> 从 JCache 到 EhCache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-%E4%BD%9C%E4%B8%BA-jcache-%E4%BE%9B%E5%BA%94%E5%95%86"><span class="nav-number">3.1.</span> <span class="nav-text"> 使用 EhCache 作为 JCache 供应商</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E-jcache-%E9%85%8D%E7%BD%AE%E8%AE%BF%E9%97%AE%E5%9F%BA%E7%A1%80-ehcache-%E9%85%8D%E7%BD%AE"><span class="nav-number">3.2.</span> <span class="nav-text"> 从 JCache 配置访问基础 Ehcache 配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%BC%96%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE-ehcache"><span class="nav-number">3.3.</span> <span class="nav-text"> 使用编程的方式配置 EhCache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ehcache-%E5%AD%98%E5%82%A8%E5%B1%82"><span class="nav-number">3.4.</span> <span class="nav-text"> EhCache 存储层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E7%AE%A1%E7%90%86%E7%9A%84%E7%BC%93%E5%AD%98"><span class="nav-number">3.5.</span> <span class="nav-text"> 用户管理的缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hibernate-%E7%BC%93%E5%AD%98"><span class="nav-number">4.</span> <span class="nav-text"> Hibernate 缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">4.1.</span> <span class="nav-text"> 配置二级缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#regionfactory"><span class="nav-number">4.1.1.</span> <span class="nav-text"> RegionFactory</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E9%85%8D%E7%BD%AE%E5%B1%9E%E6%80%A7"><span class="nav-number">4.1.2.</span> <span class="nav-text"> 缓存配置属性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E6%98%A0%E5%B0%84"><span class="nav-number">4.2.</span> <span class="nav-text"> 配置二级缓存映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BD%93%E7%BB%A7%E6%89%BF%E5%92%8C%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E6%98%A0%E5%B0%84"><span class="nav-number">4.3.</span> <span class="nav-text"> 实体继承和二级缓存映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%A1%E7%90%86%E7%BC%93%E5%AD%98%E6%95%B0%E6%8D%AE"><span class="nav-number">4.4.</span> <span class="nav-text"> 管理缓存数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spring-boot-%E4%BD%BF%E7%94%A8-ehcache"><span class="nav-number">5.</span> <span class="nav-text"> Spring Boot 使用 EhCache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%85%E4%BD%BF%E7%94%A8%E7%BC%93%E5%AD%98"><span class="nav-number">5.1.</span> <span class="nav-text"> 仅使用缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-hibernate-jcache-%E6%A0%87%E5%87%86%E6%9D%A5%E6%9E%84%E5%BB%BA%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">5.2.</span> <span class="nav-text"> 使用 Hibernate JCache 标准来构建二级缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-20-%E6%9E%84%E5%BB%BA%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">5.3.</span> <span class="nav-text"> 使用 EhCache 2.0 构建二级缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-30-%E6%9E%84%E5%BB%BA%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">5.4.</span> <span class="nav-text"> 使用 EhCache 3.0 构建二级缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hibernate-%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C"><span class="nav-number">6.</span> <span class="nav-text"> Hibernate 二级缓存如何工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%86%85%E9%83%A8"><span class="nav-number">6.1.</span> <span class="nav-text"> 二级缓存内部</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%90%88"><span class="nav-number">6.1.1.</span> <span class="nav-text"> 水合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E9%94%AE"><span class="nav-number">6.1.2.</span> <span class="nav-text"> 二级缓存键</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%80%BC%E5%85%83%E7%B4%A0"><span class="nav-number">6.1.3.</span> <span class="nav-text"> 二级缓存值元素</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">6.2.</span> <span class="nav-text"> 总结</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%BC%93%E5%AD%98"><span class="nav-number">1.</span> <span class="nav-text"> 什么是缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E5%BC%95%E5%85%A5%E7%BC%93%E5%AD%98"><span class="nav-number">2.</span> <span class="nav-text"> 什么时候引入缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text"> 缓存设计模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cache-aside"><span class="nav-number">3.1.</span> <span class="nav-text"> Cache Aside</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#readwrite-through"><span class="nav-number">3.2.</span> <span class="nav-text"> Read&#x2F;Write Through</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#write-behind-caching"><span class="nav-number">3.3.</span> <span class="nav-text"> Write Behind Caching</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#jsr107-jcache"><span class="nav-number">4.</span> <span class="nav-text"> JSR107 (JCache)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#jcache-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">4.1.</span> <span class="nav-text"> JCache 核心概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E5%80%BC%E5%AD%98%E5%82%A8%E5%92%8C%E6%8C%89%E5%BC%95%E7%94%A8%E5%AD%98%E5%82%A8"><span class="nav-number">4.2.</span> <span class="nav-text"> 按值存储和按引用存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E5%AE%83"><span class="nav-number">4.3.</span> <span class="nav-text"> 其它</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E-jcache-%E5%88%B0-ehcache"><span class="nav-number">5.</span> <span class="nav-text"> 从 JCache 到 EhCache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-%E4%BD%9C%E4%B8%BA-jcache-%E4%BE%9B%E5%BA%94%E5%95%86"><span class="nav-number">5.1.</span> <span class="nav-text"> 使用 EhCache 作为 JCache 供应商</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E-jcache-%E9%85%8D%E7%BD%AE%E8%AE%BF%E9%97%AE%E5%9F%BA%E7%A1%80-ehcache-%E9%85%8D%E7%BD%AE"><span class="nav-number">5.2.</span> <span class="nav-text"> 从 JCache 配置访问基础 Ehcache 配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%BC%96%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE-ehcache"><span class="nav-number">5.3.</span> <span class="nav-text"> 使用编程的方式配置 EhCache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ehcache-%E5%AD%98%E5%82%A8%E5%B1%82"><span class="nav-number">5.4.</span> <span class="nav-text"> EhCache 存储层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E7%AE%A1%E7%90%86%E7%9A%84%E7%BC%93%E5%AD%98"><span class="nav-number">5.5.</span> <span class="nav-text"> 用户管理的缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hibernate-%E7%BC%93%E5%AD%98"><span class="nav-number">6.</span> <span class="nav-text"> Hibernate 缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">6.1.</span> <span class="nav-text"> 配置二级缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#regionfactory"><span class="nav-number">6.1.1.</span> <span class="nav-text"> RegionFactory</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E9%85%8D%E7%BD%AE%E5%B1%9E%E6%80%A7"><span class="nav-number">6.1.2.</span> <span class="nav-text"> 缓存配置属性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E6%98%A0%E5%B0%84"><span class="nav-number">6.2.</span> <span class="nav-text"> 配置二级缓存映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BD%93%E7%BB%A7%E6%89%BF%E5%92%8C%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E6%98%A0%E5%B0%84"><span class="nav-number">6.3.</span> <span class="nav-text"> 实体继承和二级缓存映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%A1%E7%90%86%E7%BC%93%E5%AD%98%E6%95%B0%E6%8D%AE"><span class="nav-number">6.4.</span> <span class="nav-text"> 管理缓存数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spring-boot-%E4%BD%BF%E7%94%A8-ehcache"><span class="nav-number">7.</span> <span class="nav-text"> Spring Boot 使用 EhCache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%85%E4%BD%BF%E7%94%A8%E7%BC%93%E5%AD%98"><span class="nav-number">7.1.</span> <span class="nav-text"> 仅使用缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-jcache-%E6%9D%A5%E6%9E%84%E5%BB%BA-hibernate-%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">7.2.</span> <span class="nav-text"> 使用 JCache 来构建 Hibernate 二级缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-20-%E6%9E%84%E5%BB%BA-hibernate-%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">7.3.</span> <span class="nav-text"> 使用 EhCache 2.0 构建 Hibernate 二级缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-ehcache-30-%E6%9E%84%E5%BB%BA-hibernate-%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-number">7.4.</span> <span class="nav-text"> 使用 EhCache 3.0 构建 Hibernate 二级缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hibernate-%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C"><span class="nav-number">8.</span> <span class="nav-text"> Hibernate 二级缓存如何工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%86%85%E9%83%A8"><span class="nav-number">8.1.</span> <span class="nav-text"> 二级缓存内部</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%90%88"><span class="nav-number">8.1.1.</span> <span class="nav-text"> 水合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E9%94%AE"><span class="nav-number">8.1.2.</span> <span class="nav-text"> 二级缓存键</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E5%80%BC%E5%85%83%E7%B4%A0"><span class="nav-number">8.1.3.</span> <span class="nav-text"> 二级缓存值元素</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">8.2.</span> <span class="nav-text"> 总结</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -689,20 +736,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">82</span>
+        <span class="site-state-item-count">90</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -907,7 +954,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'Zeral.github.io',
       owner       : 'Zeral-Zhang',
       admin       : ['Zeral-Zhang'],
-      id          : '76a137894e6970c162e25390a00ee0b9',
+      id          : 'a86de867f679580474e3e4cfebecd2eb',
         language: '',
       distractionFreeMode: true
     });
