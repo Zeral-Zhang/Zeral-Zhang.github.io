@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="Unsafe.park&#x2F;unpark 和 Object.wait&#x2F;notify 都可以用来实现线程的阻塞和唤醒，但两者有些本质的区别。 LockSupport Unsafe.park 通常被用在 LockSupport 的 park 方法中，LockSupport 用于创建锁和其他同步类的基本线程阻塞原语。 AbstractQueuedSynchronizer(AQS) 框架中的方法大量使用该类来">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unsafe.park vs Object.wait">
+<meta property="og:url" content="https://www.zeral.cn/java/Unsafe.park-vs-Object.wait/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Unsafe.park&#x2F;unpark 和 Object.wait&#x2F;notify 都可以用来实现线程的阻塞和唤醒，但两者有些本质的区别。 LockSupport Unsafe.park 通常被用在 LockSupport 的 park 方法中，LockSupport 用于创建锁和其他同步类的基本线程阻塞原语。 AbstractQueuedSynchronizer(AQS) 框架中的方法大量使用该类来">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-10-19T03:16:14.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.357Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="park&#x2F;unpark">
+<meta property="article:tag" content="wait&#x2F;notify">
+<meta property="article:tag" content="LockSupport">
+<meta property="article:tag" content="JUC">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://www.zeral.cn/java/Unsafe.park-vs-Object.wait/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/java/Unsafe.park-vs-Object.wait/","path":"java/Unsafe.park-vs-Object.wait/","title":"Unsafe.park vs Object.wait"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Unsafe.park vs Object.wait | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#LockSupport"><span class="nav-number">1.</span> <span class="nav-text">LockSupport</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Object-wait-notify"><span class="nav-number">2.</span> <span class="nav-text">Object.wait&#x2F;notify</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AF%94%E8%BE%83-3"><span class="nav-number">3.</span> <span class="nav-text">比较</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Unsafe.park-vs-Object.wait/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Unsafe.park vs Object.wait
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-10-19 11:16:14" itemprop="dateCreated datePublished" datetime="2021-10-19T11:16:14+08:00">2021-10-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><code>Unsafe.park/unpark</code> 和 <code>Object.wait/notify</code> 都可以用来实现线程的阻塞和唤醒，但两者有些本质的区别。</p>
+<h2 id="LockSupport">LockSupport</h2>
+<p><code>Unsafe.park</code> 通常被用在 <code>LockSupport</code> 的 <code>park</code> 方法中，<code>LockSupport</code> 用于创建锁和其他同步类的<strong>基本线程阻塞原语</strong>。</p>
+<p><code>AbstractQueuedSynchronizer(AQS)</code> 框架中的方法大量使用该类来构建，该抽象类用于实现依赖先进先出 (FIFO) 等待队列的阻塞锁和相关同步器（信号量、事件等），位于 <code>java.util.concurrent</code> 包下的大部分状态依赖类都构建于它之上，例如 <code>ReentrantLock</code>、<code>Semaphore</code> 等。</p>
+<span id="more"></span>
+<p>此类与使用它的每个线程相关联一个许可（在 <code>Semaphore</code> 信号量类的意义上）。如果许可证可用，<code>park</code> 调用将立即返回，进程也将消费掉该许可；否则可能会阻塞。如果许可证不可用，则调用 <code>unpark</code> 可使许可证可用。（与信号量不同，许可不会累积。最多只有一个。）<br>
+方法 <code>park</code> 和 <code>unpark</code> 提供了阻塞和解除阻塞线程的有效方法，并且不会遇到导致过时方法 <code>Thread.suspend</code> 和 <code>Thread.resume</code> 因为以下目的变得不可用的问题：由于许可的存在，调用 <code>park</code> 的线程和另一个试图将其 <code>unpark</code> 的线程之间的竞争将保持活性。此外，如果调用者的线程被中断， <code>park</code> 将返回，并且支持超时版本。 <code>park</code> 方法还可以在其他任何时间由于虚假唤醒“毫无理由”地返回，<strong>因此通常必须在重新检查返回条件的循环里调用此方法</strong>。从这个意义上说，<code>park</code> 是“忙碌等待”的一种优化，它不会浪费这么多的时间进行自旋，但是必须将它与 <code>unpark</code> 配对使用才更高效。</p>
+<p>这些方法旨在用作创建更高级别同步实用程序的工具，并且它们本身对大多数并发控制应用程序没有用处。 <code>park</code> 方法通常的使用形式：</p>
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> <span class="comment">(!canProceed()</span>) &#123;</span><br><span class="line">   <span class="comment">// ensure request to unpark is visible to other threads</span></span><br><span class="line">   ...</span><br><span class="line">   LockSupport.park<span class="comment">(this)</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>Java docs 中的示例用法：先进先出非重入锁类的草图：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">FIFOMutex</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicBoolean</span> <span class="variable">locked</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicBoolean</span>(<span class="literal">false</span>);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Queue&lt;Thread&gt; waiters</span><br><span class="line">    = <span class="keyword">new</span> <span class="title class_">ConcurrentLinkedQueue</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">lock</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">wasInterrupted</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="comment">// 发布当前线程给 unparkers</span></span><br><span class="line">    waiters.add(Thread.currentThread());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当前线程不是队列中的第一个或无法获取锁时阻塞</span></span><br><span class="line">    <span class="keyword">while</span> (waiters.peek() != Thread.currentThread() ||</span><br><span class="line">           !locked.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>)) &#123;</span><br><span class="line">      LockSupport.park(<span class="built_in">this</span>);</span><br><span class="line">      <span class="comment">// 等待时忽略中断</span></span><br><span class="line">      <span class="keyword">if</span> (Thread.interrupted())</span><br><span class="line">        wasInterrupted = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    waiters.remove();</span><br><span class="line">    <span class="comment">// 在返回时确保正确的中断状态</span></span><br><span class="line">    <span class="keyword">if</span> (wasInterrupted)</span><br><span class="line">      Thread.currentThread().interrupt();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">unlock</span><span class="params">()</span> &#123;</span><br><span class="line">    locked.set(<span class="literal">false</span>);</span><br><span class="line">    LockSupport.unpark(waiters.peek());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> &#123;</span><br><span class="line">    <span class="comment">// 减小由于类加载导致的程序无响应“丢失 unpark”的风险</span></span><br><span class="line">    Class&lt;?&gt; ensureLoaded = LockSupport.class;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Object-wait-notify">Object.wait/notify</h2>
+<p>Object 中的 <code>wait</code>、<code>notify</code>、 <code>notifyAll</code> 方法构成了内部条件队列的 API。一个对象的内部锁与它的内部条件队列是相关的：为了能够调用对象 X 中的任一个条件队列方法，你必须持有对象 X 的锁。</p>
+<p>条件队列可以让一组线程 一一 称作等待集，以某种方式等待相关条件变成真，它也由此得名。不同于传统的队列，它们的元素是数据项，条件队列的元素是等待相关条件的线程。就像每个 Java 对象都能当作锁一样，每个对象也能当作条件队列。</p>
+<p>这是因为“等待基于状态的条件”机制必须和“维护状态一致性”机制紧密地绑定在一起：除非你能检査状态，否则你不能等待条件；同时，除非你能改变状态，否则你不能从条件等待(队列)中释放其他的线程。</p>
+<p><code>object.wait</code> <strong>会自动释放锁</strong>，并请求 OS（操作系统）挂起当前线程，让其他线程获得该锁进而修改对象的状态。当它被唤醒时，它会在返回前重新获得锁。直观上看，调用 <code>wait</code> 意味着“我要去休息了，但是发生了需要关注的事情后叫醒我”，调用通知（<code>notify/notifyAll</code>）方法意味着“需要关注的事情发生了”。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 条件依赖方法的规范式</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">stateDependentMethod</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">    <span class="comment">// 条件谓词必须被锁守护</span></span><br><span class="line">    <span class="keyword">synchronized</span> (lock) &#123;</span><br><span class="line">        <span class="keyword">while</span> (!conditionPredicate()) &#123;  <span class="comment">// 使用while的原因也是避免虚假唤醒，唤醒后重新检查状态</span></span><br><span class="line">            lock.wait();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 现在,对象处于期望的状态中</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="比较-3">比较</h2>
+<p>他们都将挂起正在运行的线程并将其置于等待状态，有 3 种方法可以使线程处于 <code>Thread.state.WAITING</code> 状态：</p>
+<ul>
+<li>没有超时的 <code>Object.wait</code></li>
+<li>没有超时的 <code>Thread.join</code></li>
+<li>没有超时的 <code>LockSupport.park</code></li>
+</ul>
+<p>但这两种方法的工作原理不同。 <strong><code>Object.wait()</code> 方法适用于基于监视器的同步</strong>，在调用时会自动释放监视器锁，Unsafe.park 不会处理监视器锁。因此，这与 Java 中的“happens-before”关系很相配。为了将等待线程恢复为可运行状态，我们将在同一个监视器对象上使用 <code>Object.notify()</code> 方法。因此，当线程回到可运行状态时，它肯定会获得跨多个线程共享的变量的更新值。<strong>JVM 将确保线程状态与主内存同步，但这是额外的开销。</strong></p>
+<p><code>Unsafe.park()</code> 方法将线程作为参数。要将 <code>park</code> 的线程变回可运行状态，我们需要在同一线程上调用 <code>Unsafe.unpark()</code> 方法。它在许可的基础上工作，许可与传入的线程关联，并且只有一个许可。当 <code>Unsafe.unpark()</code> 被调用时，如果线程已经被 <code>park</code>，它将解除阻塞，或者将确保线程上的下一个 <code>park</code> 调用立即解除阻塞。<strong>所以它的性能应该更好，因为不需要与主存同步。</strong> 这就是为什么线程池（例如 <code>ExecutorService</code>）在等待来自阻塞队列的任务时使用 <code>park</code> 方法的原因。</p>
+<p>如您所见，这些用例是不同的。如果您有跨线程共享的状态并且您想确保一个线程在继续更新之前应该等待另一个线程，那么您应该继续使用 <code>wait()</code> 和 <code>notify()</code> 方法。作为应用程序开发人员，<strong>大多数情况下您不必使用 <code>park()</code> 方法，它的 API 级别太低</strong>。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/park-unpark/" rel="tag"># park/unpark</a>
+              <a href="/tags/wait-notify/" rel="tag"># wait/notify</a>
+              <a href="/tags/LockSupport/" rel="tag"># LockSupport</a>
+              <a href="/tags/JUC/" rel="tag"># JUC</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/java/JSR-94-Rule-Engine-API/" rel="prev" title="JSR 94 Rule Engine API【翻译】">
+                  <i class="fa fa-chevron-left"></i> JSR 94 Rule Engine API【翻译】
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/pattern/%E7%B1%BB%E5%9E%8B%E5%AE%89%E5%85%A8%E7%9A%84%E5%BC%82%E6%9E%84%E5%AE%B9%E5%99%A8/" rel="next" title="类型安全的异构容器">
+                  类型安全的异构容器 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"7bff13e2cef01136f9d4d8253c80177a"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

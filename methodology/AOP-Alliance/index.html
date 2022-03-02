@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="本文档为 AOP Alliance 白皮书的部分翻译  引言 本文档的目的是介绍 AOP 联盟项目。它的目标，它的哲学，它应该提供什么答案，它不应该提供什么。这是一个提案草案，必须与 AOP 联盟的其他成员进一步讨论，以便就我们在这里所做的工作达成共识。一旦从列表中的讨论中出现有趣的点，它也应该去完成。 本文档是一份白皮书，可供 AOP 联盟成员用于内部目的，也可以为外部人员提供有关 AOP 联">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AOP 联盟白皮书【翻译】">
+<meta property="og:url" content="https://www.zeral.cn/methodology/AOP-Alliance/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="本文档为 AOP Alliance 白皮书的部分翻译  引言 本文档的目的是介绍 AOP 联盟项目。它的目标，它的哲学，它应该提供什么答案，它不应该提供什么。这是一个提案草案，必须与 AOP 联盟的其他成员进一步讨论，以便就我们在这里所做的工作达成共识。一旦从列表中的讨论中出现有趣的点，它也应该去完成。 本文档是一份白皮书，可供 AOP 联盟成员用于内部目的，也可以为外部人员提供有关 AOP 联">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/Users/zeral/Site/blog/source/images/aop/3-Layer.svg">
+<meta property="article:published_time" content="2021-10-09T01:38:25.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.217Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="AOP Alliance">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/Users/zeral/Site/blog/source/images/aop/3-Layer.svg">
+
+
+<link rel="canonical" href="https://www.zeral.cn/methodology/AOP-Alliance/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/methodology/AOP-Alliance/","path":"methodology/AOP-Alliance/","title":"AOP 联盟白皮书【翻译】"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>AOP 联盟白皮书【翻译】 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">AOP 概念及术语</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">AOP 联盟目标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#AOP-%E4%BC%98%E5%8A%BF%EF%BC%9AJ2EE-%E6%A1%88%E4%BE%8B"><span class="nav-number">3.1.</span> <span class="nav-text">AOP 优势：J2EE 案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BD%93%E5%89%8D%E5%AF%B9-AOP-%E7%9A%84%E7%BA%A6%E6%9D%9F"><span class="nav-number">3.2.</span> <span class="nav-text">当前对 AOP 的约束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AOP-%E8%81%94%E7%9B%9F%E5%A3%B0%E6%98%8E"><span class="nav-number">3.3.</span> <span class="nav-text">AOP 联盟声明</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">面向切面的架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E5%85%B1%E5%90%8C%E7%9A%84%E6%9E%B6%E6%9E%84%E6%84%BF%E6%99%AF"><span class="nav-number">4.1.</span> <span class="nav-text">一个共同的架构愿景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E5%B1%82%E5%85%B8%E5%9E%8B%E6%9E%B6%E6%9E%84"><span class="nav-number">4.2.</span> <span class="nav-text">三层典型架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AOP-%E8%81%94%E7%9B%9F%E5%9C%A8%E8%BF%99%E9%87%8C%E6%8C%87%E5%AE%9A%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">4.3.</span> <span class="nav-text">AOP 联盟在这里指定什么？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">AOP 联盟组件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%95%E5%B1%82%E7%BB%84%E4%BB%B6"><span class="nav-number">5.1.</span> <span class="nav-text">底层组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8D%E5%B0%84"><span class="nav-number">5.1.1.</span> <span class="nav-text">反射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A8%8B%E5%BA%8F%E6%A4%8D%E5%85%A5-Instrumentation"><span class="nav-number">5.1.2.</span> <span class="nav-text">程序植入 - Instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A6%E6%88%AA%E5%99%A8%E6%A1%86%E6%9E%B6"><span class="nav-number">5.1.3.</span> <span class="nav-text">拦截器框架</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%83%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86"><span class="nav-number">5.1.4.</span> <span class="nav-text">元数据处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%A1%86%E6%9E%B6"><span class="nav-number">5.1.5.</span> <span class="nav-text">类加载框架</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E5%B1%82%E7%BB%84%E4%BB%B6"><span class="nav-number">5.2.</span> <span class="nav-text">高层组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AOP-API"><span class="nav-number">5.2.1.</span> <span class="nav-text">AOP API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-API"><span class="nav-number">5.2.2.</span> <span class="nav-text">配置 API</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">结论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/methodology/AOP-Alliance/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AOP 联盟白皮书【翻译】
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-10-09 09:38:25" itemprop="dateCreated datePublished" datetime="2021-10-09T09:38:25+08:00">2021-10-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/AOP/" itemprop="url" rel="index"><span itemprop="name">AOP</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>本文档为 <a target="_blank" rel="noopener" href="http://aopalliance.sourceforge.net/white_paper/">AOP Alliance 白皮书</a>的部分翻译</p>
+</blockquote>
+<h1>引言</h1>
+<p>本文档的目的是介绍 AOP 联盟项目。它的目标，它的哲学，它应该提供什么答案，它不应该提供什么。这是一个提案草案，必须与 AOP 联盟的其他成员进一步讨论，以便就我们在这里所做的工作达成共识。一旦从列表中的讨论中出现有趣的点，它也应该去完成。</p>
+<p>本文档是一份白皮书，可供 AOP 联盟成员用于内部目的，也可以为外部人员提供有关 AOP 联盟的见解和理解。</p>
+<p>在第<a target="_blank" rel="noopener" href="http://aopalliance.sourceforge.net/white_paper/node3.html#sec:aopalliance_goals">1</a>节中，我将尝试概括地解释 AOP 联盟的目标。我们的动机来自这样一个事实，即 AOP 可以改进诸如基于 J2EE 的解决方案。如果我们设法定义一组规范化的 API，就可以将 AOP 集成到现有解决方案中或使用现有 AOP 工具构建 AOP 环境。</p>
+<p>第<a target="_blank" rel="noopener" href="http://aopalliance.sourceforge.net/white_paper/node7.html#sec:architectures">2</a>节概述了面向切面环境的拟议架构和 API。我们试着猜测 AOP 联盟应该指定哪些 API。</p>
+<p>最后，在第<a target="_blank" rel="noopener" href="http://aopalliance.sourceforge.net/white_paper/node11.html#sec:comps">3</a>节中，我将详细介绍已识别的组件及其在 AOP 环境中的角色。</p>
+<span id="more"></span>
+<h1>AOP 概念及术语</h1>
+<ul>
+<li>
+<p><strong>Cross-cutting concerns</strong>：横切关注点，指的是一些具有横越多个<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%BB%9F%E9%AB%94%E6%A8%A1%E7%B5%84">模块</a>的行为，使用传统的软件开发方法不能够达到有效的模块化的一类特殊<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=%E5%85%B3%E6%B3%A8%E7%82%B9&amp;action=edit&amp;redlink=1">关注点</a>。尽管 OO 模型中的大多数类将执行单个特定功能，但它们通常与其他类共享共同的次要需求。</p>
+<blockquote>
+<p>例如，我们可能希望在线程进入或退出方法时向数据访问层中的类添加日志记录。其它的关注点可能与安全有关，例如访问控制或信息流控制。尽管每个类具有非常不同的主要功能，但执行次要功能所需的代码通常是相同的。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Aspect</strong>：切面，跨越多个类的关注点的模块化，一个切面横切了程序的核心关注点。它由切入点和通知组合而成。</p>
+<blockquote>
+<p>例如，日志代码可以横切许多模块，但是日志的切面应该与其横切的模块功能关注点分离。将事物、日志和持久性等切面与业务逻辑隔离是面向切面编程 (AOP) 范式的核心。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Join point</strong>：连接点，程序<u>执行过程</u>中的一个点，例如方法的执行、字段的访问或异常的处理。在 Spring AOP 中，一个连接点总是代表一个方法的执行，Spring 只处理访问的执行，包括构造方法。</p>
+<blockquote>
+<p>在我们的例子中，连接点为线程进入或退出方法这一程序执行点。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Advice</strong>：通知/建议，切面在特定连接点采取的行动。许多 AOP 框架，包括 Spring，将通知建模为拦截器，并围绕连接点维护一系列拦截器。这是您要应用于现有模型的附加代码。</p>
+<blockquote>
+<p>在我们的例子中，这是我们想要在线程进入或退出方法时应用的日志记录代码。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Pointcut</strong>：切点，匹配连接点的 predicate - 谓词。 通知与切点表达式相关联，并在切点匹配的任何连接点处运行（例如，执行具有特定名称的方法）。由切点表达式匹配的连接点的概念是 AOP 的核心，Spring 默认使用 AspectJ 切点表达式语言。</p>
+<blockquote>
+<p>在我们的例子中，切点为满足数据访问层类的方法这一谓词。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Introduction</strong>：引入，引入通过定义额外的接口方法或字段修改 Java 类的类型和结构，它可用于强制现有类使用另一个类的方法来实现额外的接口。它本质上允许开发人员在 Java 中创建 C++ 风格的多继承对象系统。Spring AOP 允许您向任何通知的对象引入新的接口（和相应的实现）。</p>
+<p>在 Spring 中您可以使用 <code>@DeclareParents</code> 注解进行引入。此注解用于声明匹配类型具有新的父级（因此得名）。例如，给定一个名为 <code>UsageTracked</code> 的接口和一个名为 <code>DefaultUsageTracked</code> 的接口的实现，以下切面声明服务接口的所有实现者也实现 <code>UsageTracked</code> 接口（例如，通过 JMX 进行统计）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UsageTracking</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@DeclareParents(value=&quot;com.xzy.myapp.service.*+&quot;, defaultImpl=DefaultUsageTracked.class)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> UsageTracked mixin;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before(&quot;com.xyz.myapp.CommonPointcuts.businessService() &amp;&amp; this(usageTracked)&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">recordUsage</span><span class="params">(UsageTracked usageTracked)</span> &#123;</span><br><span class="line">        usageTracked.incrementUseCount();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>Target object</strong>：目标对象，由一个或多个切面通知的对象。也称为“通知对象”。由于 Spring AOP 是使用运行时代理实现的，所以这个对象始终是一个被代理的对象。</p>
+</li>
+<li>
+<p><strong>AOP proxy</strong>：AOP 框架为了实现切面合约（通知方法执行等）而创建的对象。在 Spring Framework 中，AOP 代理是 JDK 动态代理或 CGLIB 代理。</p>
+</li>
+<li>
+<p><strong>Weaving</strong>：将切面与其他应用程序类型或对象链接以创建通知对象。这可以在编译时完成（例如，使用 AspectJ 编译器），加载时或运行时。 Spring AOP 与其他纯 Java AOP 框架一样，在运行时执行编织。</p>
+</li>
+</ul>
+<h1>AOP 联盟目标</h1>
+<h2 id="AOP-优势：J2EE-案例">AOP 优势：J2EE 案例</h2>
+<p>J2EE 是一个典型的目标环境（但不是唯一的），可以从 AOP 联盟中受益。事实上，J2EE 环境通过提供处理技术问题（如持久性或事务）的方法部分解决了一些问题。但是，J2EE 体系结构不够灵活，无法轻松添加与特定需求相关的新技术问题。此外，当不需要或更喜欢更轻的解决方案时，能够去除一种解决方案会很有趣。</p>
+<p>AOP 提供了一种通用方法来构建新的技术关注点（横切关注点）并以灵活和模块化的方式将它们插入到应用程序中。在 J2EE 中应用一些 AOP 概念也可以真正简化它的使用。例如，可以使用常规 Java 对象 (POJO) 代替 EJB。因此，能够轻松地将完整的 AOP 应用到 J2EE 将大大提高 J2EE 的可用性。它还将为符合 J2EE 的应用程序服务器带来更多的功能。</p>
+<h2 id="当前对-AOP-的约束">当前对 AOP 的约束</h2>
+<p>AOP 越来越受欢迎。然而，大多数 AOP 工具并不是为了在任何环境中应用而设计的（主要是因为大多数工具是为了实验目的而设计的）。因此，当尝试在特定环境中使用 AOP 时，我们可能会遇到一些问题，因为例如，环境已经支持一些可能不符合 AOP 工具实现的内置方面。</p>
+<p>出现这个问题是因为 AOP 需要修改应用程序的对象/类才能正常工作。这个对象修改逻辑是由 AOP 工具的一个特定部分实现的：Weaver - 编织器。Weaver 可以很好地适应给定的环境，但可能会破坏另一个环境中的一些重要系统属性。例如，Gregor 和 Rickard 之间关于 AOP 联盟列表的有趣讨论似乎表明，AspectJ 用于引入（特定编织操作）的编织器实现并不适合某些具有某种分布式和持久性能力的环境。</p>
+<h2 id="AOP-联盟声明">AOP 联盟声明</h2>
+<p>这里的大多数人都不相信完美的系统。我们认为一个系统总是适合给定的问题和环境（它不一定适合另一个）。这正是我们可能在复杂环境（如 J2EE）中使用的 AOP 工具的情况。根据面临的问题，有一个特定的 AOP 实现会很有用。</p>
+<p>已经有很多 AOP 或 AOP 相关技术的具体实现，例如通用代理、拦截器（interceptor）或字节码翻译器（bytecode translator）。例如：</p>
+<ul>
+<li>AspectJ：AO 源代码级别（和字节码级别）编织器。切面编程新语言。</li>
+<li>AspectWerkz：AO 框架（字节码级别的动态编织器 + XML 中的配置）。</li>
+<li>BCEL：字节码翻译器。</li>
+<li>JAC：AO 中间件（字节码级别的动态编织器+配置+切面）。框架。</li>
+<li>Javassist：具有高级 API 的字节码翻译器。</li>
+<li>JBoss-AOP：拦截和基于元数据的 AO 框架（在 JBoss 应用服务器上运行 + 独立版本）。</li>
+<li>JMangler：具有翻译组合框架的字节码翻译器。</li>
+<li>Nanning：AO 编织器（框架）。</li>
+<li>Prose：AO 字节码级别的动态编织器（框架）。</li>
+</ul>
+<p>对我们来说，这些实现反映了没有好的或坏的实现，而是适合一些问题/环境的实现。</p>
+<p>因此，AOP 联盟的目标既不是提供新的 AOP 模型，也不是提供适用于所有情况或给定 J2EE 应用程序服务器的出色 AOP 实现。<strong>AOP 联盟的目标是使所有现有的实现能够使用相同的核心语言</strong>，以便：</p>
+<ul>
+<li>避免因为复用而重新构建现有的 AOP 组件，</li>
+<li>为给定的目标环境（通常是 J2EE 环境）简化现有 AOP 组件的适配，</li>
+<li>通过拥有一个通用的根 AOP API 来简化切面的复用。</li>
+<li>简化希望集成 AOP 功能的开发工具的实现。</li>
+</ul>
+<h1>面向切面的架构</h1>
+<h2 id="一个共同的架构愿景">一个共同的架构愿景</h2>
+<p>在前两节中，我们解释说很难就通用 AOP 模型和实现达成一致，因为它与使用上下文和环境的联系过于紧密（实现可能在纯 Java 方法和符合 J2EE 的方法中有所不同）。但是，我们认为有可能就面向切面的环境 (AOE) 的共同架构愿景达成一致。</p>
+<p>实际上，在构建面向方面的环境 (AOE) 时，设计师需要定义一个架构。在大多数现有的 AOE 中，架构定义并组合了一些实现系统基本功能的基本模块/组件/API。通过查看现有工具，我们可以识别通用组件（即在所考虑的架构中提供紧密功能的组件，但不一定使用相同的实现技术）。例如，JBoss 的 weaver 使用 Javassist 来实现拦截机制（在客户端植入 - Instrument），而 JAC 的 weaver 使用 BCEL 来实现拦截机制（在服务器端植入 - Instrument）。可以使用其他技术（如介入 JIT 编译器）来实现相同的效果。所有这些都严重依赖环境。</p>
+<p>在下一节中，我们将尝试提取对 AOE 有用的组件。这些组件可用于构建上下文相关的 AOE。</p>
+<h2 id="三层典型架构">三层典型架构</h2>
+<p><img data-src="/Users/zeral/Site/blog/source/images/aop/3-Layer.svg" alt="3-Layer"></p>
+<p>可以绘制一个典型的架构，如上图所示。此简化图包含一些组件（框）和一些可以使用（粗体箭头）组件 API 的核心逻辑（圆框）。它旨在图的顶部运行初始 AO 程序。请注意，此架构不打算成为参考架构，而只是一种可能的架构。实际上，组合 AO 架构的不同核心组件存在多种可能性。</p>
+<p>可以将此架构分为三层：</p>
+<ul>
+<li>一个低级层 (1)，提供基本组件以在目标平台上实现编织（AOP 的主要过程），</li>
+<li>一个高级层 (2)，为 AOP 提供基本组件，在其原始含义中，加上实现 AO 语义的逻辑（将取决于目标平台），</li>
+<li>开发级层 (3)，包括最大意义上的 UI（可以被语言支持，可以是建模工具）以及帮助开发人员信任 AO 程序所需的其他工具（例如类型检查、可视化工具、调试器等）。</li>
+</ul>
+<h2 id="AOP-联盟在这里指定什么？">AOP 联盟在这里指定什么？</h2>
+<p>如前所述，AOP 联盟的目标不是提供新模型或现有工具的更好实现。事实上，AOP 联盟的目标是为通用面向切面环境 (AOE) 实现中标识的组件指定规范化 API。如果我们设法做到这一点，通过集成最适合我们想要使用 AOP 的上下文的组件，就有可能构建出比现有 AOE 更好的 AOE。特别是，即使在 J2EE 应用程序服务器等复杂环境中，也应该可以使用最好的 AOP。</p>
+<p>因此，如果我们参考上图，<strong>AOP 联盟的角色应该是定义已识别组件的 API</strong>。最重要的组件是低级组件，因为它们的实现会影响可以使用 AOE 的环境。一些技术特征也可能对最终的系统属性产生深远的影响（例如，切面是否可以动态地编织/unwoven？系统是否可扩展？系统是否可以与内置切面共存，例如持久性或事务？）。但是，高级组件对于 IDE、调试器、建模工具等工具也很有趣。拥有一个通用的 AOP 概念操作 API 将有助于工具更好地支持不同环境中的多个 AOP 实现。</p>
+<p>AOP 联盟可以为某些组件提供一些参考实现（通过使用现有工具）。但是，如果现有工具（大多数工具创建者都在联盟中）提供他们自己定义的 API 的实现，那就更好了。这些实现将验证 API 的正确性。</p>
+<p>AOP 联盟不会解决编织逻辑和配置逻辑，因为它实际上取决于 AOE 实现。但是，我们还应该提供一些参考实现，以展示我们的 API 应该如何用于构建 AOE。</p>
+<p>最后，AOP 联盟不会解决第三层（开发级）。我们应该让开发工具实现者在他们集成的 AOP 工具实现它时使用我们的 API。</p>
+<h1>AOP 联盟组件</h1>
+<p>现在让我们深入了解核心 AOP 联盟组件的全局图景。<strong>警告：这些组件是 AOP 联盟应指定的 API 的第一个提案草案。其中一些可能会被删除，一些可能会被添加。请注意，其中一些已经开始用 Java 接口指定。</strong></p>
+<h2 id="底层组件">底层组件</h2>
+<p>底层组件非常重要，因为整个 AOE 都依赖于它们来实现。这些组件的实现方式至关重要，可能会极大地影响系统的属性，例如性能、可扩展性、集成功能或安全性。</p>
+<h3 id="反射">反射</h3>
+<p>反射 API 对于任何 AOE 都非常重要。事实上，编织者需要内省基础程序的类，以便应用通知（Advice）或介绍（Introduction）。例如，如果一个切入点（Pointcut）告诉一个类的所有方法都应该被通知（Advice）（使用某种正则表达式或一个 ALL 关键字），那么编织者将需要使用反射 API 来明确知道实际需要通知（Advice）的方法列表。</p>
+<p>当编织过程在运行时完成时，SUN 的 java.lang.reflect 实现足以构建 AOE。然而，在大多数现有系统中，编织过程发生在编译时或类加载时。在这些情况下，需要反射 API 的特定实现。根据 AOP 联盟的说法，为了能够根据 AOE 的运行上下文切换底层实现，对这个 API 进行规范化非常重要。</p>
+<h3 id="程序植入-Instrumentation">程序植入 - Instrumentation</h3>
+<p>从编织者的角度来看，如果反射是对编织程序的读访问，则植入 - Instrumentation 是写访问。然而，在 AOP 中，允许的程序修改是一组简化的修改，该修改代表初始程序的现有结构的增量，以便切面可以正确组合在一起。由于列表中先前的讨论，这些类型的增量修改被称为 Instrumentation - 植入。</p>
+<p>没有用于植入的标准 API。但是，与反射一样，植入可以在运行时、编译时或加载时发生。此外，对于每个类别，可以根据上下文和 AOE 的环境执行不同的实现（例如，植入可以直接在源代码或字节码上完成）。因此，对我们来说重要的是对植入 API 进行规范化，以便根据 AOE 要求更改底层实现。</p>
+<h3 id="拦截器框架">拦截器框架</h3>
+<p>另一种对构建 AOE 非常有用的基础组件是拦截框架。通过动态代理，Java 提供了一个标准的 API/框架用于拦截。然而，透明度、性能等方面的一些增强可以通过其他实现来实现（其中大多数使用植入 API）。因此，定义一个具有清晰语义的标准拦截 API/框架也很有趣。</p>
+<p>拦截框架有很多优点，因为它们允许非常容易地实现 AOP 模型的围绕通知 - Around Advice。此外，尽管它们是用纯 Java 编写的，但它们可以是独立的，并且大部分时间都提供非常清晰的类似 AOP 的代码。由于这些原因，许多项目和环境（包括 J2EE 应用服务器，请参阅 JBoss）中实现了几个拦截框架。因此，AOP 联盟应该提供一个抽象的拦截框架来规范这个 AOP 重要的工具箱。</p>
+<h3 id="元数据处理">元数据处理</h3>
+<p>元数据处理在实现 AOE 时很有用，尤其是与拦截框架结合使用时。它允许编织者以非侵入性的方式扩展类语义。由于元数据的大多数实现都允许动态性，因此它也可以用于切面的动态配置/重新配置。</p>
+<p>即使 JDK1.5 将提供元数据的标准实现，提供一个允许多个实现的标准 API 应该是有用的。这些可能会考虑一些环境特性，例如分发、序列化，默认实现可能无法正确处理这些特性。</p>
+<h3 id="类加载框架">类加载框架</h3>
+<p>在许多 AOE 中，需要字节码级别的操作。它可以用来实现一个拦截框架，或者直接实现程序的编织植入。在某些情况下，这种字节码级别的操作可以在类的加载时完成，因为 AOP 植入非常简单。因此，大多数 AOE 使用 Java 灵活的类加载架构。</p>
+<p>然而，一些环境也使用类加载器来实现它们自己的功能。例如，分布式环境可以使用特定的类加载器生成存根。在这些环境中，AOE 的类加载机制可能会由于类加载器不兼容而导致系统崩溃。</p>
+<p>因此，我们认为规范化类加载框架可能很重要，该框架足够灵活，可以轻松地使来自不同环境的不同类加载器以安全的方式协作。</p>
+<h2 id="高层组件">高层组件</h2>
+<p>如果我们希望在第三层（开发层）中定义的工具总体上为 AOP 提供更好的支持，那么高级组件对于规范化很重要。</p>
+<h3 id="AOP-API">AOP API</h3>
+<p>引用 Gregor 的话可以很好地解释我们的 AOP API 的目标：“显然，我们想尽我们所能避免 AOP 工具之间不必要的不一致。现在真正标准化还为时过早，我们仍然需要有意义的差异空间。但不必要的差异显然值得消除。”</p>
+<p>所以，我们的 AOP 模型不会是一个新模型。它只会尝试将所有当前模型的共同点结合在一起。AspectJ 模型无疑是最成功的模型，并且已经有一些工具支持它。所以我们可能会在这里采用 AspectJ 的一个子集。</p>
+<h3 id="配置-API">配置 API</h3>
+<p>许多切面可以以通用方式实现。这意味着它们实现了一种逻辑，对于您希望在其中编织切面功能的任何程序，该逻辑都可能可重用。大多数情况下，这个切面重用过程意味着通用方面的参数化（例如，告诉一个通用持久性切面哪个类应该持久化以及如何持久化）。在 AspectJ 中，这可以通过对抽象切面进行子类化来完成。但也可以通过使用外部工具（例如预处理器）来完成。在 J2EE 环境中，内置切面（EJB 容器的技术关注点）的配置过程由 XML 部署文件参数化。在 JBoss/AOP 等框架中，也可以使用 XML 文件进行配置。在 JAC 中，可以使用切面配置 API 在 Java 程序中完成配置，也可以使用特定的类似脚本的语言，等等。</p>
+<p>如果我们可以规范化配置 API，那就太好了。这将使开发工具的 AOE 集成更容易。它还有助于将特定配置从 AOE 重用到另一个 AOE（例如 AspectJ 和 JBoss/AOP）。</p>
+<p>请注意，由于潜在的重要差异，将切面从一个 AOE 移植到另一个可能是不现实的。但是使切面配置可移植似乎不那么不切实际，这已经是实现 AOE 互操作性的第一步。</p>
+<h1>结论</h1>
+<p>本文试图解释 AOP 联盟项目的原因，并指定一些目标。我试图以名单上许多人的名义就我所了解的内容发言。目前它是相当不精确的，并且只绘制了一个全局图。也许有些人会不同意或会失望。如果我们能进行一些非常好的讨论，帮助我们就我们真正想要的东西达成良好的感觉，那就太好了。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/AOP-Alliance/" rel="tag"># AOP Alliance</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/persistence/%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BA%20Spring%20Data%20JPA/" rel="prev" title="深入浅出 Spring Data JPA">
+                  <i class="fa fa-chevron-left"></i> 深入浅出 Spring Data JPA
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/java/JSR-94-Rule-Engine-API/" rel="next" title="JSR 94 Rule Engine API【翻译】">
+                  JSR 94 Rule Engine API【翻译】 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"4e9f571736ab9cd07adcbcfd7938bbc8"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

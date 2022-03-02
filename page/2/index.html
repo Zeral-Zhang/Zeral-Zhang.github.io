@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="Zeral, 全栈工程师一枚。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Zeral&#39;s Blog">
+<meta property="og:url" content="https://www.zeral.cn/page/2/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Zeral, 全栈工程师一枚。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Java,Web,Devops,DB">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://www.zeral.cn/page/2/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"page/2/index.html","title":""}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Zeral's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Consul-%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/middleware/Consul-%E5%85%A5%E9%97%A8/" class="post-title-link" itemprop="url">Consul 入门</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-26 17:11:00" itemprop="dateCreated datePublished" datetime="2021-07-26T17:11:00+08:00">2021-07-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1>Consul 简介</h1>
+<p>Consul 解决了各种规模的组织在微服务架构中遇到的挑战。包括各种分布式环境下及跨地理位置下的所有应用程序流量的保护，它关注计算网络层。</p>
+<p>Consul 是一个服务网格解决方案，它的核心功能主要包含：</p>
+<ul>
+<li><strong>Service Discovery - 服务发现</strong>：Consul 的客户端可以注册服务，例如 <code>api</code> 或 <code>mysql</code>，其他客户端可以使用 Consul 发现给定服务的提供者。使用 DNS 或 HTTP，应用程序可以轻松找到它们所依赖的服务。</li>
+<li><strong>Health Checking - 健康检查</strong>：Consul 客户端可以提供任意数量的健康检查，或者与给定服务相关联（“网络服务器是否返回 200 OK”），或者与本地节点相关联（“内存利用率是否低于 90%”）。操作员可以使用此信息来监控集群的健康状况，服务发现组件使用它将流量路由到健康的主机。</li>
+<li><strong>KV Store - KV 存储</strong>：应用程序可以将 Consul 的分层键/值存储用于任意数量的目的，包括动态配置、特征标记、协调、领导者选举等。简单的 HTTP API 也使其易于使用。</li>
+<li><strong>Secure Service Communication - 安全服务通信</strong>：Consul 可以为服务生成和分发 TLS 证书以建立相互 TLS 连接。<a target="_blank" rel="noopener" href="https://www.consul.io/docs/connect/intentions">Intentions</a> 可用于定义允许通信的服务。可以通过实时更改意图轻松管理服务分段，而不是使用复杂的网络拓扑和静态防火墙规则。</li>
+<li><strong>Multi Datacenter - 多数据中心</strong>：Consul 开箱即用地支持多个数据中心。这意味着 Consul 的用户不必担心构建额外的抽象层以扩展到多个区域。</li>
+</ul>
+<p>Consul 旨在对 DevOps 社区和应用程序开发人员都友好，使其非常适合现代、弹性的基础设施。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/middleware/Consul-%E5%85%A5%E9%97%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/" class="post-title-link" itemprop="url">Kafka-中的恰好一次交付和事物性消息【翻译】</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-18 06:39:25" itemprop="dateCreated datePublished" datetime="2021-07-18T06:39:25+08:00">2021-07-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <blockquote>
+<p>本文为 <a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-98+-+Exactly+Once+Delivery+and+Transactional+Messaging">KIP-98 - Exactly Once Delivery and Transactional Messaging</a> 的部分翻译</p>
+</blockquote>
+<h1>动机</h1>
+<p>本文档概述了增强 Kafka 消息交付语义的提议。这建立在之前已经完成的重要工作的基础上，特别是在<a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/Idempotent+Producer">幂等生产者</a>和<a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/Transactional+Messaging+in+Kafka">Kafka 中的事务性消息传递</a>。</p>
+<p>Kafka 目前提供至少一次（<code>at least once</code>）语义，即。 在针对可靠性进行调整时，用户可以保证每次写入的消息将至少持久化一次，而不会丢失数据。 由于生产者重试，流中可能会出现重复。 例如，代理可能会在提交消息和向生产者发送确认之间崩溃，导致生产者重试，从而导致流中出现重复的消息。</p>
+<p>消息传递系统的用户极大地受益于更严格的幂等生产者语义，即。每个消息写入都将被持久化一次，不会重复，也不会丢失数据 - 即使在客户端重试或代理失败的情况下也是如此。这些更强的语义不仅使编写应用程序更容易，而且也让更多的应用程序可以使用给定消息传递系统。<br>
+但是，幂等生产者不为跨多个 <code>TopicPartition</code> 的写入提供保证。为此，人们需要更强的事物保证，即。能够以原子方式写入多个 <code>TopicPartition</code>。原子地，我们的意思是能够将一组消息作为一个单元跨 <code>TopicPartitions</code> 提交：要么提交所有消息，要么都不提交。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/" class="post-title-link" itemprop="url">InnoDB 存储引擎【翻译】</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-12 20:09:00" itemprop="dateCreated datePublished" datetime="2021-07-12T20:09:00+08:00">2021-07-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/DB/" itemprop="url" rel="index"><span itemprop="name">DB</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <blockquote>
+<p>本文为 MySQL 8.0 官方文档 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html">The InnoDB Storage Engine</a> 的部分翻译。</p>
+</blockquote>
+<h1>InnoDB 简介</h1>
+<p>InnoDB 是一个兼顾高可靠性和高性能的通用存储引擎。在 MySQL 8.0 中，InnoDB 是默认的 MySQL 存储引擎。除非您配置了不同的默认存储引擎，否则发出不带 ENGINE 子句的 <code>CREATE TABLE</code> 语句默认会创建一个 InnoDB 表。</p>
+<h2 id="InnoDB-的主要优势">InnoDB 的主要优势</h2>
+<ul>
+<li>它的 <code>DML(data manipulation language)</code> 操作遵循 <code>ACID</code> 模型，事务具有提交、回滚和崩溃恢复功能，以保护用户数据。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/mysql-acid.html">第 15.2 节，“InnoDB 和 ACID 模型”</a>。</li>
+<li>行级锁定和 Oracle 风格的一致性读取提高了多用户并发性和性能。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html#:~:text=Section%C2%A015.7%2C%20%E2%80%9CInnoDB%20Locking%20and%20Transaction%20Model%E2%80%9D">第 15.7 节，“InnoDB 锁定和事务模型”</a>。</li>
+<li>InnoDB 表将您的数据排列在磁盘上以优化基于主键的查询。每个 InnoDB 表都有一个称为聚集索引的主键索引，用于组织数据以最小化主键查找的 I/O。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html#:~:text=Section%C2%A015.6.2.1%2C%20%E2%80%9CClustered%20and%20Secondary%20Indexes%E2%80%9D">第 15.6.2.1 节，“聚集索引和二级索引”</a>。</li>
+<li>为了保持数据完整性，InnoDB 支持外键 <code>FOREIGN KEY</code> 约束。使用外键检查插入、更新和删除以确保它们不会导致相关表之间的不一致。</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/db/MySQL-%E9%94%81%E5%92%8C%E4%BA%8B%E7%89%A9%E6%A8%A1%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/persistence/db/MySQL-%E9%94%81%E5%92%8C%E4%BA%8B%E7%89%A9%E6%A8%A1%E5%9E%8B/" class="post-title-link" itemprop="url">MySQL 锁和事物模型</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-04 11:26:00" itemprop="dateCreated datePublished" datetime="2021-07-04T11:26:00+08:00">2021-07-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/DB/" itemprop="url" rel="index"><span itemprop="name">DB</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <blockquote>
+<p>本文为 MySQL 8.0 官方文档 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-transaction-model.html">InnoDB Locking and Transaction Model</a> 的翻译，所述的锁和事物模型针对于 InnoDB 存储引擎。</p>
+</blockquote>
+<p>要实现大规模、繁忙或高可靠的数据库应用程序，或调优 MySQL 性能，了解 InnoDB 锁和 InnoDB 事务模型很重要。</p>
+<h1>InnoDB 和 ACID 模型</h1>
+<p>ACID 模型是一组数据库设计原则，强调对业务数据和任务关键型应用程序很重要的可靠性方面。MySQL 包括 InnoDB 存储引擎等组件，它们与 ACID 模型密切相关，因此数据不会损坏，结果不会因软件崩溃和硬件故障等异常情况而失真。当您依赖符合 ACID 的特性时，您不需要重新发明一致性检查和崩溃恢复机制的轮子。如果您有额外的软件保护措施、超可靠的硬件、或者可以容忍少量数据丢失或不一致的应用程序，您可以调整 MySQL 设置以换取一些 ACID 可靠性以获得更高的性能或吞吐量。</p>
+<p>以下部分讨论 MySQL 特性，特别是 InnoDB 存储引擎，如何与 ACID 模型的类别交互：</p>
+<ul>
+<li>
+<p><strong>A</strong>：atomicity - 原子性</p>
+<p>事务通常由多个语句组成。原子性保证每个事务都被视为一个“单元”，要么完全成功，要么完全失败：如果构成事务的任何语句未能完成，则整个事务失败，数据库数据保持不变。原子系统必须保证在每一种情况下的原子性，包括电源故障、错误和崩溃。保证原子性可以防止对数据库的更新仅部分发生，这可能会导致比完全拒绝整个系列更大的问题。</p>
+</li>
+<li>
+<p><strong>C</strong>：consistency - 一致性/正确性</p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Consistency_(database_systems)">一致性</a>确保事务只能将数据库从一种有效状态带到另一种有效状态，维护数据库<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Invariant_(computer_science)">不变性</a>：根据所有定义的规则，写入数据库的任何数据都必须有效，包括<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Integrity_constraints">约束</a>、<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Cascading_rollback">级联</a>、<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Database_trigger">触发器</a>及其任意组合。这可以防止非法事务导致数据库损坏，但不能保证事务是<em>正确的</em>。</p>
+</li>
+<li>
+<p><strong>I</strong>：isolation - 隔离型</p>
+<p>事务通常是<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Concurrent_computing">并发</a>执行的（例如，多个事务同时读取和写入一个表）。<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Isolation_(database_systems)">隔离</a>确保事务的并发执行使数据库处于与顺序执行事务时获得的状态相同。隔离是<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Concurrency_control">并发控制</a>的主要目标；根据所使用的方法，不完整事物的<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Race_condition">影响</a>甚至可能对其他事物不可见。</p>
+</li>
+<li>
+<p><strong>D</strong>：durability - 持久性</p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Durability_(computer_science)">持久性</a>保证一旦事务被提交，即使在系统故障（例如，断电或<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Crash_(computing)">崩溃</a>）的情况下它也将保持提交。这通常意味着已完成的事物（或它们的影响）被记录在<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Non-volatile_memory">非易失性存储器中</a>。</p>
+</li>
+</ul>
+<h2 id="Atomicity">Atomicity</h2>
+<p>ACID 模型的原子性方面主要涉及 InnoDB 事务。相关的 MySQL 功能包括：</p>
+<ul>
+<li>自动提交（<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_autocommit"><code>autocommit</code></a>）设置。</li>
+<li><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/commit.html"><code>COMMIT</code></a> 语句。</li>
+<li><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/commit.html"><code>ROLLBACK</code></a> 语句。</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/persistence/db/MySQL-%E9%94%81%E5%92%8C%E4%BA%8B%E7%89%A9%E6%A8%A1%E5%9E%8B/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/data-structure/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97-%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/data-structure/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97-%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">延迟队列实现</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-29 10:40:00" itemprop="dateCreated datePublished" datetime="2021-06-29T10:40:00+08:00">2021-06-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/DataStructure/" itemprop="url" rel="index"><span itemprop="name">DataStructure</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="延迟队列定义"><strong>延迟队列定义</strong></h2>
+<p>首先，队列这种数据结构相信大家都不陌生，它是一种先进先出的数据结构。普通队列中的元素是有序的，先进入队列中的元素会被优先取出进行消费；</p>
+<p>延时队列相比于普通队列最大的区别就体现在其延时的属性上，普通队列的元素是先进先出，按入队顺序进行处理，而延时队列中的元素在入队时会指定一个延迟时间，表示其希望能够在经过该指定时间后处理。</p>
+<h2 id="延时队列的应用">延时队列的应用</h2>
+<p>延时队列在项目中的应用还是比较多的，尤其像电商类平台：</p>
+<p>1、订单成功后，在30分钟内没有支付，自动取消订单</p>
+<p>2、外卖平台发送订餐通知，下单成功后 60s 给用户推送短信。</p>
+<p>3、如果订单一直处于某一个未完结状态时，及时处理关单，并退还库存</p>
+<p>4、淘宝新建商户一个月内还没上传商品信息，将冻结商铺等</p>
+<p>。。。。</p>
+<p>上边的这些场景都可以应用延时队列解决。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/data-structure/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97-%E5%AE%9E%E7%8E%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" class="post-title-link" itemprop="url">双向关联最佳实践</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-08 14:07:00" itemprop="dateCreated datePublished" datetime="2021-06-08T14:07:00+08:00">2021-06-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JPA/" itemprop="url" rel="index"><span itemprop="name">JPA</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>下面的最佳实践都是从性能角度证明双向关联的正确性。</p>
+<h1>映射 @OneToMany 双向关联</h1>
+<p><img data-src="../../images/jpa/one-to-many-author-book.png" alt="one-to-many-author-book"></p>
+<p>一个作者对应多本发行书，<code>Parent</code> 端 为 <code>Author</code>，<code>Child</code> 端为 <code>Book</code>。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java-Agent/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/java/Java-Agent/" class="post-title-link" itemprop="url">Java Agent</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-05 16:03:00" itemprop="dateCreated datePublished" datetime="2021-06-05T16:03:00+08:00">2021-06-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.instrument/java/lang/instrument/Instrumentation.html">Java Instrumentation API</a>，提供允许 Java 编程语言代理人（Agent）Instrument 在 JVM 上运行的程序的服务。</p>
+<blockquote>
+<p>Agent：代理，以下文章中的所述代理都是指 Java Agent。</p>
+<p>Instrumentation/Instrument：直译仪器，在计算机术语中也有植入、插桩、编排、性能测量的意思。</p>
+</blockquote>
+<p>Instrument 设计的目的是将字节码添加到方法中，收集工具使用的数据。出于这个目的，因为更改纯粹是附加的，因此这些工具不会修改应用程序状态或行为。此类良性工具的示例包括监控代理、分析器、覆盖分析器和事件记录器。</p>
+<p>由于这种检测机制提供了修改现有已编译 Java 类的字节码或添加字节码的能力，所以我们也可以用来动态修改运行的程序代码。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/Java-Agent/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="post-title-link" itemprop="url">Redis 分布式锁</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-01 13:53:00" itemprop="dateCreated datePublished" datetime="2021-06-01T13:53:00+08:00">2021-06-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1>用锁来做什么？</h1>
+<p>在计算机科学中，锁是多线程环境中防止不同线程对同一资源进行操作的机制。锁的目的是确保在可能尝试执行同一工作的多个节点中，只有一个节点实际执行此操作（至少一次只有一个）。这项工作可能是将一些数据写入共享存储系统、执行一些计算、调用一些外部 API 等。概括而言，您可能需要在分布式应用程序中锁定的原因有两个：<strong>为了效率</strong>或<strong>为了正确性</strong>。为了区分这些情况，您可以询问如果锁定失败会发生什么：</p>
+<ul>
+<li><strong>效率 - Efficiency</strong>：获取锁可以避免你不必要地做同样的工作两次（例如一些昂贵的计算）。</li>
+<li><strong>正确性 - Correctness</strong>：使用锁可以防止并发进程相互干扰并破坏系统状态。如果锁失败，两个节点同时处理同一份数据，结果是文件损坏，数据丢失，永久性不一致、错误的执行结果或其他一些严重问题。</li>
+</ul>
+<p>两者都是需要锁的有效情况，但您需要非常清楚您正在处理的是两者中的哪一个。</p>
+<h1>安全性和活跃性保证</h1>
+<p>我们将仅使用三个属性对我们的设计进行建模，从我们的角度来看，这是以有效方式使用分布式锁所需的最低保证。</p>
+<ol>
+<li><strong>安全特性</strong>：互斥。在任何给定时刻，只有一个客户端可以持有锁。</li>
+<li>活跃性属性 A：无死锁。最终总是有可能获得锁，即使锁定资源的客户端崩溃或被分区。</li>
+<li>活跃性属性 B：容错。只要大多数 Redis 节点都已启动，客户端就可以获取和释放锁。</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java-NIO/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/java/Java-NIO/" class="post-title-link" itemprop="url">Java NIO</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-05-30 18:58:00" itemprop="dateCreated datePublished" datetime="2021-05-30T18:58:00+08:00">2021-05-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-03-02 09:24:42" itemprop="dateModified" datetime="2022-03-02T09:24:42+08:00">2022-03-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>从 1.4 版本开始，Java 提供了另一套 I/O 系统，称为 NIO(New I/O 的缩写)。NIO 支持面向缓冲区的、基于通道的 I/O 操作。随着 JDK7 的发布，Java 对 NIO 系统进行了极大扩展，增强了对文件处理和文件系统特性的支持。缘于 NIO 文件类提供的功能，NIO 预期会成为文件处理中越来越重要的部分。</p>
+<p>NIO 包含下面几个核心的组件：</p>
+<ul>
+<li>Channels</li>
+<li>Buffers</li>
+<li>Selectors</li>
+</ul>
+<p>还有基于文件的几个核心组件：</p>
+<ul>
+<li>Path</li>
+<li>FileSystem</li>
+</ul>
+<p>下面我们就以核心组件展开来说。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/Java-NIO/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/jvm/JVM-%E8%B0%83%E4%BC%98%E6%8C%87%E5%8D%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/java/jvm/JVM-%E8%B0%83%E4%BC%98%E6%8C%87%E5%8D%97/" class="post-title-link" itemprop="url">JVM 调优指南</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-05-23 21:21:00" itemprop="dateCreated datePublished" datetime="2021-05-23T21:21:00+08:00">2021-05-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>从桌面上的小 applet 到大型服务器上的 Web 服务，各种各样的应用程序都使用 Java。为了支持这种多样化的部署场景，Java HotSpot VM 提供了多个垃圾收集器，每个垃圾收集器旨在满足不同的需求。Java 根据运行应用程序的计算机的类别选择最合适的垃圾收集器。但是，此选择可能并非对每个应用程序都是最佳的。具有严格性能目标或其他要求的用户，开发人员和管理员可能需要明确选择垃圾回收器并调整某些参数以实现所需的性能水平。本文档提供了有助于完成这些任务的信息。</p>
+<p>首先，在串行，stop-the-world 收集器的上下文中描述了垃圾收集器的一般功能和基本的调整选项。然后介绍了其他收集器的特定功能以及选择收集器时要考虑的因素。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/java/jvm/JVM-%E8%B0%83%E4%BC%98%E6%8C%87%E5%8D%97/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"c853ec00cc9d13bc22336b7d45d1416e"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

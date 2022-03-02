@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="本文为 MySQL 8.0 官方文档 The InnoDB Storage Engine 的部分翻译。  InnoDB 简介 InnoDB 是一个兼顾高可靠性和高性能的通用存储引擎。在 MySQL 8.0 中，InnoDB 是默认的 MySQL 存储引擎。除非您配置了不同的默认存储引擎，否则发出不带 ENGINE 子句的 CREATE TABLE 语句默认会创建一个 InnoDB 表。 Inno">
+<meta property="og:type" content="article">
+<meta property="og:title" content="InnoDB 存储引擎【翻译】">
+<meta property="og:url" content="https://www.zeral.cn/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="本文为 MySQL 8.0 官方文档 The InnoDB Storage Engine 的部分翻译。  InnoDB 简介 InnoDB 是一个兼顾高可靠性和高性能的通用存储引擎。在 MySQL 8.0 中，InnoDB 是默认的 MySQL 存储引擎。除非您配置了不同的默认存储引擎，否则发出不带 ENGINE 子句的 CREATE TABLE 语句默认会创建一个 InnoDB 表。 Inno">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/db/innodb/innodb-architecture.png">
+<meta property="og:image" content="https://www.zeral.cn/images/db/innodb/innodb-buffer-pool-list.png">
+<meta property="og:image" content="https://www.zeral.cn/images/db/innodb/innodb-change-buffer.png">
+<meta property="article:published_time" content="2021-07-12T12:09:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.233Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="InnoDb">
+<meta property="article:tag" content="Redo Log">
+<meta property="article:tag" content="Undo Log">
+<meta property="article:tag" content="Buffer Pool">
+<meta property="article:tag" content="Change Buffer">
+<meta property="article:tag" content="Doublewrite Buffer Files">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/db/innodb/innodb-architecture.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/","path":"persistence/db/InnoDB-存储引擎/","title":"InnoDB 存储引擎【翻译】"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>InnoDB 存储引擎【翻译】 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">InnoDB 简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDB-%E7%9A%84%E4%B8%BB%E8%A6%81%E4%BC%98%E5%8A%BF"><span class="nav-number">1.1.</span> <span class="nav-text">InnoDB 的主要优势</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-InnoDB-%E8%A1%A8%E7%9A%84%E5%A5%BD%E5%A4%84"><span class="nav-number">1.2.</span> <span class="nav-text">使用 InnoDB 表的好处</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDB-%E8%A1%A8%E7%9A%84%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">1.3.</span> <span class="nav-text">InnoDB 表的最佳实践</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">InnoDB 架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">InnoDb 内存结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E6%B1%A0-Buffer-Pool"><span class="nav-number">3.1.</span> <span class="nav-text">缓冲池 - Buffer Pool</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E6%B1%A0-LRU-%E7%AE%97%E6%B3%95"><span class="nav-number">3.1.1.</span> <span class="nav-text">缓冲池 LRU 算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%94%B9%E7%BC%93%E5%86%B2%E5%8C%BA-Change-Buffer"><span class="nav-number">3.2.</span> <span class="nav-text">更改缓冲区 - Change Buffer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E9%80%82%E5%BA%94%E5%93%88%E5%B8%8C%E7%B4%A2%E5%BC%95-Adaptive-Hash-Index"><span class="nav-number">3.3.</span> <span class="nav-text">自适应哈希索引 - Adaptive Hash Index</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E7%BC%93%E5%86%B2%E5%8C%BA-Log-Buffer"><span class="nav-number">3.4.</span> <span class="nav-text">日志缓冲区 - Log Buffer</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">InnoDB 物理结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8-Tables"><span class="nav-number">4.1.</span> <span class="nav-text">表 - Tables</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-InnoDB-%E8%A1%A8"><span class="nav-number">4.1.1.</span> <span class="nav-text">创建 InnoDB 表</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A1%8C%E6%A0%BC%E5%BC%8F"><span class="nav-number">4.1.1.1.</span> <span class="nav-text">行格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E9%94%AE"><span class="nav-number">4.1.1.2.</span> <span class="nav-text">主键</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B-InnoDB-%E8%A1%A8%E5%B1%9E%E6%80%A7"><span class="nav-number">4.1.1.3.</span> <span class="nav-text">查看 InnoDB 表属性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB-%E4%B8%AD%E7%9A%84-AUTO-INCREMENT-%E5%A4%84%E7%90%86"><span class="nav-number">4.1.2.</span> <span class="nav-text">InnoDB 中的 AUTO_INCREMENT 处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#InnoDB-AUTO-INCREMENT-%E9%94%81%E5%AE%9A%E6%A8%A1%E5%BC%8F"><span class="nav-number">4.1.2.1.</span> <span class="nav-text">InnoDB AUTO_INCREMENT 锁定模式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95-Indexes"><span class="nav-number">4.2.</span> <span class="nav-text">索引 - Indexes</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%81%9A%E9%9B%86%E7%B4%A2%E5%BC%95%E5%92%8C%E4%BA%8C%E7%BA%A7%E7%B4%A2%E5%BC%95"><span class="nav-number">4.2.1.</span> <span class="nav-text">聚集索引和二级索引</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%81%9A%E9%9B%86%E7%B4%A2%E5%BC%95%E5%A6%82%E4%BD%95%E5%8A%A0%E5%BF%AB%E6%9F%A5%E8%AF%A2%E9%80%9F%E5%BA%A6"><span class="nav-number">4.2.1.0.1.</span> <span class="nav-text">聚集索引如何加快查询速度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E7%B4%A2%E5%BC%95%E4%B8%8E%E8%81%9A%E9%9B%86%E7%B4%A2%E5%BC%95%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-number">4.2.1.0.2.</span> <span class="nav-text">二级索引与聚集索引的关系</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB-%E7%B4%A2%E5%BC%95%E7%9A%84%E7%89%A9%E7%90%86%E7%BB%93%E6%9E%84"><span class="nav-number">4.2.2.</span> <span class="nav-text">InnoDB 索引的物理结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%92%E5%BA%8F%E7%B4%A2%E5%BC%95%E6%9E%84%E5%BB%BA"><span class="nav-number">4.2.3.</span> <span class="nav-text">排序索引构建</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E7%A9%BA%E9%97%B4-Tablespaces"><span class="nav-number">4.3.</span> <span class="nav-text">表空间 - Tablespaces</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.3.1.</span> <span class="nav-text">系统表空间</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E6%95%B4%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%9A%84%E5%A4%A7%E5%B0%8F"><span class="nav-number">4.3.1.1.</span> <span class="nav-text">调整系统表空间的大小</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A2%9E%E5%8A%A0%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%9A%84%E5%A4%A7%E5%B0%8F"><span class="nav-number">4.3.1.1.1.</span> <span class="nav-text">增加系统表空间的大小</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%87%8F%E5%B0%91-InnoDB-%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%9A%84%E5%A4%A7%E5%B0%8F"><span class="nav-number">4.3.1.1.2.</span> <span class="nav-text">减少 InnoDB 系统表空间的大小</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#File-Per-Table-%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.3.2.</span> <span class="nav-text">File-Per-Table 表空间</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#File-Per-Table-%E8%A1%A8%E7%A9%BA%E9%97%B4%E9%85%8D%E7%BD%AE"><span class="nav-number">4.3.2.1.</span> <span class="nav-text">File-Per-Table 表空间配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#File-Per-Table-%E8%A1%A8%E7%A9%BA%E9%97%B4%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6"><span class="nav-number">4.3.2.2.</span> <span class="nav-text">File-Per-Table 表空间数据文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#File-Per-Table-%E8%A1%A8%E7%A9%BA%E9%97%B4%E4%BC%98%E5%8A%BF"><span class="nav-number">4.3.2.3.</span> <span class="nav-text">File-Per-Table 表空间优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#File-Per-Table-%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">4.3.2.4.</span> <span class="nav-text">File-Per-Table 表空间的缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E8%A1%A8%E7%A9%BA%E9%97%B4-General-Tablespaces"><span class="nav-number">4.4.</span> <span class="nav-text">通用表空间 - General Tablespaces</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%8A%9F%E8%83%BD"><span class="nav-number">4.4.1.</span> <span class="nav-text">通用表空间功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E9%80%9A%E7%94%A8%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.4.2.</span> <span class="nav-text">创建通用表空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%86%E8%A1%A8%E6%B7%BB%E5%8A%A0%E5%88%B0%E9%80%9A%E7%94%A8%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.4.3.</span> <span class="nav-text">将表添加到通用表空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E8%A1%A8%E7%A9%BA%E9%97%B4%E9%99%90%E5%88%B6"><span class="nav-number">4.4.4.</span> <span class="nav-text">通用表空间限制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%92%A4%E9%94%80%E8%A1%A8%E7%A9%BA%E9%97%B4-Undo-Tablespaces"><span class="nav-number">4.5.</span> <span class="nav-text">撤销表空间 - Undo Tablespaces</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E6%92%A4%E6%B6%88%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.5.1.</span> <span class="nav-text">默认撤消表空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%92%A4%E6%B6%88%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%A4%A7%E5%B0%8F"><span class="nav-number">4.5.2.</span> <span class="nav-text">撤消表空间大小</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%B4%E6%97%B6%E8%A1%A8%E7%A9%BA%E9%97%B4-Temporary-Tablespaces"><span class="nav-number">4.6.</span> <span class="nav-text">临时表空间 - Temporary Tablespaces</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%9A%E8%AF%9D%E4%B8%B4%E6%97%B6%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.6.1.</span> <span class="nav-text">会话临时表空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E4%B8%B4%E6%97%B6%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.6.2.</span> <span class="nav-text">全局临时表空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8C%E5%86%99%E7%BC%93%E5%86%B2%E5%8C%BA-Doublewrite-Buffer"><span class="nav-number">4.7.</span> <span class="nav-text">双写缓冲区 - Doublewrite Buffer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%81%9A%E6%97%A5%E5%BF%97-Redo-Log"><span class="nav-number">4.8.</span> <span class="nav-text">重做日志 - Redo Log</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%92%A4%E9%94%80%E6%97%A5%E5%BF%97-Undo-Log"><span class="nav-number">4.9.</span> <span class="nav-text">撤销日志 - Undo Log</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          InnoDB 存储引擎【翻译】
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-12 20:09:00" itemprop="dateCreated datePublished" datetime="2021-07-12T20:09:00+08:00">2021-07-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/DB/" itemprop="url" rel="index"><span itemprop="name">DB</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>本文为 MySQL 8.0 官方文档 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html">The InnoDB Storage Engine</a> 的部分翻译。</p>
+</blockquote>
+<h1>InnoDB 简介</h1>
+<p>InnoDB 是一个兼顾高可靠性和高性能的通用存储引擎。在 MySQL 8.0 中，InnoDB 是默认的 MySQL 存储引擎。除非您配置了不同的默认存储引擎，否则发出不带 ENGINE 子句的 <code>CREATE TABLE</code> 语句默认会创建一个 InnoDB 表。</p>
+<h2 id="InnoDB-的主要优势">InnoDB 的主要优势</h2>
+<ul>
+<li>它的 <code>DML(data manipulation language)</code> 操作遵循 <code>ACID</code> 模型，事务具有提交、回滚和崩溃恢复功能，以保护用户数据。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/mysql-acid.html">第 15.2 节，“InnoDB 和 ACID 模型”</a>。</li>
+<li>行级锁定和 Oracle 风格的一致性读取提高了多用户并发性和性能。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html#:~:text=Section%C2%A015.7%2C%20%E2%80%9CInnoDB%20Locking%20and%20Transaction%20Model%E2%80%9D">第 15.7 节，“InnoDB 锁定和事务模型”</a>。</li>
+<li>InnoDB 表将您的数据排列在磁盘上以优化基于主键的查询。每个 InnoDB 表都有一个称为聚集索引的主键索引，用于组织数据以最小化主键查找的 I/O。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html#:~:text=Section%C2%A015.6.2.1%2C%20%E2%80%9CClustered%20and%20Secondary%20Indexes%E2%80%9D">第 15.6.2.1 节，“聚集索引和二级索引”</a>。</li>
+<li>为了保持数据完整性，InnoDB 支持外键 <code>FOREIGN KEY</code> 约束。使用外键检查插入、更新和删除以确保它们不会导致相关表之间的不一致。</li>
+</ul>
+<span id="more"></span>
+<p><strong>Table InnoDB 存储引擎功能</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">功能</th>
+<th style="text-align:left">是否支持</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>B-tree 索引</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left">备份/基于时间点恢复（在服务端实现，而不是在存储引擎中。）</td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>数据库集群支持</strong></td>
+<td style="text-align:left">No</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>聚集索引</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>压缩数据</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>数据缓存</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>加密数据</strong></td>
+<td style="text-align:left">Yes (在服务器中通过加密函数实现；在 MySQL 5.7 及更高版本中，支持静态数据加密。)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>外键支持</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>全文检索索引</strong></td>
+<td style="text-align:left">Yes (MySQL 5.6 及更高版本支持全文索引。)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>地理空间数据类型支持</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>地理空间索引支持</strong></td>
+<td style="text-align:left">Yes (MySQL 5.7 及更高版本支持地理空间索引。)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>哈希索引</strong></td>
+<td style="text-align:left">No (InnoDB 在内部利用哈希索引来实现其自适应哈希索引功能。)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>索引缓存</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>锁定粒度</strong></td>
+<td style="text-align:left">行</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>MVCC - 多版本并发控制</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>复制支持</strong> (在服务端实现，而不是在存储引擎中。)</td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>存储限制</strong></td>
+<td style="text-align:left">64TB</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>T树索引</strong></td>
+<td style="text-align:left">No</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>事物</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>数据字典的更新统计信息</strong></td>
+<td style="text-align:left">Yes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="使用-InnoDB-表的好处">使用 InnoDB 表的好处</h2>
+<p>InnoDB 表具有以下优点：</p>
+<ul>
+<li>如果服务器由于硬件或软件问题而意外退出，无论当时数据库中发生了什么，您都无需在重新启动数据库后执行任何特殊操作。<code>InnoDB</code>崩溃恢复会自动完成崩溃之前提交的更改，并撤消正在进行但未提交的更改，允许您重新启动并从上次中断的地方继续。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-recovery.html">第 15.18.2 节，“InnoDB 恢复”</a>。</li>
+<li>InnoDB 存储引擎维护自己的缓冲池 - <code>buffer pool</code>，在访问数据时将表和索引数据缓存在主内存中。经常使用的数据直接从内存中处理。此缓存适用于多种类型的信息并加快处理速度。在专用数据库服务器上，多达 80% 的物理内存通常分配给缓冲池。请参见<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-buffer-pool.html">第 15.5.1 节，“缓冲池 - Buffer Pool”</a>。</li>
+<li>如果将相关数据拆分到不同的表中，则可以设置强制参照完整性的外键。请参见 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html">第 13.1.20.5 节，“外键约束”</a>。</li>
+<li>如果磁盘或内存中的数据损坏，校验和机制会在您使用之前提醒您注意虚假数据。该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_checksum_algorithm"><code>innodb_checksum_algorithm</code></a> 变量定义了 <code>InnoDB</code> 使用的校验和算法。</li>
+<li>当您为每个表设计具有适当主键列的数据库时，会自动优化涉及这些列的操作。在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/select.html"><code>WHERE</code></a> 子句、<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/select.html"><code>ORDER BY</code></a>子句、 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/select.html"><code>GROUP BY</code></a> 子句和连接操作中引用主键列的速度非常快 。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html">第 15.6.2.1 节，“聚集索引和二级索引”</a>。</li>
+<li>插入、更新和删除通过称为更改缓冲去 - <code>change buffering</code> 的自动机制进行优化。<code>InnoDB</code> 不仅允许对同一个表进行并发读写访问，它还缓存更改的数据以简化磁盘 I/O。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-change-buffer.html">第 15.5.2 节，“更改缓冲区 - Change Buffer”</a>。</li>
+<li>性能优势不仅限于具有长时间运行查询的大型表。当从表中一遍又一遍地访问相同的行时，自适应哈希索引会接管以加快这些查找，就好像它们来自哈希表一样。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-adaptive-hash.html">第 15.5.3 节，“自适应哈希索引”</a>。</li>
+<li>您可以压缩表和关联的索引。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-compression.html">第 15.9 节，“InnoDB 表和页面压缩”</a>。</li>
+<li>您可以加密您的数据。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-data-encryption.html">第 15.13 节，“InnoDB 静态数据加密”</a>。</li>
+<li>您可以创建和删除索引以及执行其他 DDL 操作，而对性能和可用性的影响要小得多。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html">第 15.12.1 节，“在线 DDL 操作”</a>。</li>
+<li>截断（Truncating）每个表的文件表空间非常快，可以释放磁盘空间供操作系统重用，而不仅仅是<code>InnoDB</code>. 请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-file-per-table-tablespaces.html">第 15.6.3.2 节，“单表文件空间”</a>。</li>
+<li>表数据的存储布局对于<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/blob.html"><code>BLOB</code></a>长文本字段和<code>DYNAMIC</code>行格式更有效 。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-row-format.html">第 15.10 节，“InnoDB 行格式”</a>。</li>
+<li>您可以通过查询<code>INFORMATION_SCHEMA</code>表来监控存储引擎的内部工作。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-information-schema.html">第 15.15 节，“InnoDB INFORMATION_SCHEMA 表”</a>。</li>
+<li>您可以通过查询 Performance Schema 表来监控存储引擎的性能详细信息。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-performance-schema.html">第 15.16 节，“InnoDB 与 MySQL Performance Schema 的集成”</a>。</li>
+<li>您可以将<code>InnoDB</code>表与来自其他 MySQL 存储引擎的表混合使用，即使在同一语句中也是如此。例如，您可以使用连接操作在单个查询中组合来自表<code>InnoDB</code>和 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/memory-storage-engine.html"><code>MEMORY</code></a>表的数据 。</li>
+<li><code>InnoDB</code> 专为处理大量数据时的 CPU 效率和最大性能而设计。</li>
+<li><code>InnoDB</code> 表可以处理大量数据，即使在文件大小限制为 2GB 的操作系统上也是如此。</li>
+</ul>
+<p>对于<code>InnoDB</code>可以应用于 MySQL 服务器和应用程序代码的特定调整技术，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/optimizing-innodb.html">第 8.5 节“优化 InnoDB 表”</a>。</p>
+<h2 id="InnoDB-表的最佳实践">InnoDB 表的最佳实践</h2>
+<p>本节介绍使用<code>InnoDB</code>表时的最佳实践 。</p>
+<ul>
+<li>使用最常查询的一列或多列来为每个表指定一个主键，如果没有明显的主键，则指定一个自增值。</li>
+<li>在根据多个表中的相同 ID 值从多个表中提取数据的地方使用连接 - <code>join</code>。为了快速连接性能，在连接列上定义外键，并在每个表中用相同的数据类型声明这些列。添加外键确保引用的列被索引，这可以提高性能。外键还会将删除和更新传播到所有受影响的表，并在父表中不存在相应 ID 时阻止在子表中插入数据。</li>
+<li>关闭自动提交。每秒提交数百次会限制性能（受存储设备的写入速度限制）。</li>
+<li>通过用<code>START TRANSACTION</code>和 <code>COMMIT</code>语句将相关的 DML 操作集分组到事务中。虽然您不想太频繁地提交，但您也不想发出大量运行数小时而不提交的 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>、 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/update.html"><code>UPDATE</code></a>、 或 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/delete.html"><code>DELETE</code></a>语句。</li>
+<li>不要使用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/lock-tables.html"><code>LOCK TABLES</code></a> 语句。<code>InnoDB</code>可以在不牺牲可靠性或高性能的情况下同时处理对同一个表的所有读取和写入的多个会话。要获得对一组行的独占写访问权限，请使用 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html"><code>SELECT ... FOR UPDATE</code></a>语法锁定您打算更新的行。</li>
+<li>启用 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_file_per_table"><code>innodb_file_per_table</code></a> 变量或使用通用表空间将表的数据和索引放入单独的文件而不是系统表空间。<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_file_per_table"><code>innodb_file_per_table</code></a> 默认情况下启用该变量。</li>
+<li>评估您的数据和访问模式是否受益于<code>InnoDB</code>表或页面压缩功能。您可以在<code>InnoDB</code>不牺牲读/写能力的情况下压缩表。</li>
+<li>使用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_sql_mode"><code>--sql_mode=NO_ENGINE_SUBSTITUTION</code></a> 选项运行服务器以防止使用您不想使用的存储引擎创建表。</li>
+</ul>
+<h1>InnoDB 架构</h1>
+<p>下图显示了构成<code>InnoDB</code>存储引擎架构的内存和磁盘结构。内存结构包括<code>缓冲池 - Buffer Pool</code>、<code>自适应哈希索引 - Adaptive Hash Index</code>、<code>更改缓冲区 - Buffer Pool</code> 和<code>日志缓冲区 - Log Buffer</code>。 磁盘结构包括<code>表空间 - Table Space</code>、<code>重做日志 - Redo Log</code> 和<code>双写缓冲区文件 - Doublewrite Buffer Files</code>。</p>
+<p><img data-src="../../../images/db/innodb/innodb-architecture.png" alt="InnoDB 架构"></p>
+<h1>InnoDb 内存结构</h1>
+<h2 id="缓冲池-Buffer-Pool">缓冲池 - Buffer Pool</h2>
+<p>缓冲池是主内存中的一个区域，用于在 <code>InnoDB</code>访问时缓存表和索引数据。缓冲池允许直接从内存访问经常使用的数据，从而加快处理速度。在专用服务器上，多达 80% 的物理内存通常分配给缓冲池。</p>
+<p>为了提高大量读取操作的效率，缓冲池被划分为可能包含多行的<code>页 - Page</code>。为了缓存管理的效率，缓冲池被实现为页的链表；很少使用的数据使用最近最少使用 (LRU) 算法的变体从缓存中老化。</p>
+<p>了解如何利用缓冲池将经常访问的数据保存在内存中是 MySQL 调优的一个重要方面。</p>
+<h3 id="缓冲池-LRU-算法">缓冲池 LRU 算法</h3>
+<p>缓冲池作为列表 - List 使用 LRU 算法的变体来进行管理。当需要空间向缓冲池添加新页时，最近最少使用的页会被逐出，并将新页添加到列表中间。此中点插入策略将列表视为两个子列表：</p>
+<ul>
+<li>在头部，最近访问的新（“年轻”）页的子列表</li>
+<li>在尾部，最近访问过的旧页的子列表</li>
+</ul>
+<p><img data-src="../../../images/db/innodb/innodb-buffer-pool-list.png" alt="缓冲池列表"></p>
+<p>该算法将经常使用的页保留在新的子列表中。旧的子列表包含不太常用的页；这些页是要被<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_eviction">驱逐的</a>候选页。</p>
+<p>默认情况下，算法操作如下：</p>
+<ul>
+<li>缓冲池的 3/8 专用于旧子列表。</li>
+<li>列表的中间是新子列表尾部与旧子列表头部相交的边界。</li>
+<li>当<code>InnoDB</code>将页读入缓冲池时，它最初将它插入到中间（旧子列表的头部）。可以读取该页，因为它是用户初始化操作（例如 SQL 查询）所必需的，或者是由 <code>InnoDB</code> 自动执行的<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_read_ahead">预读</a>操作的一部分。</li>
+<li>访问旧子列表中的页使其 “变新”，将其移动到新子列表的头部。如果页面是因为用户启动的操作需要它而被读取，则第一次访问会立即发生，并且页会变新。如果页面是由于预读操作而读取的，则第一次访问不会立即发生，并且在页被逐出之前可能根本不会发生。</li>
+<li>随着数据库的运行，缓冲池中未被访问的页面会通过向列表尾部移动来“老化”。新旧子列表中的页随着其他页的更新而老化。旧子列表中的页也会随着页插入中点而老化。最终，一个未使用的页到达旧子列表的尾部并被驱逐。</li>
+</ul>
+<p>默认情况下，查询读取的页会立即移动到新的子列表中，这意味着它们在缓冲池中停留的时间更长。例如，为 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/mysqldump.html"><strong>mysqldump</strong></a> 操作或 <code>SELECT</code> 没有 <code>WHERE</code> 子句的语句执行的表扫描可以将大量数据带入缓冲池并驱逐等量的旧数据，即使这些新数据不需要再使用。类似地，由预读后台线程加载且仅访问一次的页也会被移动到新列表的头部。这些情况会将经常使用的页推送到旧的子列表，在那里它们会被逐出。有关优化此行为的信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-performance-midpoint_insertion.html">第 15.8.3.3 节，“使缓冲池扫描具有抵抗性”</a>和 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-performance-read_ahead.html">第 15.8.3.4 节，“配置 InnoDB 缓冲池预取（预读）”</a>。</p>
+<p><code>InnoDB</code> 标准监视器输出在 <code>BUFFER POOL AND MEMORY</code> 有关缓冲池 LRU 算法操作的部分中包含多个字段。有关详细信息，请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-buffer-pool.html#innodb-buffer-pool-monitoring">使用 InnoDB 标准监视器监视缓冲池</a>。</p>
+<h2 id="更改缓冲区-Change-Buffer">更改缓冲区 - Change Buffer</h2>
+<p>更改缓冲区是一种特殊的数据结构，当<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_secondary_index">二级索引</a>页不在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_buffer_pool">缓冲池中</a>时，它会缓存对<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_secondary_index">二级索引</a>页的更改 。可能由<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>、 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/update.html"><code>UPDATE</code></a>或 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/delete.html"><code>DELETE</code></a>操作 (DML) 导致的缓冲更改稍后在其他读取操作将页加载到缓冲池时合并。</p>
+<p><img data-src="../../../images/db/innodb/innodb-change-buffer.png" alt="更改缓冲区"></p>
+<p>与<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_clustered_index">聚集索引</a>不同，二级索引通常是非唯一的，并且以相对随机的顺序插入二级索引。同样，删除和更新可能会影响索引树中不相邻的二级索引页。合并更改的缓存，以便稍后在其他操作将受影响的页读入缓冲池时可避免大量随机访问 I/O，而这些 I/O 需要将二级索引页面从磁盘读入缓冲池。</p>
+<p>在系统大部分空闲时或在缓慢关闭期间运行的<code>清洗 - purge</code> 操作会定期将更新的索引页写入磁盘。与将每个值立即写入磁盘相比，purge 操作可以更有效地为一系列索引值写入磁盘块。</p>
+<p>当有许多受影响的行和许多二级索引要更新时，更改缓冲区合并可能需要几个小时。在此期间，磁盘 I/O 增加，这可能会导致磁盘绑定查询的显着减慢。在提交事务后，甚至在服务器关闭并重新启动之后，更改缓冲区合并也可能继续发生（ 有关更多信息<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/forcing-innodb-recovery.html">，</a>请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/forcing-innodb-recovery.html">第 15.21.3 节，“强制 InnoDB 恢复”</a>）。</p>
+<p>在内存中，更改缓冲区占据了缓冲池的一部分。在磁盘上，更改缓冲区是系统表空间的一部分，当数据库服务器关闭时，索引更改会在其中缓冲。</p>
+<p>缓存在更改缓冲区中的数据类型由 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_change_buffering"><code>innodb_change_buffering</code></a>变量控制。有关更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-change-buffer.html#innodb-change-buffer-configuration">配置更改缓冲</a>。您还可以配置最大更改缓冲区大小。有关更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-change-buffer.html#innodb-change-buffer-maximum-size">配置更改缓冲区最大大小</a>。</p>
+<p>如果索引包含降序索引列或主键包含降序索引列，则二级索引不支持更改缓冲。</p>
+<p>有关更改缓冲区的<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/faqs-innodb-change-buffer.html">常见问题解答</a>，请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/faqs-innodb-change-buffer.html">第 A.16 节，“MySQL 8.0 常见问题解答：InnoDB 更改缓冲区”</a>。</p>
+<h2 id="自适应哈希索引-Adaptive-Hash-Index">自适应哈希索引 - Adaptive Hash Index</h2>
+<p>自适应哈希索引能够让 <code>InnoDB</code> 在具有适当组合的工作负载和足够的缓冲池内存的系统上的执行更像内存数据库，而不会牺牲事务功能或可靠性。自适应哈希索引由<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_adaptive_hash_index"><code>innodb_adaptive_hash_index</code></a> 变量启用 ，或在服务器启动时由参数 <code>--skip-innodb-adaptive-hash-index</code> 关闭。</p>
+<p>根据观察到的搜索模式，使用索引键的前缀构建哈希索引。前缀可以是任意长度，也可能只有 B 树中的某些值出现在哈希索引中。哈希索引是针对经常访问的索引页按需构建的。</p>
+<p>如果一个表几乎完全放在主内存中，哈希索引会通过启用任何元素的直接查找来加速查询，将索引值转换为一种指针。 <code>InnoDB</code>具有监视索引搜索的机制。如果<code>InnoDB</code>注意到查询可以从构建哈希索引中受益，它会自动这样做。</p>
+<p>对于某些工作负载，哈希索引查找的加速优势大大超过了监视索引查找和维护哈希索引结构的带来的额外工作。对自适应哈希索引的访问有时也会成为繁重工作负载下的争用源，例如多个并发连接。带有 <code>LIKE</code> 运算符和 <code>%</code> 通配符的查询也往往不会受益。对于无法从自适应哈希索引中受益的工作负载，将其关闭可减少不必要的性能开销。由于很难提前预测自适应哈希索引是否适合特定系统和工作负载，请考虑在启用和禁用它的情况下运行基准测试。</p>
+<p>自适应哈希索引功能是分区的。每个索引都绑定到一个特定的分区，每个分区都由一个单独的闩锁 - latch 保护。分区由<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_adaptive_hash_index_parts"><code>innodb_adaptive_hash_index_parts</code></a> 变量控制 。该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_adaptive_hash_index_parts"><code>innodb_adaptive_hash_index_parts</code></a> 变量默认设置为 8。最大设置为 512。</p>
+<p>您可以在 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/show-engine.html"><code>SHOW ENGINE INNODB STATUS</code></a> 输出的 <code>SEMAPHORES </code>部分监控自适应哈希索引的使用和争用。如果有大量线程在等待 <code>btr0sea.c</code> 中创建的 <code>rw-latch</code>，请考虑增加自适应散列索引分区的数量或禁用自适应散列索引。</p>
+<p>有关哈希索引的性能特征的信息，请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/index-btree-hash.html">第 8.3.9 节，“B 树和哈希索引的比较”</a>。</p>
+<h2 id="日志缓冲区-Log-Buffer">日志缓冲区 - Log Buffer</h2>
+<p>日志缓冲区是保存要写入到磁盘上日志文件的数据的内存区域。日志缓冲区大小由<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_log_buffer_size"><code>innodb_log_buffer_size</code></a>变量定义 。默认大小为 16MB。日志缓冲区的内容会定期刷新到磁盘。大型日志缓冲区使大型事务能够运行，而无需在事务提交之前将重做日志数据写入磁盘。因此，如果您有更新、插入或删除许多行的事务，增加日志缓冲区的大小可以节省磁盘 I/O。</p>
+<p>该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_flush_log_at_trx_commit"><code>innodb_flush_log_at_trx_commit</code></a> 变量控制日志缓冲区的内容如何写入和刷新到磁盘。该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_flush_log_at_timeout"><code>innodb_flush_log_at_timeout</code></a> 变量控制日志刷新频率。</p>
+<p>有关相关信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-init-startup-configuration.html#innodb-startup-memory-configuration">内存配置</a> 和 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/optimizing-innodb-logging.html">第 8.5.4 节, “优化 InnoDB 重做日志”</a>。</p>
+<h1>InnoDB 物理结构</h1>
+<h2 id="表-Tables">表 - Tables</h2>
+<h3 id="创建-InnoDB-表">创建 InnoDB 表</h3>
+<p><code>InnoDB</code>表是使用 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html"><code>CREATE TABLE</code></a> 语句创建的 ；例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (a <span class="type">INT</span>, b <span class="type">CHAR</span> (<span class="number">20</span>), <span class="keyword">PRIMARY</span> KEY (a)) ENGINE<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+<p>当把 <code>InnoDB</code> 定义为默认存储引擎时不需要 <code>ENGINE=InnoDB</code> 该子句 ，默认情况下就是 <code>InnoDB</code>。但是，如果 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html"><code>CREATE TABLE</code></a> 要在默认存储引擎不存在 <code>InnoDB</code> 或未知的其他 MySQL 服务器实例上重放语句，则该子句很有用 。您可以通过发出以下语句来确定 MySQL 服务器实例上的默认存储引擎：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">SELECT</span> @<span class="variable">@default</span>_storage_engine;</span><br><span class="line"><span class="operator">+</span><span class="comment">--------------------------+</span></span><br><span class="line"><span class="operator">|</span> @<span class="variable">@default</span>_storage_engine <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">--------------------------+</span></span><br><span class="line"><span class="operator">|</span> InnoDB                   <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">--------------------------+</span></span><br></pre></td></tr></table></figure>
+<p><code>InnoDB</code> 默认情况下，表是在 <code>File-Per-Table Tablespaces</code> 表空间中创建的。要让 <code>InnoDB</code> 在 <code>InnoDB</code> 系统表空间（System Tablespace）中创建表，请在创建表之前禁用该变量 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_file_per_table"><code>innodb_file_per_table</code></a>。要让 <code>InnoDB</code> 在通用表空间（General Tablespaces）中创建表，请使用 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html"><code>CREATE TABLE ... TABLESPACE </code></a>语法。有关更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-tablespace.html">第 15.6.3 节，“表空间”</a>。</p>
+<h4 id="行格式">行格式</h4>
+<p><code>InnoDB</code>表 的行格式决定了其行在磁盘上的物理存储方式。 <code>InnoDB</code> 支持四种行格式，每种格式具有不同的存储特性。支持的行格式包括 <code>REDUNDANT</code>，<code>COMPACT</code>， <code>DYNAMIC</code>，和 <code>COMPRESSED</code>。默认的行格式为 <code>DYNAMIC</code>。有关行格式特征的信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-row-format.html">第 15.10 节，“InnoDB 行格式”</a>。</p>
+<p>该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_default_row_format"><code>innodb_default_row_format</code></a> 变量定义了默认的行格式。表的行格式也可以使用 <code>CREATE TABLE</code> 或 <code>ALTER TABLE</code> 语句中的 <code>ROW_FORMAT</code> 表选项显式定义。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-row-format.html#innodb-row-format-defining">定义表的行格式</a>。</p>
+<p><strong>表 InnoDB 行格式概述</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">行格式</th>
+<th style="text-align:left">紧凑的存储特性</th>
+<th style="text-align:left">增强的可变长度列存储</th>
+<th style="text-align:left">大索引键前缀支持</th>
+<th style="text-align:left">压缩支持</th>
+<th style="text-align:left">支持的表空间类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>REDUNDANT</code></td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">system, file-per-table, general</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>COMPACT</code></td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">system, file-per-table, general</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>DYNAMIC</code></td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">system, file-per-table, general</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>COMPRESSED</code></td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">file-per-table, general</td>
+</tr>
+</tbody>
+</table>
+<h4 id="主键">主键</h4>
+<p>建议您为您创建的每个表定义一个主键。选择主键列时，选择具有以下特征的列：</p>
+<ul>
+<li>最重要的查询引用的列。</li>
+<li>永远不会留空的列。</li>
+<li>从不具有重复值的列。</li>
+<li>插入后很少更改值的列。</li>
+</ul>
+<p>例如，在包含有关人员信息的表中，您不会创建主键，<code>(firstname, lastname)</code> 因为可以有多个人具有相同的姓名，姓名列可能留空，有时人们会更改他们的姓名。由于有如此多的约束，通常没有一组明显的列用作主键，因此您创建一个带有数字 ID 的新列作为主键的全部或部分。您可以声明一个 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_auto_increment">自动递增</a> 列，以便在插入行时自动填充升序值：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># ID 的值可以充当不同表中相关项之间的指针。</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t5 (id <span class="type">INT</span> AUTO_INCREMENT, b <span class="type">CHAR</span> (<span class="number">20</span>), <span class="keyword">PRIMARY</span> KEY (id));</span><br><span class="line"></span><br><span class="line"># 主键可以由多列组成。任何 autoinc 列都必须排在第一位。</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t6 (id <span class="type">INT</span> AUTO_INCREMENT, a <span class="type">INT</span>, b <span class="type">CHAR</span> (<span class="number">20</span>), <span class="keyword">PRIMARY</span> KEY (id,a));</span><br></pre></td></tr></table></figure>
+<p>有关自动增量列的更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-auto-increment-handling.html">第 15.6.1.6 节，“InnoDB 中的 AUTO_INCREMENT 处理”</a>。</p>
+<p>尽管表在没有定义主键的情况下也能正常工作，但主键涉及性能的许多方面，并且是任何大型或经常使用的表的关键设计方面。建议您始终在 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html"><code>CREATE TABLE</code></a> 语句中指定主键。如果创建表，加载数据，然后运行 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE</code></a> 添加主键，该操作比创建表时定义主键要慢得多。有关主键的更多信息，请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html">第 15.6.2.1 节，“聚集索引和二级索引”</a>。</p>
+<h4 id="查看-InnoDB-表属性">查看 InnoDB 表属性</h4>
+<p>要查看 <code>InnoDB</code> 表的属性，可以发出一条 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/show-table-status.html"><code>SHOW TABLE STATUS</code></a> 语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">SHOW</span> <span class="keyword">TABLE</span> STATUS <span class="keyword">FROM</span> test <span class="keyword">LIKE</span> <span class="string">&#x27;t%&#x27;</span> \G;</span><br><span class="line"><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span> <span class="number">1.</span> <span class="type">row</span> <span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span></span><br><span class="line">           Name: t1</span><br><span class="line">         Engine: InnoDB</span><br><span class="line">        Version: <span class="number">10</span></span><br><span class="line">     Row_format: <span class="keyword">Dynamic</span></span><br><span class="line">           <span class="keyword">Rows</span>: <span class="number">0</span></span><br><span class="line"> Avg_row_length: <span class="number">0</span></span><br><span class="line">    Data_length: <span class="number">16384</span></span><br><span class="line">Max_data_length: <span class="number">0</span></span><br><span class="line">   Index_length: <span class="number">0</span></span><br><span class="line">      Data_free: <span class="number">0</span></span><br><span class="line"> Auto_increment: <span class="keyword">NULL</span></span><br><span class="line">    Create_time: <span class="number">2021</span><span class="number">-02</span><span class="number">-18</span> <span class="number">12</span>:<span class="number">18</span>:<span class="number">28</span></span><br><span class="line">    Update_time: <span class="keyword">NULL</span></span><br><span class="line">     Check_time: <span class="keyword">NULL</span></span><br><span class="line">      <span class="keyword">Collation</span>: utf8mb4_0900_ai_ci</span><br><span class="line">       Checksum: <span class="keyword">NULL</span></span><br><span class="line"> Create_options: </span><br><span class="line">        Comment:</span><br></pre></td></tr></table></figure>
+<p>有关 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/show-table-status.html"><code>SHOW TABLE STATUS</code></a> 输出的信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/show-table-status.html">第 13.7.7.38 节，“显示表状态语句”</a>。</p>
+<p>您还可以通过查询 <code>InnoDB</code>  Information Schema 系统表来访问表属性：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> INFORMATION_SCHEMA.INNODB_TABLES <span class="keyword">WHERE</span> NAME<span class="operator">=</span><span class="string">&#x27;test/t1&#x27;</span> \G</span><br><span class="line"><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span> <span class="number">1.</span> <span class="type">row</span> <span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span></span><br><span class="line">     TABLE_ID: <span class="number">1144</span></span><br><span class="line">         NAME: test<span class="operator">/</span>t1</span><br><span class="line">         FLAG: <span class="number">33</span></span><br><span class="line">       N_COLS: <span class="number">5</span></span><br><span class="line">        SPACE: <span class="number">30</span></span><br><span class="line">   ROW_FORMAT: <span class="keyword">Dynamic</span></span><br><span class="line">ZIP_PAGE_SIZE: <span class="number">0</span></span><br><span class="line">   SPACE_TYPE: Single</span><br><span class="line"> INSTANT_COLS: <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>有关更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-information-schema-system-tables.html">第 15.15.3 节，“InnoDB INFORMATION_SCHEMA 模式对象表”</a>。</p>
+<h3 id="InnoDB-中的-AUTO-INCREMENT-处理">InnoDB 中的 AUTO_INCREMENT 处理</h3>
+<p>InnoDB 提供了一种可配置的锁定机制，可以显着提高向具有 AUTO_INCREMENT 列的表添加行的 SQL 语句的可伸缩性和性能。要对 <code>InnoDB</code> 表使用该 <code>AUTO_INCREMENT</code> 机制，必须将 <code>AUTO_INCREMENT</code> 列定义为索引的一部分，以便可以对表执行等效的索引查找 <code>SELECT MAX(ai_col)</code> 以获得最大列值。通常，这是通过将该列作为某个表索引的第一列来实现的。</p>
+<p>本节描述 <code>AUTO_INCREMENT</code> 锁定模式、不同 <code>AUTO_INCREMENT</code> 锁定模式设置的使用含义，以及 <code>InnoDB</code> 如何初始化 <code>AUTO_INCREMENT</code> 计数器。</p>
+<h4 id="InnoDB-AUTO-INCREMENT-锁定模式">InnoDB AUTO_INCREMENT 锁定模式</h4>
+<p>本节介绍用于生成自动增量值的 <code>AUTO_INCREMENT</code> 锁模式，以及每种锁模式如何影响复制。在启动时使用 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-auto-increment-handling.html#:~:text=startup%20using%20the-,innodb_autoinc_lock_mode,-variable."><code>innodb_autoinc_lock_mode</code></a> 变量来配置自动增量锁定模式。</p>
+<p>以下术语用于描述 <code>innodb_autoinc_lock_mode</code> 设置：</p>
+<ul>
+<li>
+<p>“类似 Insert”的语句</p>
+<p>在表中生成新行的所有语句，包括 <code>INSERT</code>、<code>INSERT ... SELECT</code>、<code>REPLACE</code>、<code>REPLACE ... SELECT</code> 和 <code>LOAD DATA</code>。包括“简单插入”、“批量插入”和“混合模式”插入。</p>
+</li>
+<li>
+<p>“简单插入”</p>
+<p>可以预先确定要插入的行数的语句（在最初处理语句时）。这包括没有嵌套子查询的单行和多行 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>和 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/replace.html"><code>REPLACE</code></a>语句，但不包含 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html"><code>INSERT ... ON DUPLICATE KEY UPDATE</code></a>.</p>
+</li>
+</ul>
+<ul>
+<li>
+<p>“批量插入”</p>
+<p>要插入的行数（以及所需的自动增量值的数量）事先未知的语句。这包括 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert-select.html"><code>INSERT ... SELECT</code></a>, <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/replace.html"><code>REPLACE ... SELECT</code></a>和<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/load-data.html"><code>LOAD DATA</code></a>语句，但不包括普通的 <code>INSERT</code>。在处理每一行时，一次为列<code>InnoDB</code>分配一个新值 <code>AUTO_INCREMENT</code>。</p>
+</li>
+<li>
+<p>“混合模式插入”</p>
+<p>其中一部分是“简单插入”语句，用于指定某些（但不是全部）新行的自动增量值。下面是一个示例，其中 c1 是表 t1 的 <code>AUTO_INCREMENT</code> 列：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> t1 (c1,c2) <span class="keyword">VALUES</span> (<span class="number">1</span>,<span class="string">&#x27;a&#x27;</span>), (<span class="keyword">NULL</span>,<span class="string">&#x27;b&#x27;</span>), (<span class="number">5</span>,<span class="string">&#x27;c&#x27;</span>), (<span class="keyword">NULL</span>,<span class="string">&#x27;d&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<p>另一种类型的“混合模式插入”是<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html"><code>INSERT ... ON DUPLICATE KEY UPDATE</code></a>，在最坏的情况下实际上是一个<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a> 后跟一个<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/update.html"><code>UPDATE</code></a>，其中<code>AUTO_INCREMENT</code>在更新阶段可能会或可能不会使用为列分配的值 。</p>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_autoinc_lock_mode"><code>innodb_autoinc_lock_mode</code></a> 变量有三种可能的设置 。设置为 0、1 或 2，分别表示 “传统”、“连续”或 “交错”锁定模式。从 MySQL 8.0 开始，交错锁模式 ( <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_autoinc_lock_mode"><code>innodb_autoinc_lock_mode=2</code></a>) 是默认设置。在 MySQL 8.0 之前，连续锁定模式是默认的 ( <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_autoinc_lock_mode"><code>innodb_autoinc_lock_mode=1</code></a>)。</p>
+<p>MySQL 8.0 中交错锁模式的默认设置反映了从基于语句的复制更改为基于行的复制作为默认复制类型。基于语句的复制需要连续的自增锁模式，以保证给定的 SQL 语句序列以可预测和可重复的顺序分配自增值，而基于行的复制对 SQL 语句的执行顺序不敏感.</p>
+<ul>
+<li>
+<p><code>innodb_autoinc_lock_mode = 0</code> （“传统”锁定模式）</p>
+<p>传统的锁定模式提供与引入该<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_autoinc_lock_mode"><code>innodb_autoinc_lock_mode</code></a> 变量存在之前的行为相同 。由于语义可能存在差异，提供传统锁定模式选项是为了向后兼容、性能测试和解决“混合模式插入”问题。</p>
+<p>在这种锁定模式下，所有“类似 INSERT ”的语句都会获得一个特殊的表级<code>AUTO-INC</code> 锁定，用于插入到带有 <code>AUTO_INCREMENT</code>列的表中。此锁通常保持到语句的末尾（而不是事务的末尾），以确保为给定的<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a> 语句序列以可预测和可重复的顺序分配自动增量值，并确保自动增量值由任何给定语句赋值都是连续的。</p>
+<p>在基于语句的复制的情况下，这意味着在副本服务器上复制 SQL 语句时，自动增量列使用的值与源服务器上的值相同。多个<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>语句的执行结果是确定性的，副本复制与源上相同的数据。如果多个<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>语句生成的自动增量值被交错，则两个并发<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>语句的结果将是不确定的，并且无法使用基于语句的复制可靠地传播到副本服务器。</p>
+<p>为清楚起见，请考虑使用此表的示例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (</span><br><span class="line">  c1 <span class="type">INT</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  c2 <span class="type">VARCHAR</span>(<span class="number">10</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (c1)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+<p>假设有两个事务在运行，每个事务都将行插入到带有 <code>AUTO_INCREMENT</code>列的表中 。一个事务使用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert-select.html"><code>INSERT ... SELECT</code></a>插入 1000 行的语句，另一个事务使用插入一行的简单<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Tx1: <span class="keyword">INSERT</span> <span class="keyword">INTO</span> t1 (c2) <span class="keyword">SELECT</span> <span class="number">1000</span> <span class="keyword">rows</span> <span class="keyword">from</span> another <span class="keyword">table</span> ...</span><br><span class="line">Tx2: <span class="keyword">INSERT</span> <span class="keyword">INTO</span> t1 (c2) <span class="keyword">VALUES</span> (<span class="string">&#x27;xxx&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<p><code>InnoDB</code>无法预先知道从 Tx1<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/select.html"><code>SELECT</code></a>中的<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>语句中检索了多少行 ，并且随着语句的进行，它一次分配一个自动增量值。使用表级锁，一直保持到语句的末尾，一次只能执行一条 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>引用 table 的语句<code>t1</code>，并且不同语句的自增数的生成不会交错。Tx1<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert-select.html"><code>INSERT ... SELECT</code></a>语句生成的自增值是连续的，并且使用的（单个）自增值 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a> Tx2 中的语句小于或大于所有用于 Tx1 的语句，具体取决于哪个语句先执行。</p>
+<p>只要 SQL 语句在从二进制日志重放时（使用基于语句的复制时，或在恢复场景中）以相同的顺序执行，结果与 Tx1 和 Tx2 首次运行时的结果相同。因此，在语句结束之前一直持有的表级锁使 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>使用自动增量的语句安全用于基于语句的复制。但是，当多个事务同时执行插入语句时，这些表级锁会限制并发性和可伸缩性。</p>
+<p>在前面的示例中，如果没有表级锁，则用于<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>到 Tx2 的自增列的值取决于语句的执行时间。如果 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a> Tx2 的<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>在 Tx1 的运行时执行（而不是在它开始之前或完成之后），则这两个<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>语句分配的特定自动增量值是不确定的，并且可能会因运行而异。</p>
+<p>在 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-auto-increment-handling.html#innodb-auto-increment-lock-mode-consecutive">连续</a> 锁模式下，<code>InnoDB</code>可以避免对预先知道行数的“简单插入”语句使用表级<code>AUTO-INC</code>锁 ，并且仍然保留基于语句的复制的确定性执行和安全性。</p>
+<p>如果您不使用二进制日志来重放 SQL 语句作为恢复或复制的一部分， 则可以使用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-auto-increment-handling.html#innodb-auto-increment-lock-mode-interleaved">交错</a>锁模式来消除所有表级<code>AUTO-INC</code>锁的使用， 以获得更高的并发性和性能，代价是允许自动中断 - 增加由语句分配的编号，并且可能将同时执行的语句分配的编号交错。</p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>innodb_autoinc_lock_mode = 1</code> （“连续”锁定模式）</p>
+<p>在这种模式下，“批量插入”使用特殊的 <code>AUTO-INC</code>表级锁并保持到语句结束。这适用于所有 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert-select.html"><code>INSERT ... SELECT</code></a>， <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/replace.html"><code>REPLACE ... SELECT</code></a>和<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/load-data.html"><code>LOAD DATA</code></a>语句。一次<code>AUTO-INC</code>只能执行一个持有锁的语句 。如果批量插入操作的源表与目标表不同，则<code>AUTO-INC</code>在对源表中选择的第一行上取共享锁后，再取目标表上的锁。如果批量插入操作的源和目标是同一个表，则<code>AUTO-INC</code> 在对所有选定行采取共享锁之后，才会采取锁定措施。</p>
+<p>“简单插入”（预先知道要插入的行数）通过在互斥锁（轻量级锁）的控制下获取所需数量的自动增量值来避免表级 AUTO-INC 锁只在分配过程中保留，直到语句完成。除非另一个事务持有 AUTO-INC 锁，否则不使用表级 AUTO-INC 锁。如果另一个事务持有 AUTO-INC 锁，则“简单插入”等待 AUTO-INC 锁，就好像它是“批量插入”一样。</p>
+<p>这种锁定模式确保在存在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>行数未知的语句时（并且随着语句的进行分配自动递增编号），任何“<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT-like</code></a>” 语句分配的所有自动增量值都是连续的，并且操作对于基于语句的复制是安全的。</p>
+<p>简而言之，这种锁定模式显着提高了可伸缩性，同时可以安全地用于基于语句的复制。此外，与“传统” 锁定模式一样，任何给定语句分配的自动递增编号都是<em>连续的</em>。对于任何使用自动增量的语句，与“传统”模式相比，语义上<em>没有任何变化</em>，只有一个重要的例外。</p>
+<p>例外情况是“混合模式插入”，其中用户为<code>AUTO_INCREMENT</code>多行“简单插入”中的某些（但不是全部）行提供列的显式值 。对于此类插入，对于此类插入，InnoDB 分配的自动增量值多于要插入的行数。但是，所有自动分配的值都是连续生成的（因此高于）由最近执行的前一条语句生成的自动增量值。“多余”的数字丢失。</p>
+</li>
+<li>
+<p><code>innodb_autoinc_lock_mode = 2</code> （“交错”锁定模式）</p>
+<p>在这种锁模式下，没有“INSERT-like”语句使用表级 <code>AUTO-INC</code> 锁，可以同时执行多条语句。 这是最快和最具扩展性的锁模式，但在使用基于语句的复制或从二进制日志重放 SQL 语句的恢复场景时，它是<em>不安全的</em>。</p>
+<p>在这种锁定模式下，自动递增值保证在所有并发执行的“<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/insert.html"><code>INSERT</code></a>-like ” 语句中是唯一的并且单调递增 。但是，由于多个语句可以同时生成数字（即，数字的分配在语句之间<em>交错</em>），因此为任何给定语句插入的行生成的值可能不是连续的。</p>
+<p>如果执行的唯一语句是提前知道要插入的行数的“简单插入”，则为单个语句生成的数字没有间隙，“混合模式插入”除外 。但是，当执行“批量插入”时，任何给定语句分配的自动增量值中可能存在间隙。</p>
+</li>
+</ul>
+<h2 id="索引-Indexes">索引 - Indexes</h2>
+<h3 id="聚集索引和二级索引">聚集索引和二级索引</h3>
+<p>每个<code>InnoDB</code>表都有一个称为聚集索引（clustered index）的特殊索引，用于存储行数据。通常，聚集索引与主键同义。为了从查询、插入和其他数据库操作中获得最佳性能，了解<code>InnoDB</code>如何使用聚集索引来优化常见查询和 DML 操作非常重要。</p>
+<ul>
+<li>在表上定义<code>PRIMARY KEY</code>时，InnoDB 将其用作聚集索引。应该为每个表定义一个主键。如果没有逻辑唯一且非空的列或列集使用主键，请添加自动增量列。自动递增列值是唯一的，并在插入新行时自动添加。</li>
+<li>如果您没有为表定义 PRIMARY KEY，则 InnoDB 使用第一个所有键列都定义为 NOT NULL 的 UNIQUE 索引作为聚集索引。</li>
+<li>如果表没有<code>PRIMARY KEY</code>或没有合适的 <code>UNIQUE</code>索引，则 InnoDB 会在包含行 ID 值的合成列上生成一个名为 <code>GEN_CLUST_INDEX</code> 的隐藏聚集索引。行按<code>InnoDB</code>分配的行 ID 排序。行 ID 是一个 6 字节的字段，随着插入新行而单调增加。因此，按行 ID 排序的行在物理上是按插入顺序排列的。</li>
+</ul>
+<h5 id="聚集索引如何加快查询速度">聚集索引如何加快查询速度</h5>
+<p>通过聚集索引访问一行很快，因为索引搜索直接指向包含行数据的页面。如果表很大，与使用与索引记录不同的页面存储行数据的存储组织相比，聚簇索引体系结构通常可以节省磁盘 I/O 操作。</p>
+<h5 id="二级索引与聚集索引的关系">二级索引与聚集索引的关系</h5>
+<p>聚集索引以外的索引称为二级索引。在<code>InnoDB</code>中，二级索引中的每条记录都包含该行的主键列，以及为二级索引指定的列。<code>InnoDB</code>使用此主键值搜索聚集索引中的行。</p>
+<p>如果主键很长，二级索引会占用更多的空间，所以主键短是有利的。</p>
+<p>有关利用<code>InnoDB</code> 聚集索引和二级索引的指南，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/optimization-indexes.html">第 8.3 节 “优化和索引”</a>。</p>
+<h3 id="InnoDB-索引的物理结构">InnoDB 索引的物理结构</h3>
+<p>除空间索引外，<code>InnoDB</code>索引都是 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_b_tree">B 树</a>数据结构。空间索引使用 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_r_tree">R 树</a>，它是用于索引多维数据的专用数据结构。索引记录存储在其 B 树或 R 树数据结构的叶页中。索引页的默认大小为 16KB。页大小由<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_page_size"><code>innodb_page_size</code></a>MySQL 实例初始化时的设置决定 。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-init-startup-configuration.html">第 15.8.1 节，“InnoDB 启动配置”</a>。</p>
+<p>当新记录插入到<code>InnoDB</code> <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_clustered_index">聚集索引中时</a>， <code>InnoDB</code>尝试保留 1/16 的页空闲空间以供将来插入和更新索引记录。如果按顺序（升序或降序）插入索引记录，则生成的索引页大约为 15/16。如果以随机顺序插入记录，则页从 1/2 到 15/16 。</p>
+<p><code>InnoDB</code>创建或重建 B 树索引时执行批量加载。这种创建索引的方法称为<strong>排序索引构建</strong>(Sorted Index Builds)。该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_fill_factor"><code>innodb_fill_factor</code></a>变量定义了在排序索引构建期间填充的每个 B 树页面上的空间百分比，剩余空间保留用于将来的索引增长。空间索引不支持排序索引构建。有关更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/sorted-index-builds.html">第 15.6.2.3 节，“排序索引构建”</a>。<code>innodb_fill_factor</code> 设置为 100 会留下聚集索引页中 1/16 的空间用于将来的索引增长。</p>
+<p>如果<code>InnoDB</code>索引页面的填充因子（fill factor）低于<code>MERGE_THRESHOLD</code>，默认情况下为 50%，如果未指定，则<code>InnoDB</code>尝试收缩索引树以释放页面。该 <code>MERGE_THRESHOLD</code>设置适用于 B 树和 R 树索引。有关更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/index-page-merge-threshold.html">第 15.8.11 节，“配置索引页面的合并阈值”</a>。</p>
+<h3 id="排序索引构建">排序索引构建</h3>
+<p><code>InnoDB</code>在创建或重建索引时执行批量加载而不是一次插入一个索引记录。这种索引创建方法也称为排序索引构建。空间索引不支持排序索引构建。</p>
+<p>索引构建分为三个阶段。在第一阶段， 扫描<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_clustered_index">聚集索引</a>，生成索引条目并添加到排序缓冲区。当<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_sort_buffer">排序缓冲区</a>变满时，条目被排序并写出到临时中间文件。此过程也称为 “运行-run”。在第二阶段，将一次或多次运行写入临时中间文件，对文件中的所有条目执行归并排序。在第三个也是最后一个阶段，排序后的条目被插入到 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_b_tree">B 树中</a>。</p>
+<p>在引入排序索引构建之前，使用插入 API 将索引条目一次一条地插入到 B 树中。此方法涉及打开 B 树 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_cursor">游标</a>以查找插入位置，然后使用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_optimistic">乐观</a>插入将条目插入 B 树页面 。如果由于页面已满而导致插入失败， 则将执行<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_pessimistic">悲观</a>插入，这涉及打开 B 树游标并根据需要拆分和合并 B 树节点，以便为条目找到空间。这种构建索引的“自顶向下”方法的缺点是搜索插入位置的成本以及 B 树节点的不断分裂和合并。</p>
+<p>排序索引构建使用“自下而上”建立索引的方法。使用这种方法，对最右侧叶页的引用保存在 B 树的所有级别。分配必要 B 树深度的最右侧叶页，并根据其排序顺序插入条目。一旦叶页已满，节点指针将附加到父页，并为下一次插入分配同级叶页。这个过程一直持续到所有条目都被插入，这可能会导致插入到根级别。分配同级页时，释放对先前固定的叶页的引用，新分配的叶页成为最右侧的叶页和新的默认插入位置。</p>
+<h2 id="表空间-Tablespaces">表空间 - Tablespaces</h2>
+<h3 id="系统表空间">系统表空间</h3>
+<p>系统表空间是更改缓冲区的存储区域。如果表是在系统表空间中创建的，而不是在每个表文件或通用表空间中创建，则它还可能包含表和索引数据。在以前的 MySQL 版本中，系统表空间包含<code>InnoDB</code>数据字典。在 MySQL 8.0 中，<code>InnoDB</code>将元数据存储在 MySQL 数据字典中。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/data-dictionary.html">第 14 章，<em>MySQL 数据字典</em></a>。在以前的 MySQL 版本中，系统表空间还包含双写缓冲区存储区。从 MySQL 8.0.20 开始，此存储区域位于单独的双写文件中。请参见 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-doublewrite-buffer.html">第 15.6.4 节，“双写缓冲区”</a>。</p>
+<p>系统表空间可以有一个或多个数据文件。默认情况下，会在数据目录中创建一个名为 <code>ibdata1</code> 的系统表空间数据文件。系统表空间数据文件的大小和数量由<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_data_file_path"><code>innodb_data_file_path</code></a>启动选项定义。有关配置信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-init-startup-configuration.html#innodb-startup-data-file-configuration">系统表空间数据文件配置</a>。</p>
+<h4 id="调整系统表空间的大小">调整系统表空间的大小</h4>
+<p>本节介绍如何增加或减少系统表空间的大小。</p>
+<h5 id="增加系统表空间的大小">增加系统表空间的大小</h5>
+<p>增加系统表空间大小的最简单方法是将其配置为自动扩展。为此，在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_data_file_path"><code>innodb_data_file_path</code></a> 设置中指定最后一个数据文件的 <code>autoextend</code> 属性，然后重新启动服务器。例如：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">innodb_data_file_path</span>=ibdata1:<span class="number">10</span>M:autoextend</span><br></pre></td></tr></table></figure>
+<p>当指定了 <code>autoextend</code> 属性时，数据文件的大小会随着空间的需要自动增加 <code>8MB</code>。 <code>innodb_autoextend_increment</code> 变量控制增量大小。</p>
+<p>您还可以通过添加另一个数据文件来增加系统表空间的大小。可以这样做：</p>
+<ol>
+<li>停止 MySQL 服务器。</li>
+<li>如果设置中的最后一个数据文件 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_data_file_path"><code>innodb_data_file_path</code></a> 是用该<code>autoextend</code> 属性定义的，请将其删除，然后修改 <code>size</code> 属性以反映当前数据文件的大小。要确定指定的数据文件大小，请检查文件系统的文件大小，并将该值向下舍入到最接近的 MB 值，其中 1MB 等于 1024 x 1024 字节。</li>
+<li>将新数据文件附加到 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_data_file_path"><code>innodb_data_file_path</code></a> 设置，可选择指定<code>autoextend</code>属性。<code>autoextend</code>只能为 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_data_file_path"><code>innodb_data_file_path</code></a>设置中的最后一个数据文件指定该属性。</li>
+<li>启动 MySQL 服务器。</li>
+</ol>
+<p>例如，这个表空间有一个自动扩展的数据文件：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">innodb_data_home_dir</span> =<span class="string"></span></span><br><span class="line"><span class="attr">innodb_data_file_path</span> = <span class="string">/ibdata/ibdata1:10M:autoextend</span></span><br></pre></td></tr></table></figure>
+<p>假设数据文件随时间增长到 988MB。这是<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_data_file_path"><code>innodb_data_file_path</code></a> 修改 size 属性以反映当前数据文件大小后的设置，并在指定新的 50MB 自动扩展数据文件后：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">innodb_data_home_dir</span> =<span class="string"></span></span><br><span class="line"><span class="attr">innodb_data_file_path</span> = <span class="string">/ibdata/ibdata1:988M;/disk2/ibdata2:50M:autoextend</span></span><br></pre></td></tr></table></figure>
+<p>添加新数据文件时，请勿指定现有文件名。<code>InnoDB</code>在您启动服务器时创建并初始化新的数据文件。</p>
+<h5 id="减少-InnoDB-系统表空间的大小">减少 InnoDB 系统表空间的大小</h5>
+<p>不支持减小现有系统表空间的大小。实现更小的系统表空间的唯一选择是将数据从备份恢复到使用所需系统表空间大小配置创建的新 MySQL 实例。</p>
+<p>有关创建备份的信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-backup.html">第 15.18.1 节，“InnoDB 备份”</a>。</p>
+<p>有关为新系统表空间配置数据文件的信息。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-init-startup-configuration.html#innodb-startup-data-file-configuration">系统表空间数据文件配置</a>。</p>
+<p>为避免使用大型系统表空间，请考虑为您的数据使用 <code>file-per-table</code> 表空间或通用表空间。<code>File-per-table</code> 表空间是默认的表空间类型，在创建<code>InnoDB</code> 表时隐式使用。与系统表空间不同，每个表的文件表空间在被截断或删除时将磁盘空间返回给操作系统。通用表空间是多表表空间，也可以用作系统表空间的替代。见 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/general-tablespaces.html">第 15.6.3.3 节，“通用表空间”</a>。</p>
+<h3 id="File-Per-Table-表空间">File-Per-Table 表空间</h3>
+<p>每个表的文件表空间包含单个<code>InnoDB</code>表的数据和索引 ，并存储在文件系统上的单个数据文件中。</p>
+<h4 id="File-Per-Table-表空间配置">File-Per-Table 表空间配置</h4>
+<p><code>InnoDB</code>默认情况下，在 <code>file-per-table</code> 表空间中创建表。此行为由<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_file_per_table"><code>innodb_file_per_table</code></a>变量控制 。禁用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_file_per_table"><code>innodb_file_per_table</code></a> 导致<code>InnoDB</code>在系统表空间中创建表。</p>
+<p>的<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_file_per_table"><code>innodb_file_per_table</code></a> 设置可以在选项文件来指定，或者使用在运行时配置的 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/set-variable.html"><code>SET GLOBAL</code></a>语句。在运行时更改设置需要足够的权限来设置全局系统变量。请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/system-variable-privileges.html">第 5.1.9.1 节，“系统变量权限”</a>。</p>
+<p>选项文件：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[mysqld]</span></span><br><span class="line"><span class="attr">innodb_file_per_table</span>=<span class="literal">ON</span></span><br></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/set-variable.html"><code>SET GLOBAL</code></a>运行时 使用：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">SET</span> <span class="keyword">GLOBAL</span> innodb_file_per_table<span class="operator">=</span><span class="keyword">ON</span>;</span><br></pre></td></tr></table></figure>
+<h4 id="File-Per-Table-表空间数据文件">File-Per-Table 表空间数据文件</h4>
+<p>在 MySQL 数据目录下的架构目录中的 <code>.idb</code> 数据文件中创建一个 <code>file-per-table</code> 表空间。该<code>.ibd</code>文件以表 ( <code>*</code>table_name<code>*.ibd</code>)命名。例如，例如在 MySQL 数据目录下的 <code>test</code> 目录下创建表 <code>test.t1</code> 的数据文件：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> USE test;</span><br><span class="line"></span><br><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (</span><br><span class="line">   id <span class="type">INT</span> <span class="keyword">PRIMARY</span> KEY AUTO_INCREMENT,</span><br><span class="line">   name <span class="type">VARCHAR</span>(<span class="number">100</span>)</span><br><span class="line"> ) ENGINE <span class="operator">=</span> InnoDB;</span><br><span class="line"></span><br><span class="line">shell<span class="operator">&gt;</span> cd <span class="operator">/</span>path<span class="operator">/</span><span class="keyword">to</span><span class="operator">/</span>mysql<span class="operator">/</span>data<span class="operator">/</span>test</span><br><span class="line">shell<span class="operator">&gt;</span> ls</span><br><span class="line">t1.ibd</span><br></pre></td></tr></table></figure>
+<p>您可以使用 <code>CREATE TABLE</code> 语句的 <code>DATA DIRECTORY</code> 子句在数据目录之外隐式地创建一个 <code>file-per-table</code> 表空间数据文件。有关更多信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-create-table-external.html">第 15.6.1.2 节，“在外部创建表”</a>。</p>
+<h4 id="File-Per-Table-表空间优势">File-Per-Table 表空间优势</h4>
+<p><code>File-per-table</code> 表空间与共享表空间（例如系统表空间或通用表空间）相比具有以下优势。</p>
+<ul>
+<li>截断或删除在 file-per-table 表空间中创建的表后，磁盘空间将返回给操作系统。截断或删除存储在共享表空间中的表会在共享表空间数据文件中创建空闲空间，该空间只能用于 <code>InnoDB</code>数据。换句话说，共享表空间数据文件在表被截断或删除后不会缩小。</li>
+<li>对位于共享表空间中的表进行表复制 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE</code></a> 操作会增加表空间占用的磁盘空间量。此类操作可能需要与表中的数据加上索引一样多的额外空间。该空间不会像用于 file-per-table 表空间那样释放回操作系统。</li>
+<li><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/truncate-table.html"><code>TRUNCATE TABLE</code></a> 在驻留在 file-per-table 表空间中的表上执行时，性能更好。</li>
+<li>File-per-table 表空间数据文件可以在单独的存储设备上创建，用于 I/O 优化、空间管理或备份目的。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-create-table-external.html">第 15.6.1.2 节，“在外部创建表”</a>。</li>
+<li>您可以从另一个 MySQL 实例导入驻留在 file-per-table 表空间中的表。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-table-import.html">第 15.6.1.3 节，“导入 InnoDB 表”</a>。</li>
+<li>在 file-per-table 表空间中创建的表支持<code>DYNAMIC</code>与 <code>COMPRESSED</code>行格式相关的功能，而系统表空间不支持这些功能。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-row-format.html">第 15.10 节，“InnoDB 行格式”</a>。</li>
+<li>当发生数据损坏、备份或二进制日志不可用或 MySQL 服务器实例无法重新启动时，存储在单个表空间数据文件中的表可以节省时间并提高成功恢复的机会。</li>
+<li>可以使用 MySQL Enterprise Backup 快速备份或恢复在 file-per-table 表空间中创建的表，而不会中断其他<code>InnoDB</code>表的使用 。这对于备份计划不同或需要较少备份的表很有用。有关详细信息，请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/mysql-enterprise-backup/8.0/en/partial.html">进行部分备份</a>。</li>
+<li>File-per-table 表空间允许通过监视表空间数据文件的大小来监视文件系统上的表大小。</li>
+<li>当 <code>innodb_flush_method</code> 设置为 <code>O_DIRECT</code> 时，常见的 Linux 文件系统不允许并发写入单个文件，例如共享表空间数据文件。因此，结合此设置使用每个表的文件表空间时，可能会提高性能。</li>
+<li>共享表空间中的表的大小受 64TB 表空间大小限制。相比之下，每个表每个文件的表空间都有 64TB 的大小限制，这为单个表的大小增长提供了足够的空间。</li>
+</ul>
+<h4 id="File-Per-Table-表空间的缺点">File-Per-Table 表空间的缺点</h4>
+<p>与共享表空间（例如系统表空间或通用表空间）相比，File-Per-Table 文件表空间具有以下缺点。</p>
+<ul>
+<li>使用 file-per-table 表空间，每个表可能有未使用的空间，只能由同一表的行使用，如果管理不当，可能会导致空间浪费。</li>
+<li><code>fsync</code>操作是在多个 file-per-table 数据文件而不是单个共享表空间数据文件上执行的。由于 <code>fsync</code>操作是针对每个文件的，因此无法合并多个表的写操作，这会导致<code>fsync</code> 操作总数更高。</li>
+<li><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/mysqld.html"><strong>mysqld</strong></a> 必须为每个 file-per-table 表空间保留一个打开的文件句柄，如果在 file-per-table 表空间中有多个表，这可能会影响性能。</li>
+<li>当每个表都有自己的数据文件时，需要更多的文件描述符。</li>
+<li>存在更多碎片的可能性，这会阻碍<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/drop-table.html"><code>DROP TABLE</code></a>和表扫描性能。但是，如果管理碎片，每个表的文件表空间可以提高这些操作的性能。</li>
+<li>删除驻留在 file-per-table 表空间中的表时会扫描缓冲池，这对于大型缓冲池可能需要几秒钟。使用广泛的内部锁执行扫描，这可能会延迟其他操作。</li>
+<li>该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_autoextend_increment"><code>innodb_autoextend_increment</code></a> 变量定义了在自动扩展共享表空间文件变满时扩展其大小的增量大小，不适用于 file-per-table 表空间文件，这些文件无论<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_autoextend_increment"><code>innodb_autoextend_increment</code></a> 如何设置都会自动扩展。每个表的初始文件表空间扩展是少量的，之后扩展以 4MB 的增量发生。</li>
+</ul>
+<h2 id="通用表空间-General-Tablespaces">通用表空间 - General Tablespaces</h2>
+<p>通用表空间是<code>InnoDB</code> 使用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-tablespace.html"><code>CREATE TABLESPACE</code></a>语法创建的共享表空间。本节的以下主题中描述了常规表空间功能和特性：</p>
+<h3 id="通用表空间功能">通用表空间功能</h3>
+<p>通用表空间提供以下功能：</p>
+<ul>
+<li>与系统表空间类似，通用表空间是能够为多个表存储数据的共享表空间。</li>
+<li>通用表空间比 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-file-per-table-tablespaces.html">file-per-table 表</a>空间具有潜在的内存优势 。服务器在表空间的生命周期内将表空间元数据保存在内存中。与在每个单独的文件表空间中的相同数量的表相比，较少的通用表空间中的多个表为表空间元数据消耗的内存更少。</li>
+<li>通用表空间数据文件可以放在一个相对于或独立于 MySQL 数据目录的目录中，它为您提供了许多和 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-file-per-table-tablespaces.html">File-Per-Table 表空间</a>的数据文件和存储管理一样的能力 。与 file-per-table 表空间一样，比如将数据文件放置在 MySQL 数据目录之外的能力允许您单独管理关键表的性能，为特定表设置 RAID 或 DRBD，或将表绑定到特定磁盘。</li>
+<li>通用表空间支持所有表行格式和相关功能。</li>
+<li><code>TABLESPACE</code> 选项可以与 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html"><code>CREATE TABLE</code></a> 一起使用，以在通用表空间、每个表文件表空间或系统表空间中创建表。</li>
+<li><code>TABLESPACE</code>选项可以与 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE</code></a> 一起使用，在通用表空间、每个表文件表空间和系统表空间之间移动表。</li>
+</ul>
+<h3 id="创建通用表空间">创建通用表空间</h3>
+<p>通用表空间是使用<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-tablespace.html"><code>CREATE TABLESPACE</code></a>语法创建的 。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span>SPACE tablespace_name</span><br><span class="line">    [<span class="keyword">ADD</span> DATAFILE <span class="string">&#x27;file_name&#x27;</span>]</span><br><span class="line">    [FILE_BLOCK_SIZE <span class="operator">=</span> <span class="keyword">value</span>]</span><br><span class="line">        [ENGINE [<span class="operator">=</span>] engine_name]</span><br></pre></td></tr></table></figure>
+<p>可以在数据目录中或外部创建通用表空间。为避免与隐式创建的 file-per-table 表空间冲突，不支持在数据目录下的子目录中创建通用表空间。在数据目录之外创建通用表空间时，该目录必须存在并且必须<code>InnoDB</code>在创建表空间之前已知 。要使 <code>InnoDB</code> 知道未知目录，请将目录添加到 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_directories"><code>innodb_directories</code></a>参数值中。<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_directories"><code>innodb_directories</code></a>是只读启动选项。配置它需要重新启动服务器。</p>
+<p>例子：</p>
+<p>在数据目录中创建通用表空间：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span>SPACE `ts1` <span class="keyword">ADD</span> DATAFILE <span class="string">&#x27;ts1.ibd&#x27;</span> Engine<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span>SPACE `ts1` Engine<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+<p>该<code>ADD DATAFILE</code>子句从 MySQL 8.0.14 开始是可选的，在此之前是必需的。如果<code>ADD DATAFILE</code>在创建表空间时未指定该子句，则会隐式创建具有唯一文件名的表空间数据文件。唯一的文件名是一个 128 位的 UUID，它被格式化为五组由破折号 ( <em><code>aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</code></em>)分隔的十六进制数字。通用表空间数据文件包括 <code>.ibd</code>文件扩展名。在复制环境中，在源上创建的数据文件名与在副本上创建的数据文件名不同。</p>
+<p>在数据目录之外的目录中创建通用表空间：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span>SPACE `ts1` <span class="keyword">ADD</span> DATAFILE <span class="string">&#x27;/my/tablespace/directory/ts1.ibd&#x27;</span> Engine<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+<p>只要表空间目录不在数据目录下，就可以指定相对于数据目录的路径。在此示例中， <code>my_tablespace</code>目录与数据目录处于同一级别：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span>SPACE `ts1` <span class="keyword">ADD</span> DATAFILE <span class="string">&#x27;../my_tablespace/ts1.ibd&#x27;</span> Engine<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>备注<br>
+该<code>ENGINE = InnoDB</code>子句必须定义为<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-tablespace.html"><code>CREATE TABLESPACE</code></a>语句的一部分，或者<code>InnoDB</code> 必须定义为默认存储引擎 ( <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_storage_engine"><code>default_storage_engine=InnoDB</code></a>)。</p>
+</blockquote>
+<h3 id="将表添加到通用表空间">将表添加到通用表空间</h3>
+<p>创建通用表空间后，可以使用 <code>CREATE TABLE tbl_name ... TABLESPACE [=] tablespace_name</code> 或 <code>ALTER TABLE tbl_name TABLESPACE [=] tablespace_name</code> 语句向表空间添加表，如下例所示：</p>
+<p><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html"><code>CREATE TABLE</code></a>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (c1 <span class="type">INT</span> <span class="keyword">PRIMARY</span> KEY) TABLESPACE ts1;</span><br></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE</code></a>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t2 TABLESPACE ts1;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>备注</p>
+<p>支持将表分区添加到共享表空间在 MySQL 5.7.24 中已弃用，并在 MySQL 8.0.13 中删除。共享表空间包括 InnoDB 系统表空间和通用表空间。</p>
+</blockquote>
+<p>有关详细的语法信息，请参阅<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html"><code>CREATE TABLE</code></a>和<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE</code></a>。</p>
+<h3 id="通用表空间限制">通用表空间限制</h3>
+<ul>
+<li>
+<p>生成的或现有的表空间不能更改为通用表空间。</p>
+</li>
+<li>
+<p>不支持创建临时通用表空间。</p>
+</li>
+<li>
+<p>通用表空间不支持临时表。</p>
+</li>
+<li>
+<p>与系统表空间类似，截断或删除存储在通用表空间中的表会在通用表空间<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_ibd_file">.ibd 数据文件</a>内部创建仅可用于新<code>InnoDB</code>数据的可用空间 。空间不会释放回操作系统。</p>
+<p>此外，<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE</code></a>对位于共享表空间（通用表空间或系统表空间）中的表进行表复制操作可能会增加表空间使用的空间量。此类操作需要与表中的数据加上索引一样多的额外空间。表复制<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE</code></a> 操作所需的额外空间不会像每个表文件表空间那样释放回操作系统。</p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE ... DISCARD TABLESPACE</code></a>并且 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html"><code>ALTER TABLE ...IMPORT TABLESPACE</code></a>不支持属于通用表空间的表。</p>
+</li>
+<li>
+<p>在 MySQL 5.7.24 中不推荐使用对将表分区放置在通用表空间中的支持，并在 MySQL 8.0.13 中删除。</p>
+</li>
+<li>
+<p>在源和副本驻留在同一主机上的复制环境中，不支持 <code>ADD DATAFILE</code> 子句，因为它会导致源和副本在同一位置创建同名表空间，但是，如果省略该 <code>ADD DATAFILE</code> 子句，则在数据目录中创建表空间，生成的文件名是唯一的，这是允许的。</p>
+</li>
+<li>
+<p>从 MySQL 8.0.21 开始，除非 InnoDB 直接知道该目录，否则不能在撤消表空间目录 ( <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_undo_directory"><code>innodb_undo_directory</code></a>) 中创建通用表空间。InnoDB 已知的目录包括那些被定义的 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_datadir"><code>datadir</code></a>， <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_data_home_dir"><code>innodb_data_home_dir</code></a>和 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_directories"><code>innodb_directories</code></a> 变量。</p>
+</li>
+</ul>
+<h2 id="撤销表空间-Undo-Tablespaces">撤销表空间 - Undo Tablespaces</h2>
+<p>撤消表空间包含撤消日志（undo log），这是包含有关如何撤消事务对聚集索引记录的最新更改的信息的记录集合。</p>
+<h3 id="默认撤消表空间">默认撤消表空间</h3>
+<p>初始化 MySQL 实例时会创建两个默认的 undo 表空间。默认撤消表空间在初始化时创建，为在接受 SQL 语句之前必须存在的回滚片段提供位置。至少需要两个撤消表空间来支持撤消表空间的自动截断。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-undo-tablespaces.html#truncate-undo-tablespace">截断撤消表空间</a>。</p>
+<p>默认撤消表空间在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_undo_directory"><code>innodb_undo_directory</code></a> 变量定义的位置创建。如果 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_undo_directory"><code>innodb_undo_directory</code></a>变量未定义，则在数据目录中创建默认的撤消表空间。默认撤消表空间数据文件命名为 <code>undo_001</code>和<code>undo_002</code>。数据字典中定义的对应撤销表空间名称是<code>innodb_undo_001</code>和 <code>innodb_undo_002</code>。</p>
+<p>从 MySQL 8.0.14 开始，可以在运行时使用 SQL 创建额外的撤消表空间。请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-undo-tablespaces.html#innodb-add-undo-tablespaces">添加撤消表空间</a>。</p>
+<h3 id="撤消表空间大小">撤消表空间大小</h3>
+<p>在 MySQL 8.0.23 之前，undo 表空间的初始大小取决于<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_page_size"><code>innodb_page_size</code></a> 值。对于默认的 16KB 页面大小，初始撤消表空间文件大小为 10MiB。对于 4KB、8KB、32KB 和 64KB 页面大小，初始撤消表空间文件大小分别为 7MiB、8MiB、20MiB 和 40MiB。从 MySQL 8.0.23 开始，初始撤消表空间大小通常为 16MiB。当通过截断操作创建新的撤消表空间时，初始大小可能会有所不同。在这种情况下，如果文件扩展名大于 16MB，并且前一个文件扩展名发生在最后一秒内，则新的撤消表空间将创建为<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_max_undo_log_size"><code>innodb_max_undo_log_size</code></a> 变量定义的大小的四分之一 。</p>
+<p>在 MySQL 8.0.23 之前，undo 表空间一次扩展四个区。从 MySQL 8.0.23 开始，undo 表空间至少扩展了 16MB。为了应对急剧增长，如果前一个文件扩展名发生的时间少于 0.1 秒，则文件扩展名大小会加倍。扩展大小的两倍可以发生多次，最大为 256MB。如果前一个文件扩展名早于 0.1 秒出现，则扩展名大小将减少一半，也可能多次出现，最小为 16MB。如果该 <code>AUTOEXTEND_SIZE</code>选项是为撤销表空间定义的，则它会被扩展 <code>AUTOEXTEND_SIZE</code>设置和扩展大小由上述逻辑确定。有关该<code>AUTOEXTEND_SIZE</code>选项的信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-tablespace-autoextend-size.html">第 15.6.3.9 节，“表空间 AUTOEXTEND_SIZE 配置”</a>。</p>
+<h2 id="临时表空间-Temporary-Tablespaces">临时表空间 - Temporary Tablespaces</h2>
+<p><code>InnoDB</code> 使用会话临时表空间和全局临时表空间。</p>
+<h3 id="会话临时表空间">会话临时表空间</h3>
+<p>当 <code>InnoDB</code> 被配置为磁盘内部临时表的存储引擎时，会话临时表空间存储用户创建的临时表和优化器创建的内部临时表。从 MySQL 8.0.16 开始，用于磁盘内部临时表的存储引擎是<code>InnoDB</code>. （以前，存储引擎由 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_internal_tmp_disk_storage_engine"><code>internal_tmp_disk_storage_engine</code></a> 的值决定。）</p>
+<p>会话临时表空间在第一次请求创建磁盘临时表时从临时表空间池中分配给会话。一个会话最多分配两个表空间，一个用于用户创建的临时表，另一个用于优化器创建的内部临时表。分配给会话的临时表空间用于会话创建的所有磁盘临时表。当会话断开连接时，其临时表空间被截断并释放回池中。服务器启动时会创建一个包含 10 个临时表空间的池。池的大小永远不会缩小，并且表空间会根据需要自动添加到池中。在正常关闭或中止初始化时删除临时表空间池。会话临时表空间文件在创建时大小为五页，并且具有<code>.ibt</code> 文件扩展名。</p>
+<p>为会话临时表空间保留了 40 万个空间 ID。因为每次服务器启动时都会重新创建会话临时表空间池，所以当服务器关闭时会话临时表空间的空间 ID 不会保留，并且可能会被重用。</p>
+<p>该<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_temp_tablespaces_dir"><code>innodb_temp_tablespaces_dir</code></a> 变量定义了创建会话临时表空间的位置。默认位置是 <code>#innodb_temp</code> 数据目录中的目录。如果无法创建临时表空间池，则拒绝启动。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; cd BASEDIR/data/#innodb_temp</span><br><span class="line">shell&gt; ls</span><br><span class="line">temp_10.ibt  temp_2.ibt  temp_4.ibt  temp_6.ibt  temp_8.ibt</span><br><span class="line">temp_1.ibt   temp_3.ibt  temp_5.ibt  temp_7.ibt  temp_9.ibt</span><br></pre></td></tr></table></figure>
+<p>在基于语句的复制 (SBR) 模式下，在副本上创建的临时表驻留在单个会话临时表空间中，该表空间仅在 MySQL 服务器关闭时被截断。</p>
+<p>该<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-innodb-session-temp-tablespaces-table.html"><code>INNODB_SESSION_TEMP_TABLESPACES</code></a> 表提供有关会话临时表空间的元数据。</p>
+<p>该 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-innodb-temp-table-info-table.html"><code>INFORMATION_SCHEMA.INNODB_TEMP_TABLE_INFO</code></a> 表提供有关在<code>InnoDB</code>实例中处于活动状态的用户创建的临时表的元数据。</p>
+<h3 id="全局临时表空间">全局临时表空间</h3>
+<p>全局临时表空间 ( <code>ibtmp1</code>) 存储对用户创建的临时表所做更改的回滚片段。</p>
+<p>该<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_temp_data_file_path"><code>innodb_temp_data_file_path</code></a> 变量定义了全局临时表空间数据文件的相对路径、名称、大小和属性。如果没有为 <code>innodb_temp_data_file_path</code> 指定值，默认行为是在 <code>innodb_data_home_dir</code> 目录中创建一个名为 <code>ibtmp1</code> 的自动扩展数据文件。初始文件大小略大于 12MB。</p>
+<p>全局临时表空间在正常关闭或中止初始化时被删除，并在每次服务器启动时重新创建。全局临时表空间在创建时会收到一个动态生成的空间 ID。如果无法创建全局临时表空间，则拒绝启动。如果服务器意外停止，则不会删除全局临时表空间。在这种情况下，数据库管理员可以手动删除全局临时表空间或重新启动 MySQL 服务器。重新启动 MySQL 服务器会自动删除并重新创建全局临时表空间。</p>
+<p>全局临时表空间不能驻留在原始设备上。</p>
+<h2 id="双写缓冲区-Doublewrite-Buffer">双写缓冲区 - Doublewrite Buffer</h2>
+<p>双写缓冲区是一个存储区域，在 <code>InnoDB</code>将页写入<code>InnoDB</code>数据文件中的适当位置之前，从缓冲池中写入页面 。如果在页面写入过程中存在操作系统、存储子系统或意外的 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/mysqld.html"><strong>mysqld</strong></a> 进程退出，则 <code>InnoDB</code>可以在崩溃恢复期间从双写缓冲区中找到该页面的良好副本。</p>
+<p>虽然数据被写入两次，但双写缓冲区不需要两倍的 I/O 开销或两倍的 I/O 操作。数据以一个大的顺序块写入双写缓冲区，只需<code>fsync()</code>调用一次操作系统（<code>innodb_flush_method</code>设置为<code>O_DIRECT_NO_FSYNC</code>的情况除外）。</p>
+<p>在 MySQL 8.0.20 之前，doublewrite 缓冲区存储区位于<code>InnoDB</code>系统表空间中。从 MySQL 8.0.20 开始，双写缓冲区存储区域位于双写文件中。</p>
+<h2 id="重做日志-Redo-Log">重做日志 - Redo Log</h2>
+<p>重做日志是一种基于磁盘的数据结构，用于在崩溃恢复期间纠正不完整事务写入的数据。在正常操作期间，重做日志对由 SQL 语句或低级 API 调用产生的更改表数据的请求进行编码。在初始化期间和接受连接之前，会自动重放在意外关闭之前未完成更新数据文件的修改。有关重做日志在崩溃恢复中的作用的信息，请参阅 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-recovery.html">第 15.18.2 节，“InnoDB 恢复”</a>。</p>
+<p>默认情况下，重做日志在磁盘上由两个名为<code>ib_logfile0</code>和<code>ib_logfile1</code>物理文件表示。MySQL 以循环方式写入重做日志文件。重做日志中的数据根据受影响的记录进行编码；这些数据统称为重做。通过重做日志的数据通道由不断增加的<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_lsn">LSN</a>值表示。</p>
+<h2 id="撤销日志-Undo-Log">撤销日志 - Undo Log</h2>
+<p>撤消日志是与单个读写事务相关联的撤消日志记录的集合。撤消日志记录包含有关如何撤消事务对<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_clustered_index">聚集索引</a>记录的最新更改的信息。如果另一个事务需要查看原始数据作为一致性读取操作的一部分，则未修改的数据将从撤消日志记录中检索。撤消日志存在于 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_undo_log_segment">撤消日志段中</a>，而<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_undo_log_segment">撤消日志段</a>包含在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_rollback_segment">回滚段中</a>。回滚段驻留在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_undo_tablespace">撤销表空间</a>和<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_global_temporary_tablespace">全局临时表空间中</a>。</p>
+<p>驻留在全局临时表空间中的撤消日志用于修改用户定义临时表中数据的事务。这些撤消日志不会被重做日志，因为它们不是崩溃恢复所必需的。它们仅用于在服务器运行时回滚。这种类型的撤消日志通过避免重做日志记录 I/O 来提高性能。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/InnoDb/" rel="tag"># InnoDb</a>
+              <a href="/tags/Redo-Log/" rel="tag"># Redo Log</a>
+              <a href="/tags/Undo-Log/" rel="tag"># Undo Log</a>
+              <a href="/tags/Buffer-Pool/" rel="tag"># Buffer Pool</a>
+              <a href="/tags/Change-Buffer/" rel="tag"># Change Buffer</a>
+              <a href="/tags/Doublewrite-Buffer-Files/" rel="tag"># Doublewrite Buffer Files</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/persistence/db/MySQL-%E9%94%81%E5%92%8C%E4%BA%8B%E7%89%A9%E6%A8%A1%E5%9E%8B/" rel="prev" title="MySQL 锁和事物模型">
+                  <i class="fa fa-chevron-left"></i> MySQL 锁和事物模型
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/" rel="next" title="Kafka-中的恰好一次交付和事物性消息【翻译】">
+                  Kafka-中的恰好一次交付和事物性消息【翻译】 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"786d02d35054f65f4be5ccc04c255a80"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

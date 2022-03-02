@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="关于 JMS 和 AMQP 在消息和代理上的一些说明。 如今，AMQP 越来越受欢迎。因此，我认为这是一个很好的机会，以了解它如何与旧的 JMS 匹配。  JMS 包括 Java RMI 在内的远程过程调用（RPC）系统基本都是是同步的 – 调用者必须阻塞并等待，直到被调用的方法完成执行，因此，如果不使用多个线程，则无法开发松耦合的企业应用程序。换句话说，RPC 系统要求客户端和服务器同时可用。然">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JMS vs AMQP">
+<meta property="og:url" content="https://www.zeral.cn/middleware/JMS-vs-AMQP/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="关于 JMS 和 AMQP 在消息和代理上的一些说明。 如今，AMQP 越来越受欢迎。因此，我认为这是一个很好的机会，以了解它如何与旧的 JMS 匹配。  JMS 包括 Java RMI 在内的远程过程调用（RPC）系统基本都是是同步的 – 调用者必须阻塞并等待，直到被调用的方法完成执行，因此，如果不使用多个线程，则无法开发松耦合的企业应用程序。换句话说，RPC 系统要求客户端和服务器同时可用。然">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/jms.gif">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/amqp-message-routing.png">
+<meta property="article:published_time" content="2020-11-10T04:46:25.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.361Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="AMQP">
+<meta property="article:tag" content="MQ">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/middleware/jms.gif">
+
+
+<link rel="canonical" href="https://www.zeral.cn/middleware/JMS-vs-AMQP/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/middleware/JMS-vs-AMQP/","path":"middleware/JMS-vs-AMQP/","title":"JMS vs AMQP"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>JMS vs AMQP | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">JMS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-5"><span class="nav-number">1.1.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">AMQP</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%8D%A2%E6%9C%BA%E5%92%8C%E4%BA%A4%E6%8D%A2%E6%9C%BA%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.</span> <span class="nav-text">交换机和交换机类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-6"><span class="nav-number">2.2.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/JMS-vs-AMQP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JMS vs AMQP
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-11-10 12:46:25" itemprop="dateCreated datePublished" datetime="2020-11-10T12:46:25+08:00">2020-11-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>关于 <code>JMS</code> 和 <code>AMQP</code> 在消息和代理上的一些说明。</p>
+<p>如今，AMQP 越来越受欢迎。因此，我认为这是一个很好的机会，以了解它如何与旧的 JMS 匹配。</p>
+<hr>
+<h1>JMS</h1>
+<p>包括 Java RMI 在内的远程过程调用（<code>RPC</code>）系统基本都是是同步的 – 调用者必须阻塞并等待，直到被调用的方法完成执行，因此，如果不使用多个线程，则无法开发松耦合的企业应用程序。换句话说，<code>RPC</code> 系统要求客户端和服务器同时可用。然而，在某些应用中，这种紧密耦合可能是不可能的或奢望的。面向消息的中间件 - <code>Message Oriented Middleware（MOM）</code>系统为此类问题提供了解决方案。它们基于异步交互模型，并提供可通过网络访问的消息队列的抽象。</p>
+<span id="more"></span>
+<p>由 Sun Microsystems 和其他几家公司在 Java Community Process 下以 <a target="_blank" rel="noopener" href="https://www.jcp.org/en/jsr/detail?id=914">JSR 914</a> 设计的 <code>Java Message Service（JMS）</code>是第一个获得业界广泛支持的企业消息 <strong><code>API</code></strong>。Java 消息服务（JMS）旨在简化开发异步发送和接收业务数据和事件的业务应用程序的过程。它定义了一个通用的企业消息传递 API，该 API 旨在为各种企业在消息产品上提供轻松高效地支持。 JMS 支持两种消息传递模型：<strong>点对点（队列）</strong> 和 <strong>发布-订阅（主题）</strong>。</p>
+<p>JMS 定义了一组接口和语义，这些接口和语义允许 Java 应用程序与其他消息传递实现进行通信。JMS 实现被称为 JMS 提供程序 - provider。 JMS 通过最小化 Java 开发人员使用企业消息产品必须学习的概念集来简化学习过程，同时，它使消息传递应用程序的可移植性最大化。</p>
+<p>下图描述了生产和消费消息的高层视图。</p>
+<p><img data-src="../../images/middleware/jms.gif" alt="Producing and consuming messages"></p>
+<h2 id="总结-5">总结</h2>
+<p>JMS 是用于与面向消息的中间件通信的标准 Java API。</p>
+<p>JMS 是 Java <code>J2EE</code> 的一部分，由 <a target="_blank" rel="noopener" href="https://jcp.org/aboutJava/communityprocess/final/jsr914/index.html"><code>JSR 914</code></a> 定义。它被认为是健壮和成熟的。</p>
+<p>JMS 允许两个不同的 Java 应用程序进行通信，这些应用程序可能正在使用 JMS 客户端，即能够进行通信，也保证解耦。</p>
+<p>如果您正在寻找 JMS 消息代理，则您的代码中可能需要 <code>ActiveMQ</code> 或 <code>HornetQ</code> 客户端。ActiveMQ 更受欢迎。</p>
+<p>因此，JMS 允许 Java 组件仅用几行代码就可以可靠地发送和接收消息，实现低耦合。</p>
+<p>可以用最少的代码，甚至根本不更改代码，就可以用一个 <code>JMS 代理</code>替换另一个。</p>
+<h1>AMQP</h1>
+<p><code>AMQP</code>（代表“<code>高级消息队列协议</code> - <code>Advanced Message Queuing Protocol</code>”）是一种开放标准的应用程序层协议。它支持符合要求的客户端应用（application）和消息中间件代理（messaging middleware broker）之间进行通信。</p>
+<p>AMQP 的工作过程如下图：<strong>消息</strong>（<code>message</code>）被<strong>发布者</strong>（<code>publisher</code>）发送给<strong>交换机</strong>（<code>exchange</code>），交换机常常被比喻成邮局或者邮箱。然后交换机将收到的消息根据路由规则分发给绑定的<strong>队列</strong>（<code>queue</code>）。最后 AMQP 代理会将消息投递给订阅了此队列的<strong>消费者（consumer）</strong>，或者消费者按照需求自行获取。</p>
+<p><img data-src="../../images/middleware/amqp-message-routing.png" alt="enter image description here"></p>
+<p><strong>发布者</strong>（<code>publisher</code>）发布消息时可以给消息指定各种<strong>消息属性</strong>（<code>message meta-data</code>）。有些属性有可能会被<strong>消息代理</strong>（<code>brokers</code>）使用，然而其他的属性则是完全不透明的，它们只能被接收消息的应用所使用。</p>
+<p>从安全角度考虑，网络是不可靠的，接收消息的应用也有可能在处理消息的时候失败。基于此原因，AMQP 模块包含了一个<strong>消息确认</strong>（<code>message acknowledgements</code>）的概念：当一个消息从队列中投递给<strong>消费者</strong>后（<code>consumer</code>），消费者会通知一下消息代理（<code>broker</code>），这个可以是自动的也可以由处理消息的应用的开发者执行。当“消息确认”被启用的时候，消息代理不会完全将消息从队列中删除，直到它收到来自消费者的<strong>确认回执</strong>（<code>acknowledgement</code>）。</p>
+<p>在某些情况下，例如当一个消息无法被成功路由时，消息或许会被返回给发布者并被丢弃。或者，如果消息代理执行了延期操作，消息会被放入一个所谓的<strong>死信队列</strong>（<code>Dead letter queue</code>）中。此时，消息发布者可以选择某些参数来处理这些特殊情况。</p>
+<p><strong>队列</strong>，<strong>交换机</strong>和<strong>绑定</strong>统称为 AMQP实体（AMQP entities）。</p>
+<h2 id="交换机和交换机类型">交换机和交换机类型</h2>
+<p>交换机拿到一个消息之后将它路由给一个或零个队列。它使用哪种路由算法是由交换机类型和被称作绑定（bindings）的规则所决定的。AMQP 0-9-1的代理提供了四种交换机</p>
+<table>
+<thead>
+<tr>
+<th>交换机类型</th>
+<th>介绍</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Direct exchange（直连交换机）</td>
+<td>根据消息携带的路由键路由消息。路由键（routing key）是一串单词，由句点分隔，与消息有一定的相关性。</td>
+</tr>
+<tr>
+<td>Fanout exchange（扇型交换机）</td>
+<td>将消息路由到所有可用队列。在这种广播类型的交换中，路由键被忽略。</td>
+</tr>
+<tr>
+<td>Topic exchange（主题交换机）</td>
+<td>根据与路由键的完全或部分匹配将消息路由到一个或多个队列。</td>
+</tr>
+<tr>
+<td>Headers exchange（头交换机）</td>
+<td>根据消息头路由消息，消息头可以包含比路由键更多的属性。</td>
+</tr>
+</tbody>
+</table>
+<p>除交换机类型外，在声明交换机时还可以附带许多其他的属性，其中最重要的几个分别是：</p>
+<ul>
+<li>Name</li>
+<li>Durability （消息代理重启后，交换机是否还存在）</li>
+<li>Auto-delete （当所有与之绑定的消息队列都完成了对此交换机的使用后，删掉它）</li>
+<li>Arguments（依赖代理本身）</li>
+</ul>
+<p>交换机可以有两个状态：持久（durable）、暂存（transient）。持久化的交换机会在消息代理（broker）重启后依旧存在，而暂存的交换机则不会（它们需要在代理再次上线后重新被声明）。然而并不是所有的应用场景都需要持久化的交换机。</p>
+<h2 id="总结-6">总结</h2>
+<p>AMQP 提供统一消息服务的应用层高级消息队列规范，基于此规范的客户端与消息中间件可传递消息，并不受客户端不同产品和不同开发语言等条件的限制。</p>
+<p>如果你想使用 AMQP，则可以选择 <code>RabbitMQ</code>，<code>Qpid</code> 或 <code>StormMQ</code>。</p>
+<p>AMQP 提供了有关如何构造消息的描述。它没有提供有关如何发送消息的 API。</p>
+<h1>总结</h1>
+<p>好吧…… JMS 是一个 API，AMQP 是一个协议。</p>
+<p>早在定义 JMS 时，JMS 实际上就没有在 JMS 客户端和 JMS 消息传递服务器之间强制使用协议。</p>
+<p>实现 JMS API 的 JMS 客户端可以使用任何协议与 JMS 服务器进行通信。但是，JMS 客户端需要确保与 JMS API 兼容。而已。</p>
+<p>另一方面，AMQP 只是消息客户端和消息中间件之间的协议。因此，JMS 客户端可以使用 AMQP 作为协议与消息传递服务器进行通信。</p>
+<p>实际上，它已经存在，例如，ActiveMQ 正在提供对 AMQP 1.0 的支持。</p>
+<p><strong>简而言之，AMQP 定义了消息的通讯协议，JMS 定义了 Java 程序间消息通讯接口。</strong></p>
+<h1>参考资料</h1>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://www.oracle.com/technical-resources/articles/java/intro-java-message-service.html">Getting Started with Java Message Service</a>  JMS 入门</li>
+<li><a target="_blank" rel="noopener" href="https://www.linkedin.com/pulse/jms-vs-amqp-eran-shaham/">JMS vs AMQP</a></li>
+<li><a target="_blank" rel="noopener" href="https://rabbitmq.mr-ping.com/AMQP/AMQP_0-9-1_Model_Explained.html">AMQP Model Explained</a> AMQP 模型解释</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/AMQP/" rel="tag"># AMQP</a>
+              <a href="/tags/MQ/" rel="tag"># MQ</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" rel="prev" title="Mybatis 快速入门">
+                  <i class="fa fa-chevron-left"></i> Mybatis 快速入门
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/persistence/db/MySQL-utf8-vs-utf8mb4/" rel="next" title="MySQL utf8 和 utf8mb4 的区别">
+                  MySQL utf8 和 utf8mb4 的区别 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"6c6b9652480bba7720366d6c5355ba6c"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

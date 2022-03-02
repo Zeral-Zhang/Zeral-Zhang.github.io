@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="基础 我们先大概瞥一眼 JDK 1.7 之前的 HashMap 结构：  简而言之，HashMap 是由数组组成的一定数量的桶（bucket）。在进行存储时，使用 key 的 hashcode() 通过 hash 函数计算得到  hash 值，然后通过 **hash 值 % 数组长度**来确定将 Entry(key + value) 放入数组的哪个桶里。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java HashMap">
+<meta property="og:url" content="https://www.zeral.cn/data-structure/Java-HashMap-%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="基础 我们先大概瞥一眼 JDK 1.7 之前的 HashMap 结构：  简而言之，HashMap 是由数组组成的一定数量的桶（bucket）。在进行存储时，使用 key 的 hashcode() 通过 hash 函数计算得到  hash 值，然后通过 **hash 值 % 数组长度**来确定将 Entry(key + value) 放入数组的哪个桶里。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/hashmap.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/buckets.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/hash%20collision.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/tradeoff-time-space.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/rehashing.gif">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/poisson-distribution.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/open-addressing.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/hashmap-tree.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/hashmap-1.8.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/hashmap/red-black-tree.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/linked-hash-map-uml.png">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/linked-hash-map.png">
+<meta property="article:published_time" content="2020-07-04T03:51:25.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.205Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="HashMap">
+<meta property="article:tag" content="LinkedHashMap">
+<meta property="article:tag" content="Red–black tree">
+<meta property="article:tag" content="LRU">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/hashmap/hashmap.jpg">
+
+
+<link rel="canonical" href="https://www.zeral.cn/data-structure/Java-HashMap-%E5%AE%9E%E7%8E%B0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/data-structure/Java-HashMap-%E5%AE%9E%E7%8E%B0/","path":"data-structure/Java-HashMap-实现/","title":"Java HashMap"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Java HashMap | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hash-%E7%A2%B0%E6%92%9E%E5%8F%8A%E8%A7%A3%E5%86%B3%EF%BC%88Collision%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">Hash 碰撞及解决（Collision）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B4%9F%E8%BD%BD%E5%9B%A0%E5%AD%90%E4%B8%8E%E5%AE%B9%E9%87%8F"><span class="nav-number">1.1.1.</span> <span class="nav-text">负载因子与容量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%BB%E5%9D%80"><span class="nav-number">1.1.2.</span> <span class="nav-text">寻址</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%80%E6%94%BE%E5%BC%8F%E5%AF%BB%E5%9D%80%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">开放式寻址相关技术</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BA%BF%E6%80%A7%E6%8E%A2%E6%B5%8B"><span class="nav-number">1.1.2.1.1.</span> <span class="nav-text">线性探测</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8C%E6%AC%A1%E6%96%B9%E6%8E%A2%E6%B5%8B"><span class="nav-number">1.1.2.1.2.</span> <span class="nav-text">二次方探测</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%86%8D%E5%93%88%E5%B8%8C"><span class="nav-number">1.1.2.1.3.</span> <span class="nav-text">再哈希</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AD%E5%90%88%E5%BC%8F%E5%AF%BB%E5%9D%80%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">闭合式寻址相关技术</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">HashMap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E7%BB%84%E6%A1%B6"><span class="nav-number">2.1.</span> <span class="nav-text">数组桶</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E9%93%BE%E8%A1%A8"><span class="nav-number">2.2.</span> <span class="nav-text">单链表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HashMap-%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97%E6%A1%B6%E7%B4%A2%E5%BC%95%EF%BC%9F"><span class="nav-number">2.3.</span> <span class="nav-text">HashMap 如何计算桶索引？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%A1%B6%E5%86%85%E4%B8%8D%E4%BD%BF%E7%94%A8-ArrayList-%E6%88%96-LinkedList%EF%BC%9F"><span class="nav-number">2.4.</span> <span class="nav-text">为什么桶内不使用 ArrayList 或 LinkedList？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%A1%B6%E5%86%85%E5%85%83%E7%B4%A0%E8%BF%87%E9%95%BF%E6%97%B6%E7%94%A8%E7%BA%A2%E9%BB%91%E6%A0%91%EF%BC%9F"><span class="nav-number">2.5.</span> <span class="nav-text">为什么桶内元素过长时用红黑树？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">LinkedHashMap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA"><span class="nav-number">3.1.</span> <span class="nav-text">构建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Insert-Order-LinkedHashMap"><span class="nav-number">3.1.1.</span> <span class="nav-text">Insert Order LinkedHashMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Access-Order-LinkedHashMap"><span class="nav-number">3.1.2.</span> <span class="nav-text">Access Order LinkedHashMap</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E6%80%A7"><span class="nav-number">3.2.</span> <span class="nav-text">并发性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%92%8C-TreeMap-%E6%AF%94%E8%BE%83"><span class="nav-number">3.3.</span> <span class="nav-text">和 TreeMap 比较</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/data-structure/Java-HashMap-%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java HashMap
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-07-04 11:51:25" itemprop="dateCreated datePublished" datetime="2020-07-04T11:51:25+08:00">2020-07-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/DataStructure/" itemprop="url" rel="index"><span itemprop="name">DataStructure</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>基础</h1>
+<p>我们先大概瞥一眼 JDK 1.7 之前的 HashMap 结构：</p>
+<p><img data-src="../../images/java/hashmap/hashmap.jpg" alt="HashMap"></p>
+<p>简而言之，<code>HashMap</code> 是由数组组成的一定数量的桶（<code>bucket</code>）。在进行存储时，使用 <code>key</code> 的 <code>hashcode()</code> 通过 <strong><code>hash</code> 函数</strong>计算得到  <code>hash</code> 值，然后通过 **<code>hash 值 % 数组长度</code>**来确定将 <code>Entry(key + value)</code> 放入数组的哪个桶里。</p>
+<span id="more"></span>
+<blockquote>
+<p>为什么要用 <code>hashcode</code> 来确定位置？</p>
+<p>为了高效的定位元素在数组中的位置，以及使放入的元素尽可能均匀的分布在数组中。</p>
+<p>正确实现 hashcode() 方法返回的 hash 值可以达到散列分布的目的，同样的键也会返回相同的 hash 值，因此我们使用 hash 信息来确定元素在数组中的下标信息以达到快速访问。</p>
+</blockquote>
+<p>如果 hash 函数足够完美，将能实现数据的均匀分配，此时时间复杂度为 O(1)。但是开发者通常会编写较差的哈希函数，这将导致分布不均。</p>
+<blockquote>
+<p>散列函数也被用于对称、非对称加密算法、签名或摘要（Digest）算法中，比如：MD 加密、SHA 加密</p>
+</blockquote>
+<p><img data-src="../../images/java/hashmap/buckets.png" alt="Bad hashmap"></p>
+<h2 id="Hash-碰撞及解决（Collision）">Hash 碰撞及解决（Collision）</h2>
+<p>此时数组将会有很大一部分被浪费，而且含多不同的键将会产生相同的 hash 值**（hash 碰撞）**。</p>
+<p><img data-src="../../images/java/hashmap/hash%20collision.png" alt="Hash function"></p>
+<h3 id="负载因子与容量">负载因子与容量</h3>
+<p>为了解决这个问题，一方面，我们可以增大哈希值的取值空间来减少冲突的可能性，比如使 hash 表大于所需的总数据量。期望只要有哈希表的 70 % 被占用就足够。存储元素的个数和哈希表桶的数量的比值就叫做<strong>负载因子（Load factor）</strong>。<br>
+$$<br>
+\begin{align*}<br>
+Load \quad Factor = \frac{Total \quad number \quad of \quad items \quad stored} {Size \quad of \quad the \quad Buckets \quad array}<br>
+\end{align*}<br>
+$$</p>
+<p>负载因子的值通常是可配置的，并在时间和空间成本之间进行权衡，下图是负载因子值调低调高时的影响。</p>
+<p><img data-src="../../images/java/hashmap/tradeoff-time-space.png" alt="Tradeoff Time And Space"></p>
+<p>Java 中 <code>HashMap</code> 的默认负载因子是 <code>0.75</code>，也就是说只要哈希表的 75 % 被占用就足够了。</p>
+<p>容量（<code>Capacity</code>） 在 <code>Java HashMap</code> 中指桶的数量，也就是负载因子的被除数。</p>
+<p><code>Java HashMap</code> 的默认初始容量为 <code>16</code>，即存储区数组在首次插入时被延迟初始化。</p>
+<p>当插入的元素到达一定的阈值，HashMap 将会扩容来重新计算哈希，该阈值的计算公式为：<br>
+$$<br>
+Threshold = (Current Capacity) * (Load Factor)<br>
+$$<br>
+以 HashMap 的默认值计算，则为：<br>
+$$<br>
+Threshold = 16 * 0.75 = 12<br>
+$$<br>
+也就是说当插入第 13 个元素后会进行扩容为之前的两倍 <code>oldThreshold &lt;&lt; 1</code>，此时将发生重新哈希（<code>Rehashing</code>），由于重新哈希处理增加了存储桶的数量，因此降低了负载因子。</p>
+<p><img data-src="../../images/java/hashmap/rehashing.gif" alt="Rehashing"></p>
+<blockquote>
+<p>为什么 HashMap 加载因子默认是 0.75？</p>
+<p>这个跟一个统计学里很重要的原理——泊松分布有关。</p>
+<p>泊松分布是统计学和概率学常见的离散概率分布，适用于描述单位时间内随机事件发生的次数的概率分布。</p>
+<p><img data-src="../../images/java/hashmap/poisson-distribution.png" alt="Poisson distribution"><br>
+等号的左边，P 表示概率，N 表示某种函数关系，t 表示时间，n 表示数量。等号的右边，λ 表示事件的频率。</p>
+<p>在理想情况下，使用随机哈希码，在扩容阈值（加载因子）为 0.75 的情况下，节点出现在频率在 Hash 桶（表）中遵循参数平均为 0.5 的泊松分布。忽略方差，即 X = λt，P(λt = k)，其中 λt = 0.5的情况。</p>
+<p>所以我们可以知道，其实常数 0.5 是作为参数代入泊松分布来计算的，而加载因子 0.75 是作为一个条件，当 HashMap 长度为length/size ≥ 0.75 时就扩容，在这个条件下，冲突后的拉链长度和概率结果为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0</span>:    <span class="number">0.60653066</span></span><br><span class="line"><span class="number">1</span>:    <span class="number">0.30326533</span></span><br><span class="line"><span class="number">2</span>:    <span class="number">0.07581633</span></span><br><span class="line"><span class="number">3</span>:    <span class="number">0.01263606</span></span><br><span class="line"><span class="number">4</span>:    <span class="number">0.00157952</span></span><br><span class="line"><span class="number">5</span>:    <span class="number">0.00015795</span></span><br><span class="line"><span class="number">6</span>:    <span class="number">0.00001316</span></span><br><span class="line"><span class="number">7</span>:    <span class="number">0.00000094</span></span><br><span class="line"><span class="number">8</span>:    <span class="number">0.00000006</span></span><br></pre></td></tr></table></figure>
+<p>计算结果如上述的列表所示，当一个桶中的链表长度达到 8 个元素的时候，概率为 0.00000006，几乎是一个不可能事件。</p>
+<p>选择0.75作为默认的加载因子，完全是时间和空间成本上寻求的一种折衷选择。</p>
+</blockquote>
+<h3 id="寻址">寻址</h3>
+<p>另一方面，为了给冲突元素一个合适的位置存储，我们将解决方案从寻址方向上分为两个大类：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">开放式寻址（Open Addressing）</th>
+<th style="text-align:center">闭合式寻址（Closed Addressing）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">通过在哈希表数组本身中搜索另一个空存储桶来处理冲突。</td>
+<td style="text-align:center">键始终存储在散列到的桶中。在每个桶的基础上使用单独的数据结构来处理冲突。</td>
+</tr>
+<tr>
+<td style="text-align:center">每个桶中最多存放一个键。</td>
+<td style="text-align:center">每个桶存储任意键数。</td>
+</tr>
+<tr>
+<td style="text-align:center">理论最大负载系数为1。</td>
+<td style="text-align:center">没有理论上的最大负载系数。</td>
+</tr>
+<tr>
+<td style="text-align:center">哈希表数组的大小必须始终至少与哈希表中键的数量一样大。</td>
+<td style="text-align:center">性能随着负载系数的增长而降低。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="开放式寻址相关技术">开放式寻址相关技术</h4>
+<ul>
+<li>线性探测（<code>Linear Probing</code>）</li>
+<li>二次方探测（<code>Quadratic Probing</code>）</li>
+<li>再哈希（<code>Double hashing</code>）</li>
+<li>罗宾汉哈希（<code>Robin Hood hashing</code>）</li>
+<li>等</li>
+</ul>
+<p>插入和查找扫描阵列的顺序在实现之间有所不同。下面介绍一些常用技术。 （所有索引均以数组长度为模。）</p>
+<h5 id="线性探测">线性探测</h5>
+<p>如果在存储区 i 中发生冲突，搜索序列将使用下列索引继续：</p>
+<ul>
+<li><em>i</em> + 1</li>
+<li><em>i</em> + 2</li>
+<li><em>i</em> + 3</li>
+<li>…</li>
+</ul>
+<p>由于探测序列在内存中是线性的，因此该方法可实现良好的缓存性能。</p>
+<h5 id="二次方探测">二次方探测</h5>
+<p>通过二次方探测，从存储桶 i 开始的搜索序列如下：</p>
+<ul>
+<li><em>i</em> + 1<sup>2</sup></li>
+<li><em>i</em> + 2<sup>2</sup></li>
+<li><em>i</em> + 3<sup>2</sup></li>
+<li>…</li>
+</ul>
+<h5 id="再哈希">再哈希</h5>
+<p>使用二次哈希（另一个哈希函数）双重哈希，h 用于确定搜索序列中步骤的大小。如果 h<sub>2</sub>(key) = j，则从存储区 i 开始的搜索序列如下：</p>
+<ul>
+<li><em>i</em> + 1 × <em>j</em></li>
+<li><em>i</em> + 2 × <em>j</em></li>
+<li><em>i</em> + 3 × <em>j</em></li>
+</ul>
+<p>（如果 j 恰好等于数组长度的倍数，则使用 1 代替。）</p>
+<p><img data-src="../../images/java/hashmap/open-addressing.png" alt="Comparison of Probing Techniques"></p>
+<h4 id="闭合式寻址相关技术">闭合式寻址相关技术</h4>
+<ul>
+<li>使用链表单独存储 hash 相同的键值（拉链法）</li>
+<li>使用动态数组单独存储 hash 相同的键值</li>
+<li>使用自平衡二叉树</li>
+</ul>
+<p><strong>Java HashMap 是结合第一种和第三种的实现。</strong></p>
+<p><img data-src="../../images/java/hashmap/hashmap-tree.png" alt="HashMap"></p>
+<h1>HashMap</h1>
+<p><img data-src="../../images/java/hashmap/hashmap-1.8.png" alt="HashMap JDK 1.8"></p>
+<p>先总体了解下 <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/HashMap.html"><code>HashMap</code></a> 作为集合类的特性：</p>
+<ul>
+<li>
+<p>HashMap 的键值都不能存储基本类型</p>
+<p>要存储基本类型提高性能，可以使用 <a target="_blank" rel="noopener" href="https://github.com/eclipse/eclipse-collections/blob/master/docs/guide.md#primitive-maps"><code>Eclipse Collection</code> 的原始类型集合类</a>。</p>
+</li>
+<li>
+<p>支持一个 null 键和多个 null value</p>
+</li>
+<li>
+<p>键必须唯一，重复的键值将被后面的值替代</p>
+</li>
+<li>
+<p>使用哈希技术存储索引，所以不保证插入顺序</p>
+</li>
+<li>
+<p>非线程安全，需自己保证同步</p>
+<p>可以使用 <code>Collections.synchronizedMap(new HashMap(...));</code> 包裹，或使用 <code>HashTable</code>，<code>ConcurrentHashMap</code>，后者性能更高</p>
+</li>
+<li>
+<p>快速失败机制</p>
+<p>在 Java 非线程安全的集合类中，遍历集合中，对集合做额外的操作比如调用新增、删除会立即停止当前操作并抛出 <code>ConcurrentModificationException</code>，在 HashMap 中使用 <code>modCount</code> 记录修改次数，如果遍历中该记录和开始时不相同，则报错。</p>
+<p>可以使用 <code>Iterator</code> 接口安全的移除元素，一般集合会实现安全的移除操作。但是多线程环境下得保证 <code>Iterator</code> 实现类的线程安全。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> HashMap&lt;String, String&gt; hashMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;(<span class="number">20</span>, <span class="number">0.75f</span>);</span><br><span class="line"><span class="keyword">final</span> Iterator&lt;Map.Entry&lt;String, String&gt;&gt; iterator = hashMap.entrySet().iterator();</span><br><span class="line"><span class="keyword">while</span> (iterator.hasNext()) &#123;</span><br><span class="line">    <span class="keyword">if</span> (iterator.next().getKey().equals(<span class="string">&quot;test&quot;</span>)) &#123;</span><br><span class="line">        iterator.remove(); <span class="comment">// ok!</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// java 8 removeIf</span></span><br><span class="line">hashMap.entrySet().removeIf(stringStringEntry -&gt; stringStringEntry.getKey().equals(<span class="string">&quot;test&quot;</span>));</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>标记了 <strong>Serializeable</strong> 和 <strong>Cloneable</strong> 接口</p>
+</li>
+</ul>
+<h2 id="数组桶">数组桶</h2>
+<p>在代码中，桶数组用如下变量表示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">transient</span> Node&lt;K,V&gt;[] table;</span><br></pre></td></tr></table></figure>
+<p>这里需要注意几点：</p>
+<ul>
+<li>
+<p>桶数组并没有在构造方法中初始化，而是在第一次使用时才会分配内存，比如 <code>put</code>、<code>compute</code>、<code>merge</code> 等。</p>
+</li>
+<li>
+<p>当分配内存时，长度总是 2 的幂次方。</p>
+<blockquote>
+<p>为什么选择 2 的幂次方？</p>
+<p>由于为了达到高效处理性能，很多操作都是通过位运算完成。比如其中的 <code>hash</code> 方法，计算桶索引等，后面会详细说明。</p>
+</blockquote>
+</li>
+<li>
+<p>如果初始化时传入的桶的容量 <code>capacity</code> 不是 2 的幂次方，将会使用<a target="_blank" rel="noopener" href="http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2">该位运算算法</a>增加到最近的 2 次幂。</p>
+</li>
+</ul>
+<h2 id="单链表">单链表</h2>
+<p>每个桶内部由链表组成，在代码中为类 <code>Node&lt;K, V&gt;</code> 的实例，此类是 HashMap 类的静态内部类，并且实现 <code>Map.Entry&lt;K, V&gt;</code> 接口，此节点的表示形式为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Node</span>&lt;K,V&gt; <span class="keyword">implements</span> <span class="title class_">Map</span>.Entry&lt;K,V&gt; &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> hash;			<span class="comment">// 使用 hash 定位桶</span></span><br><span class="line">        <span class="keyword">final</span> K key;				<span class="comment">// 节点存放的 key</span></span><br><span class="line">        V value;						<span class="comment">// 节点存放的 值</span></span><br><span class="line">        Node&lt;K,V&gt; next;     <span class="comment">// 指向链表的下一个节点</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="HashMap-如何计算桶索引？">HashMap 如何计算桶索引？</h2>
+<p>之前我们提到计算索引是使用哈希函数计算的 <code>hash</code> 值和桶数组长度求余，但是求余的效率并没有直接按位运算的高。同样我们需要借助一些<a target="_blank" rel="noopener" href="http://graphics.stanford.edu/~seander/bithacks.html#ModulusDivisionEasy">位运算的技巧</a>，这里 n 为桶数组的长度：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">index = hash(key) &amp; (n-<span class="number">1</span>)  <span class="comment">// 相当于求 hash(key) % n，当 n 为 2 的次幂且不为 0 时成立</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// hash 函数求 hash 值  </span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="title function_">hash</span><span class="params">(Object key)</span> &#123;</span><br><span class="line">  <span class="type">int</span> h;</span><br><span class="line">  <span class="keyword">return</span> (key == <span class="literal">null</span>) ? <span class="number">0</span> : (h = key.hashCode()) ^ (h &gt;&gt;&gt; <span class="number">16</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意，为什么这里 hash 函数需要将高位数据移位到低位进行异或运算呢？这是因为有些数据计算出的哈希值差异主要在高位，而 HashMap 里的哈希寻址是忽略容量以上的高位的，那么这种处理就可以有效避免类似情况下的哈希碰撞。</p>
+<p>计算桶索引并不只是发生在 <code>put</code> 方法时，在调用 <code>get</code>、<code>contains</code>、<code>remove</code> 时都会调用 <code>hash</code> 方法重新计算 <code>hash</code> 值并在计算桶索引。</p>
+<h2 id="为什么桶内不使用-ArrayList-或-LinkedList？">为什么桶内不使用 ArrayList 或 LinkedList？</h2>
+<p>HashMap 内部使用单向链表来维护哈希冲突的元素，但为什么不用数组或双向链表，这其实是一个平衡后的考虑：</p>
+<ul>
+<li><code>ArrayList</code> 使用较少的空间，检索速度快，但是最坏的情况下插入和删除元素的时间复杂度可能为 <strong><code>O(n)</code></strong></li>
+<li><code>LinkedList</code> 双向链表使用更多空间维护前后节点信息，但是插入或删除元素的时间复杂度为 <strong><code>O(1)</code></strong></li>
+</ul>
+<p>使用<strong>单向链表</strong>的好处在于，其既可以使空间相对较少，也能保证删除和插入的时间复杂度为 <code>O(1)</code>。但是如果链表过长，最坏的可能是所有元素都放入一个桶里，此时时间复杂度将变为 <code>O(n)</code>。为了优化这一点，<code>JDK 1.8</code> 使用了红黑树来优化链表过长的情况。</p>
+<p>当桶数组的长度超过 <code>MIN_TREEIFY_CAPACITY</code> 且桶中的元素超过 <code>TREEIFY_THRESHOLD</code> 值时，链表转为红黑树。</p>
+<p>当桶中元素减少至 <code>UNTREEIFY_THRESHOLD</code> 时，红黑树退回到链表。</p>
+<h2 id="为什么桶内元素过长时用红黑树？">为什么桶内元素过长时用红黑树？</h2>
+<p><img data-src="../../images/java/hashmap/red-black-tree.jpg" alt="Red Black Tree"></p>
+<p>因为当大量哈希冲突的时候会导致节点链表越来越长从而降低 <code>HashMap</code> 性能。而红黑树为<strong>自平衡二叉搜索树</strong>，重新平衡并不完美，但保证在 <code>O(logN)</code> 时间内搜索，其中 <code>n</code> 是树的节点数。插入和删除操作，以及树的重排和重新着色，也在 <code>O(logN)</code> 时间内执行。 <strong>因此在数据量大的且桶中冲突较大的散列表中红黑树比单向链表更有优势。</strong></p>
+<p>**本质上这是个安全问题。**因为在元素放置过程中，如果一个对象哈希冲突，都被放置到同一个桶里，则会形成一个很长的链表，我们知道链表查询是线性的，会严重影响存取的性能。而在现实世界，构造哈希冲突的数据并不是非常复杂的事情，恶意代码就可以利用这些数据大量与服务器端交互，导致服务器端 CPU 大量占用，这就构成了哈希碰撞拒绝服务攻击，国内一线互联网公司就发生过类似攻击事件。</p>
+<p><strong>为什么选择红黑树而不是二叉树或绝对平衡二叉树呢？</strong><br>
+首先，二叉树在极端情况下依然会形成链表。例如 1,2,3,4 的 <code>hashCode</code> 相同时，二叉树退化成链表；<br>
+再是，绝对平衡就好像有强迫症一样把精力消耗在如何达到平衡上，因此造成不必要的性能开销；<br>
+而红黑树它是一棵自平衡树但不是绝对平衡树，优点有以下：</p>
+<ol>
+<li>树属于折半查找，于较长的链表相比查询效率要高</li>
+<li>自平衡树解决了二叉树的计算情况问题（二叉树退化成链表）</li>
+<li>非绝对平衡树比绝对平衡树在增删节点时要高效一些</li>
+</ol>
+<p>因此红黑树是综合性能较强的树型数据结构。</p>
+<h1>LinkedHashMap</h1>
+<img data-src="../../images/data-structure/linked-hash-map-uml.png" alt="linked-hash-map-uml" style="zoom:50%;" />
+<p>我们知道 HashMap 使用 <code>hash</code> 函数定位桶，桶内部使用单向链表存储冲突元素，不能保证插入的顺序。<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/LinkedHashMap.html"><code>LinkedHashMap</code></a> 继承了 HashMap，在原有的数据结构基础上，将所有桶内元素通过双向链表链接起来，该链表定义了迭代的顺序，默认是数据插入的顺序，也可以配置为访问顺序。转换为红黑树时也维护链表。</p>
+<blockquote>
+<p>如果将键重新插入映射中，则插入顺序不会受到影响。</p>
+</blockquote>
+<p><img data-src="../../images/data-structure/linked-hash-map.png" alt="LinkedHashMap"></p>
+<p>该实现提供了顺序保证，但是并没有增加时间复杂度，和 HashMap 一样还是 <code>O(1)</code>。TreeMap 由于使用了红黑树来提供顺序保证，所以时间复杂度为 <code>O(logN)</code>。</p>
+<h2 id="构建">构建</h2>
+<h3 id="Insert-Order-LinkedHashMap">Insert Order LinkedHashMap</h3>
+<p>我们可以使用其它 Map 来生成一个 LinkedHashMap 的拷贝，而不用管之前的实现。很适合一种以无序输入开始，最后保留该顺序的副本操作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">foo</span><span class="params">(Map m)</span> &#123;</span><br><span class="line">    <span class="type">Map</span> <span class="variable">copy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LinkedHashMap</span>(m);</span><br><span class="line">     ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Access-Order-LinkedHashMap">Access Order LinkedHashMap</h3>
+<p>还提供了一个特殊的<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/util/LinkedHashMap.html#LinkedHashMap-int-float-boolean-">构造函数</a>来创建一个迭代顺序为上次访问顺序的 LinkedHashMap。访问顺序从最近最少访问到最近最多访问。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">LinkedHashMap</span><span class="params">(<span class="type">int</span> initialCapacity,</span></span><br><span class="line"><span class="params">                     <span class="type">float</span> loadFactor,</span></span><br><span class="line"><span class="params">                     <span class="type">boolean</span> accessOrder)</span></span><br><span class="line">  </span><br><span class="line">构造一个具有指定初始容量、加载因子和排序模式的空 LinkedHashMap 实例。</span><br><span class="line">  </span><br><span class="line">参数:</span><br><span class="line">initialCapacity - 初始化桶容量</span><br><span class="line">loadFactor - 负载因子</span><br><span class="line">accessOrder - 排序模式 - <span class="literal">true</span> 为访问顺序 access-order, <span class="literal">false</span> 为插入顺序 insertion-order</span><br></pre></td></tr></table></figure>
+<p>这种 Map <strong>非常适合构建 LRU (Least recently used) 缓存</strong>。而且提供了一个可重写移除旧元素的 protected 的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">removeEldestEntry</span><span class="params">(Map.Entry&lt;K,V&gt; eldest)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用该方法很容易构建一个首先丢弃最近最少使用的项目的 LRU 缓存：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LRUCache</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> capacity;</span><br><span class="line">    <span class="keyword">private</span> Map&lt;Integer, Integer&gt; cache;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">LRUCache</span><span class="params">(<span class="keyword">final</span> <span class="type">int</span> capacity)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.capacity = capacity;</span><br><span class="line">        <span class="comment">// 使用特殊的构造方法，传入 true 为访问顺序，最近最多访问在前</span></span><br><span class="line">        <span class="built_in">this</span>.cache = <span class="keyword">new</span> <span class="title class_">java</span>.util.LinkedHashMap&lt;Integer, Integer&gt; (capacity, <span class="number">0.75f</span>, <span class="literal">true</span>) &#123;</span><br><span class="line">            <span class="comment">// 定义put后的移除规则，大于容量就删除eldest</span></span><br><span class="line">            <span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">removeEldestEntry</span><span class="params">(Map.Entry&lt;Integer, Integer&gt; eldest)</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> size() &gt; capacity;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">get</span><span class="params">(<span class="type">int</span> key)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (cache.containsKey(key)) &#123;</span><br><span class="line">            <span class="keyword">return</span> cache.get(key);</span><br><span class="line">        &#125; <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">set</span><span class="params">(<span class="type">int</span> key, <span class="type">int</span> value)</span> &#123;</span><br><span class="line">        cache.put(key, value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="并发性">并发性</h2>
+<p>和 <code>HashMap</code> 一样，<code>LinkedHashMap</code> 的实现也不是同步的，<strong>非线程安全</strong>。因此，如果您打算从多个线程访问它，并且这些线程中至少有一个可能会在结构上改变它，那么必须从外部进行同步。最容易的实现为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Map</span> <span class="variable">m</span> <span class="operator">=</span> Collections.synchronizedMap(<span class="keyword">new</span> <span class="title class_">LinkedHashMap</span>());</span><br></pre></td></tr></table></figure>
+<p>与 HashMap 的区别在于需要进行结构修改。在按<strong>访问顺序（access-ordered</strong>）链接的哈希映射中，仅调用 <em>get</em> API 时会导致结构修改。除此之外，还有诸如 <em>put</em> 和 <em>remove</em> 之类的操作。</p>
+<h2 id="和-TreeMap-比较">和 TreeMap 比较</h2>
+<p>以下是 TreeMap、HashMap 和 LinkedHashMap 之间的重要区别。</p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th style="text-align:center"><strong>关键点</strong></th>
+<th style="text-align:center">TreeMap</th>
+<th style="text-align:center">HashMap</th>
+<th style="text-align:center">LinkedHashMap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align:center">元素的顺序</td>
+<td style="text-align:center">插入到 TreeMap 中的元素根据其键的自然顺序进行排序，或者通过在 Map 创建时提供的 <code>Comparator</code> 进行排序，具体取决于使用的构造函数。</td>
+<td style="text-align:center">HashMap 不保证 Map 的顺序，也不保证顺序随时间保持不变。</td>
+<td style="text-align:center">LinkedHashMap 默认遵循元素的插入顺序，并维护插入元素的顺序。</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">内部实现</td>
+<td style="text-align:center">TreeMap 的内部实现不允许存储 null 键，但允许 null 值。</td>
+<td style="text-align:center">HashMap 允许存储一个 null 键以及多个 null 值。</td>
+<td style="text-align:center">LinkedHashmap 的内部实现与 HashMap 相似，因此允许存储一个 null 键和多个 null 值。</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center">时间复杂度</td>
+<td style="text-align:center">TreeMap 的 get、put 和 remove 操作的时间复杂度都是 O(logN)，比 HashMap 大。</td>
+<td style="text-align:center">HashMap 在 get、put 和 remove 操作的情况下具有 O(1) 的复杂性。</td>
+<td style="text-align:center">LinkedHashMap 具有与 HashMap 相同的复杂度，即 O(1)。</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align:center">继承</td>
+<td style="text-align:center">TreeMap 实现了 Collection 框架的 <code>SortedMap</code> 接口，它是 Map 的子代。TreeMap 内部实现了红黑树（一种自平衡二叉搜索树）。</td>
+<td style="text-align:center">HashMap 实现了简单的 Map 接口，并在内部使用散列来存储和检索其元素。</td>
+<td style="text-align:center">LinkedHashMap 扩展了 HashMap 并在内部像 HashMap 一样使用散列。</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align:center">索引性能</td>
+<td style="text-align:center">与 HashMap 和 LinkedHashMap 相比，TreeMap 维护其元素的顺序，因此性能指标较低，并且需要更多内存。</td>
+<td style="text-align:center">HashMap 不维护其元素的任何插入顺序，因此与 TreeMap 相比更快，也不根据其值对其元素进行排序，因此也比 LinkedHashMap 更快。</td>
+<td style="text-align:center">LinkedHashMap 比 TreeMap 快，但比 HashMap 慢。</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align:center">比较</td>
+<td style="text-align:center">TreeMap 中的元素通过使用 compareTo() 方法进行比较，其中也可以提供自定义实现。</td>
+<td style="text-align:center">HashMap 使用 Object 类的 compare() 方法进行元素比较。</td>
+<td style="text-align:center">LinkedHashMap 也使用 Object 类的 compare() 方法进行元素比较。</td>
+</tr>
+</tbody>
+</table>
+<h1>参考资料</h1>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://programming.guide/hash-tables-open-vs-closed-addressing.html#:~:text=Also%20known%20as%20open%20hashing,the%20bucket%20it's%20hashed%20to.">hash-tables-open-vs-closed-addressing</a> 开放寻址和闭合寻址比较</li>
+<li><a target="_blank" rel="noopener" href="https://programming.guide/hash-tables-open-addressing.html">hash-tables-open-addressing</a> 介绍开放式寻址</li>
+<li><a target="_blank" rel="noopener" href="https://programming.guide/hash-tables.html">hash-tables</a> hash table 实现</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/HashMap/" rel="tag"># HashMap</a>
+              <a href="/tags/LinkedHashMap/" rel="tag"># LinkedHashMap</a>
+              <a href="/tags/Red%E2%80%93black-tree/" rel="tag"># Red–black tree</a>
+              <a href="/tags/LRU/" rel="tag"># LRU</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/data-structure/Map.merge()/" rel="prev" title="Map.merge()">
+                  <i class="fa fa-chevron-left"></i> Map.merge()
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/java/Java-%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F/" rel="next" title="Java 内存泄漏">
+                  Java 内存泄漏 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"1e3c376613b5c50a551925cb681d10dd"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

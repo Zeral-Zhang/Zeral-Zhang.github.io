@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="引言 无论您是要集成多个微服务、希望提高应用程序可靠性还是构建新的流应用，您都可能需要消息队列 (MQ) 或消息代理平台。这些类型的软件将消息从生产应用程序或服务传递到消费应用程序或服务。 两个最流行的消息处理平台是 Apache Kafka 和 RabbitMQ 。在高层次上，它们具有相似的功能，尽管它们之间存在重要差异。了解这些差异可以帮助您为特定用例选择一种或另一种。 在本博客中，我们将探">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka VS RabbitMQ">
+<meta property="og:url" content="https://www.zeral.cn/middleware/Kafka-VS-RabbitMQ/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="引言 无论您是要集成多个微服务、希望提高应用程序可靠性还是构建新的流应用，您都可能需要消息队列 (MQ) 或消息代理平台。这些类型的软件将消息从生产应用程序或服务传递到消费应用程序或服务。 两个最流行的消息处理平台是 Apache Kafka 和 RabbitMQ 。在高层次上，它们具有相似的功能，尽管它们之间存在重要差异。了解这些差异可以帮助您为特定用例选择一种或另一种。 在本博客中，我们将探">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka-vs-rabbitmq.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/rabbitmq/rabbitmq-system.gif">
+<meta property="article:published_time" content="2021-10-21T06:47:25.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.362Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Kafka">
+<meta property="article:tag" content="RabbitMQ">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/middleware/kafka-vs-rabbitmq.jpg">
+
+
+<link rel="canonical" href="https://www.zeral.cn/middleware/Kafka-VS-RabbitMQ/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/middleware/Kafka-VS-RabbitMQ/","path":"middleware/Kafka-VS-RabbitMQ/","title":"Kafka VS RabbitMQ"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Kafka VS RabbitMQ | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E8%A8%80-2"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ"><span class="nav-number">2.</span> <span class="nav-text">RabbitMQ</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">架构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka"><span class="nav-number">3.</span> <span class="nav-text">Kafka</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84-2"><span class="nav-number">3.1.</span> <span class="nav-text">架构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ-vs-Kafka"><span class="nav-number">4.</span> <span class="nav-text">RabbitMQ vs Kafka</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A6%81%E6%B1%82%E5%92%8C%E7%94%A8%E4%BE%8B"><span class="nav-number">4.1.</span> <span class="nav-text">要求和用例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%8F%91%E8%80%85%E4%BD%93%E9%AA%8C"><span class="nav-number">4.2.</span> <span class="nav-text">开发者体验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD"><span class="nav-number">4.3.</span> <span class="nav-text">性能</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E6%97%B6%E7%9A%84%E8%80%83%E8%99%91"><span class="nav-number">5.</span> <span class="nav-text">选择消息队列时的考虑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Kafka-VS-RabbitMQ/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kafka VS RabbitMQ
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-10-21 14:47:25" itemprop="dateCreated datePublished" datetime="2021-10-21T14:47:25+08:00">2021-10-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><img data-src="../../images/middleware/kafka-vs-rabbitmq.jpg" alt="cover"></p>
+<h2 id="引言-2">引言</h2>
+<p>无论您是要集成多个微服务、希望提高应用程序可靠性还是构建新的流应用，您都可能需要消息队列 (MQ) 或消息代理平台。这些类型的软件将消息从生产应用程序或服务传递到消费应用程序或服务。</p>
+<p>两个最流行的消息处理平台是 <a target="_blank" rel="noopener" href="https://www.instaclustr.com/products/managed-apache-kafka/">Apache Kafka</a> 和 <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/">RabbitMQ</a> 。在高层次上，它们具有相似的功能，尽管它们之间存在重要差异。了解这些差异可以帮助您为特定用例选择一种或另一种。</p>
+<p>在本博客中，我们将探讨 Kafka 和 RabbitMQ 的工作原理、它们的一些差异以及各自的最佳用例。</p>
+<span id="more"></span>
+<h2 id="RabbitMQ">RabbitMQ</h2>
+<p><code>RabbitMQ</code> 通常被概括为“开源分布式消息代理”。用 Erlang 编写，于 2007 年首次发布。它通常被认为是传统的消息队列。</p>
+<p>开发人员通常选择 RabbitMQ 是因为它的灵活性。它有助于在<strong>复杂的路由场景</strong>中有效地传递消息。最初围绕流行的 <a target="_blank" rel="noopener" href="https://www.amqp.org/"><code>AMQP</code></a> 协议构建，还支持其它多种消息传递协议，包括 <code>MQTT</code> 和 <code>STOMP</code> 等，同时可以通过服务器上启用的插件扩展其功能。它可以通过部署在分布式环境中以扩展和提供高可用性。</p>
+<h3 id="架构">架构</h3>
+<p>RabbitMQ 架构包括生产者、交换器、队列、绑定和消费者。生产者将消息推送到交换器，然后将消息路由到绑定的队列（或其他交换）。然后消费者继续从队列中读取消息，通常达到预定的消息限制。</p>
+<p>参见 <a href="/middleware/JMS-vs-AMQP/" title="JMS vs AMQP">JMS vs AMQP</a> 的 AMQP 介绍。</p>
+<p><strong>RabbitMQ 具有很强的路由能力。</strong> 它可以通过复杂的交换机和队列系统路由消息。生产者将消息发送到根据其配置进行操作的交换机。</p>
+<p>下图是使用 <a target="_blank" rel="noopener" href="http://tryrabbitmq.com">http://tryrabbitmq.com</a> 模拟的 RabbitMQ 路由：</p>
+<p><img data-src="../../images/middleware/rabbitmq/rabbitmq-system.gif" alt="'RabbitMQ routing simulation'"></p>
+<h2 id="Kafka">Kafka</h2>
+<p><code>Apache Kafka</code> 是一个开源分布式事件流平台。最初由 LinkedIn 开发用于跟踪网站活动，如今 Kafka 通常用于构建实时数据管道和流应用。它不是专注于灵活路由，而是提高原始吞吐量。用 Scala 和 Java 编写，Kafka 建立在 “distributed append-only log” 的思想之上，其中消息被写入到持久化到磁盘的日志的末尾，并且客户端可以选择从该日志开始读取的位置。同样，Kafka 集群可以跨多台服务器分布和集群，以获得更高程度的可用性。</p>
+<h3 id="架构-2">架构</h3>
+<p>Kafka 架构包括生产者、消费者、集群、代理、主题和分区。生产者将记录发送到集群，集群存储这些记录，然后将它们传递给消费者，集群中的每个服务器节点都是一个“代理”，它存储生产者提供的数据，直到被消费者读取为止。</p>
+<p>参见 <a href="/middleware/Kafka-%E5%85%A5%E9%97%A8/" title="Kafka 入门">Kafka 入门</a> 介绍。</p>
+<h2 id="RabbitMQ-vs-Kafka">RabbitMQ vs Kafka</h2>
+<p>虽然它们不是同一个服务，但许多人经常将他们的消息队列选项缩小到这两个，想知道哪一个更好。这不是正确的问题，相反，您希望专注于每个服务的优势，分析它们的差异，然后决定这两个服务中哪一个最适合您的用例。即使在任一服务的功能之外，您还应该考虑操作服务所需的技能以及围绕它们的开发人员社区。</p>
+<p>Confluent 也有一份 Kafka 和 RabbitMQ 以及 Pulsar 的比较，里面列举了很多方面，但客观性存在争议：<a target="_blank" rel="noopener" href="https://www.confluent.io/kafka-vs-pulsar/">Kafka vs. Pulsar vs. RabbitMQ: Performance, Architecture, and Features Compared</a>。</p>
+<h3 id="要求和用例">要求和用例</h3>
+<p>在撰写最初的博文时，RabbitMQ 和 Kafka 之间在设计上存在非常明显的差异，因此，在用例上也存在差异。</p>
+<p>RabbitMQ 的消息代理设计在<strong>具有特定路由需求</strong>和<strong>单消息保证</strong>的用例中表现出色，而 Kafka 的 append-only 日志允许开发人员<strong>访问流历史记录</strong>和更<strong>直接的流处理</strong>。虽然这两种技术可以实现的用例的维恩图非常紧凑，但在某些情况下，其中一种显然比另一种更好。</p>
+<p>然而，在 RabbitMQ 新版本中，它引入一种新的数据结构：<em><a target="_blank" rel="noopener" href="https://blog.rabbitmq.com/posts/2021/07/rabbitmq-streams-overview">streams - 流</a></em>，对 append-only 日志进行建模，具有非破坏性的消费语义。这种新的数据结构将与 Kafka 的持久日志非常相似，对于希望扩展其流处理用例的 RabbitMQ 用户来说，这将是一个令人兴奋的补充。此功能将与 AMQP 协议兼容，但它还将引入基于二进制的流协议。</p>
+<h3 id="开发者体验">开发者体验</h3>
+<p>这两项服务的开发人员体验基本保持不变，由于各自社区的工作，客户端和库的列表都在继续增长。<a target="_blank" rel="noopener" href="https://www.rabbitmq.com/devtools.html">RabbitMQ</a> 和 <a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/Clients">Kafka</a> 的客户端库列表都在稳步增长。随着越来越多的语言和框架越来越流行，为这两种服务找到一个支持良好且完整的库变得更加容易。</p>
+<p>需要注意的一件事是 Kafka Streams 的增长，这是一个客户端库实现，使开发人员可以更轻松地处理流数据。它用于从 Kafka 读取数据、处理数据并将其写入另一个 Kafka 队列的常见用例。此外，对于希望构建流应用程序同时利用他们对关系数据库的熟悉的开发人员来说，ksqlDB 非常值得一试。</p>
+<p>在一些其他部分的帮助下，RabbitMQ 可以完成类似的事情，例如 <a target="_blank" rel="noopener" href="https://dataflow.spring.io/docs/">Spring Cloud Data Flow</a>。此外，请注意上一节中提到的 RabbitMQ 的流式更改，这可以为开发人员打开与 RabbitMQ 交互的新方式。</p>
+<h3 id="性能">性能</h3>
+<p>正如在最初的帖子中所指出的，性能可能很难量化，因为有这么多变量在起作用，包括服务的配置方式、您的代码与它的交互方式，当然还有它运行的硬件。从网络到内存和磁盘速度的一切都会极大地影响服务的性能。当然，RabbitMQ 和 Kafka 都针对性能进行了优化，但您还应该确保您的用例利用它们来最大限度地提高效率。</p>
+<p>对于 RabbitMQ，有一些关于最大化性能的很好的操作方法资源，例如如何对<a target="_blank" rel="noopener" href="https://www.rabbitmq.com/blog/2020/06/18/cluster-sizing-and-other-considerations/">集群</a>进行<a target="_blank" rel="noopener" href="https://www.rabbitmq.com/blog/2020/06/04/how-to-run-benchmarks/">基准测试</a>和调整<a target="_blank" rel="noopener" href="https://www.rabbitmq.com/blog/2020/06/18/cluster-sizing-and-other-considerations/">大小</a>。这些指南详细介绍了有关如何配置集群以及您的代码应如何与它们交互以获得最佳性能的最佳实践。大部分建议都围绕诸如管理队列大小和连接以及注意客户端如何使用消息等问题。该 <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/clustering.html">RabbitMQ 的集群指南</a>还包括构建集群时需要注意的事项。</p>
+<p>同样，Confluent 有一个很棒的<a target="_blank" rel="noopener" href="https://docs.confluent.io/current/kafka/deployment.html">在生产中运行 Kafka</a>指南，它涵盖了许多相同的问题，当您构建将运行 Kafka 集群的硬件时，以及如何配置集群本身。由于 Kafka 在 JVM 之上运行，因此您需要记住几件事，该指南也包含了如何调整虚拟机。</p>
+<p>如果您对原始数据感兴趣，<a target="_blank" rel="noopener" href="https://www.rabbitmq.com/blog/category/performance-2/">RabbitMQ 团队</a>和 <a target="_blank" rel="noopener" href="https://www.confluent.io/blog/kafka-fastest-messaging-system/">Confluent 团队</a>最近都发布了各自的基准。两者都包含有关如何配置集群以及放置在集群上的工作负载的大量详细信息，因此请确保在阅读结果时考虑这些信息。用例和操作也应在您的决策中发挥重要作用。</p>
+<p>由 Confluent 团队发布的基准测试来看，Kafka 在吞吐量、和性能上还是有明显的优势。但是在延迟上 RabbitMQ 更胜一筹。</p>
+<h2 id="选择消息队列时的考虑">选择消息队列时的考虑</h2>
+<p>选择消息代理时，你需要考虑以下各种因素：</p>
+<ul>
+<li>支持的编程语言：你选择的消息代理应该支持尽可能多的编程语言。</li>
+<li>支持的消息标准：消息代理是否支持多种消息标淮，比如 AMQP 和 STOMP， 还是它仅支持专用的消息标准？</li>
+<li>消息排序：消息代理是否能够保留消息的排序？</li>
+<li>投递保证：消息代理提供什么样的消息投递保证？</li>
+<li>持久性：消息是否持久化保存到磁盘并且能够在代理崩溃时恢复？</li>
+<li>耐久性：如果接收方重新连接到消息代理，它是否会收到断开连接时发送的消息？</li>
+<li>可扩展性：消息代理的可扩展性如何？</li>
+<li>延迟：端到端是否有较大延迟？</li>
+<li>竞争性（并发）接收方：消息代理是否支持竞争性接收方？</li>
+</ul>
+<p>每个消息代理都有不同的侧重点。例如，一个非常低延迟的代理可能不会保留消息的顺序，不保证消息投递成功，只在内存中存储消息。保证投递成功并在磁盘上可靠地存储消息的代理可能具有更高的延迟。哪种消息代理最适合取决于你的应用程序的需求。你的应用程序的不同部分甚至可能具有不同的消息传递需求。</p>
+<p>但是，消息顺序和可扩展性很可能是必不可少的。</p>
+<h2 id="参考">参考</h2>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Kafka/" rel="tag"># Kafka</a>
+              <a href="/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/pattern/%E7%B1%BB%E5%9E%8B%E5%AE%89%E5%85%A8%E7%9A%84%E5%BC%82%E6%9E%84%E5%AE%B9%E5%99%A8/" rel="prev" title="类型安全的异构容器">
+                  <i class="fa fa-chevron-left"></i> 类型安全的异构容器
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/methodology/%E6%AD%A3%E5%88%99%E9%80%9F%E6%9F%A5/" rel="next" title="正则速查">
+                  正则速查 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"3beffd9c4573a1010d08c9347bb35ed0"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

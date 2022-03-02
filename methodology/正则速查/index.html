@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="匹配单个字符 匹配任意字符：. . 元字符可以匹配任何单个的字符、字母、数字甚至是 . 字符本身 匹配特殊字符：\ \ 反斜杠是一个元字符( metacharacter，表示“这个字符有特殊含义，而不是字符本身含义&quot;)，反斜杠元字符可以对其它有特殊含义的元字符进行转义，来匹配该字符。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="正则速查">
+<meta property="og:url" content="https://www.zeral.cn/methodology/%E6%AD%A3%E5%88%99%E9%80%9F%E6%9F%A5/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="匹配单个字符 匹配任意字符：. . 元字符可以匹配任何单个的字符、字母、数字甚至是 . 字符本身 匹配特殊字符：\ \ 反斜杠是一个元字符( metacharacter，表示“这个字符有特殊含义，而不是字符本身含义&quot;)，反斜杠元字符可以对其它有特殊含义的元字符进行转义，来匹配该字符。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-12-11T02:05:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.218Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Regex">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://www.zeral.cn/methodology/%E6%AD%A3%E5%88%99%E9%80%9F%E6%9F%A5/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/methodology/%E6%AD%A3%E5%88%99%E9%80%9F%E6%9F%A5/","path":"methodology/正则速查/","title":"正则速查"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>正则速查 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">匹配单个字符</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E4%BB%BB%E6%84%8F%E5%AD%97%E7%AC%A6%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">匹配任意字符：.</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E7%89%B9%E6%AE%8A%E5%AD%97%E7%AC%A6%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">匹配特殊字符：\</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">匹配一组字符</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E5%A4%9A%E4%B8%AA%E5%AD%97%E7%AC%A6%E4%B8%AD%E7%9A%84%E6%9F%90%E4%B8%80%E4%B8%AA%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">匹配多个字符中的某一个：[]</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E5%AD%97%E7%AC%A6%E9%9B%86%E5%90%88%E5%8C%BA%E9%97%B4%EF%BC%9A"><span class="nav-number">2.2.</span> <span class="nav-text">利用字符集合区间：-</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%96%E9%9D%9E%E5%8C%B9%E9%85%8D%EF%BC%9A"><span class="nav-number">2.3.</span> <span class="nav-text">取非匹配：^</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">使用元字符</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E7%A9%BA%E7%99%BD%E5%AD%97%E7%AC%A6"><span class="nav-number">3.1.</span> <span class="nav-text">匹配空白字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E7%89%B9%E5%AE%9A%E7%9A%84%E5%AD%97%E7%AC%A6%E7%B1%BB%E5%88%AB"><span class="nav-number">3.2.</span> <span class="nav-text">匹配特定的字符类别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E6%95%B0%E5%AD%97-%E6%88%96%E9%9D%9E%E6%95%B0%E5%AD%97"><span class="nav-number">3.2.1.</span> <span class="nav-text">匹配数字(或非数字)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E5%AD%97%E6%AF%8D%E5%92%8C%E6%95%B0%E5%AD%97-%E4%B8%8E%E9%9D%9E%E5%AD%97%E6%AF%8D%E5%92%8C%E6%95%B0%E5%AD%97"><span class="nav-number">3.2.2.</span> <span class="nav-text">匹配字母和数字(与非字母和数字)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E7%A9%BA%E7%99%BD%E5%AD%97%E7%AC%A6-%E4%B8%8E%E9%9D%9E%E7%A9%BA%E7%99%BD%E5%AD%97%E7%AC%A6"><span class="nav-number">3.2.3.</span> <span class="nav-text">匹配空白字符(与非空白字符)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">重复匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E4%B8%80%E4%B8%AA%E6%88%96%E5%A4%9A%E4%B8%AA%E5%AD%97%E7%AC%A6%EF%BC%9A"><span class="nav-number">4.1.</span> <span class="nav-text">匹配一个或多个字符：+</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E9%9B%B6%E4%B8%AA%E6%88%96%E5%A4%9A%E4%B8%AA%E5%AD%97%E7%AC%A6%EF%BC%9A"><span class="nav-number">4.2.</span> <span class="nav-text">匹配零个或多个字符：*</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E9%9B%B6%E4%B8%AA%E6%88%96%E4%B8%80%E4%B8%AA%E5%AD%97%E7%AC%A6%EF%BC%9A"><span class="nav-number">4.3.</span> <span class="nav-text">匹配零个或一个字符：?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E7%9A%84%E9%87%8D%E5%A4%8D%E6%AC%A1%E6%95%B0%EF%BC%9A"><span class="nav-number">4.4.</span> <span class="nav-text">匹配的重复次数：{}</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%B2%E6%AD%A2%E8%BF%87%E5%A4%9A%E9%87%8D%E5%A4%8D"><span class="nav-number">4.5.</span> <span class="nav-text">防止过多重复</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">位置匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E8%AF%8D%E8%BE%B9%E7%95%8C%EF%BC%9A-b"><span class="nav-number">5.1.</span> <span class="nav-text">单词边界：\b</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%BE%B9%E7%95%8C%EF%BC%9A"><span class="nav-number">5.2.</span> <span class="nav-text">字符串边界：^ $</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E8%A1%8C%E5%8C%B9%E9%85%8D%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.3.</span> <span class="nav-text">分行匹配模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">使用子表达式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%90%E8%A1%A8%E8%BE%BE%E5%BC%8F%EF%BC%9A"><span class="nav-number">6.1.</span> <span class="nav-text">子表达式：()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%90%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%B5%8C%E5%A5%97"><span class="nav-number">6.2.</span> <span class="nav-text">子表达式嵌套</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">回溯引用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9E%E6%BA%AF%E5%BC%95%E7%94%A8%E5%8C%B9%E9%85%8D-n"><span class="nav-number">7.1.</span> <span class="nav-text">回溯引用匹配 \n</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E6%8D%95%E8%8E%B7%EF%BC%9A-name-X-k-name"><span class="nav-number">7.2.</span> <span class="nav-text">命名捕获：(?&lt;name&gt;X) \k&lt;name&gt;</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9E%E6%BA%AF%E5%BC%95%E7%94%A8%E5%9C%A8%E6%9B%BF%E6%8D%A2%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">7.3.</span> <span class="nav-text">回溯引用在替换中的应用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">8.</span> <span class="nav-text">前后查找</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%91%E5%89%8D%E6%9F%A5%E6%89%BE%EF%BC%9A-X"><span class="nav-number">8.1.</span> <span class="nav-text">向前查找：(?&#x3D;X)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%91%E5%90%8E%E6%9F%A5%E6%89%BE%EF%BC%9A-X"><span class="nav-number">8.2.</span> <span class="nav-text">向后查找：(?&lt;&#x3D;X)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E5%90%88%E5%89%8D%E5%90%8E%E6%9F%A5%E6%89%BE"><span class="nav-number">8.3.</span> <span class="nav-text">结合前后查找</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E5%89%8D%E5%90%8E%E6%9F%A5%E6%89%BE%E5%8F%96%E9%9D%9E"><span class="nav-number">8.4.</span> <span class="nav-text">对前后查找取非</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%89%8D%E5%90%8E%E6%9F%A5%E6%89%BE%E6%8B%86%E5%88%86%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">8.5.</span> <span class="nav-text">使用前后查找拆分字符串</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">9.</span> <span class="nav-text">嵌入条件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9E%E6%BA%AF%E5%BC%95%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="nav-number">9.1.</span> <span class="nav-text">回溯引用条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E5%90%8E%E6%9F%A5%E6%89%BE%E6%9D%A1%E4%BB%B6"><span class="nav-number">9.2.</span> <span class="nav-text">前后查找条件</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/methodology/%E6%AD%A3%E5%88%99%E9%80%9F%E6%9F%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          正则速查
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-12-11 10:05:00" itemprop="dateCreated datePublished" datetime="2021-12-11T10:05:00+08:00">2021-12-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Regex/" itemprop="url" rel="index"><span itemprop="name">Regex</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>匹配单个字符</h1>
+<h2 id="匹配任意字符：">匹配任意字符：<code>.</code></h2>
+<p><code>.</code> 元字符可以匹配任何单个的字符、字母、数字甚至是 <code>.</code> 字符本身</p>
+<h2 id="匹配特殊字符：">匹配特殊字符：<code>\</code></h2>
+<p><code>\</code> 反斜杠是一个元字符( metacharacter，表示“这个字符有特殊含义，而不是字符本身含义&quot;)，反斜杠元字符可以对其它有特殊含义的元字符进行转义，来匹配该字符。</p>
+<span id="more"></span>
+<h1>匹配一组字符</h1>
+<h2 id="匹配多个字符中的某一个：">匹配多个字符中的某一个：<code>[]</code></h2>
+<p>可以使用元字符 <code>[</code> 和 <code>]</code> 来定义一个字符集合。这两个元字符之间的所有字符都是该集合的组成部分，字符集合的匹配结果是能够与该集合里的任意一个成员相匹配的文本。</p>
+<h2 id="利用字符集合区间：">利用字符集合区间：<code>-</code></h2>
+<p>在使用正则表达式的时候，会频繁地用到一些字符区间( 0 ~ 9、A ~ Z 等)。为了简化字符区间的定义，正则表达式提供了一个特殊的元字符，字符区间可以用 <code>-</code> (连字符)来定义，连字符只能用在 <code>[]</code> 之间，其它地方只是普通字符，不需要转义。</p>
+<p>字符区间的首、尾字符可以是 ASCII 字符表里的任意字符。以下都是合法的字符区间：</p>
+<ul>
+<li>[0-9]，匹配从 0 到 9 的任意数字，0 (ASCII 48) and 9 (ASCII 57)，[0-9] 和 [0123456789] 等价。</li>
+<li>[A-Z]，匹配从 A 到 Z 的任意大写字母。</li>
+<li>[a-z]，匹配从 a 到 z 的任意小写字母。</li>
+<li>[A-Za-z0-9]，匹配字幕、数字中的任意一个。</li>
+</ul>
+<h2 id="取非匹配：">取非匹配：<code>^</code></h2>
+<p>除了那个字符集合里的字符，其他宇符都可以匹配。<code>^</code> 的效果将作用于给定宇符集合里的所有字符或字符区间，而不是仅限于紧跟在 <code>^</code> 字符后面的那一个字符或字符区间。例如：[ ^A-Za-z0-9 ] 表示匹配任何不是数字或字母的字符。</p>
+<h1>使用元字符</h1>
+<h2 id="匹配空白字符">匹配空白字符</h2>
+<table>
+<thead>
+<tr>
+<th>元字符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\f</td>
+<td>换页符</td>
+</tr>
+<tr>
+<td>\n</td>
+<td>换行符</td>
+</tr>
+<tr>
+<td>\r</td>
+<td>回车符</td>
+</tr>
+<tr>
+<td>\t</td>
+<td>制表符（Tab 键）</td>
+</tr>
+<tr>
+<td>\v</td>
+<td>垂直制表符</td>
+</tr>
+</tbody>
+</table>
+<p><code>\r\n</code> 是 Windows 所使用的文本行结束标签。 Unix 和 Linux 系统只使用一个换行符来结束一个文本行，换句话说，在 Unix/Linux 系统上匹配空白行只使用  <code>\n</code> 即可，不需要加上 <code>\r</code>。</p>
+<h2 id="匹配特定的字符类别">匹配特定的字符类别</h2>
+<p>前面介绍的都是匹配特定的字符、匹配单个字符。一些常用的字符集合可以用特殊元字符来代替，这些元字符匹配的是某一类别的字符(术语称之为”字符类&quot;)。</p>
+<h3 id="匹配数字-或非数字">匹配数字(或非数字)</h3>
+<table>
+<thead>
+<tr>
+<th>元字符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\d</td>
+<td>任何一个数字字符（等价于 [ 0-9 ]）</td>
+</tr>
+<tr>
+<td>\D</td>
+<td>任何一个非数字字符（等价于 [ ^0-9 ]）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="匹配字母和数字-与非字母和数字">匹配字母和数字(与非字母和数字)</h3>
+<table>
+<thead>
+<tr>
+<th>元字符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\w</td>
+<td>任何一个字母、数字字符（大小写均可）或下划线字符（等价与 [a-zA-Z0-9_] ）</td>
+</tr>
+<tr>
+<td>\W</td>
+<td>任何一个非字母数字或非下划线字符（等价与 [ ^a-zA-Z0-9_ ])</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<h3 id="匹配空白字符-与非空白字符">匹配空白字符(与非空白字符)</h3>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>元字符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\s</td>
+<td>任何一个空白字符（等价千[ \f\n\r\t\v ]）</td>
+</tr>
+<tr>
+<td>\S</td>
+<td>任何一个非空白字符（等价于[ ^\f\n\r\t\v ]）</td>
+</tr>
+</tbody>
+</table>
+<h1>重复匹配</h1>
+<h2 id="匹配一个或多个字符：">匹配一个或多个字符：<code>+</code></h2>
+<p>要想匹配同一个字符（或字符集合）的多次重复，只要简单地给这个字符（或字符集合）加上一个 <code>+</code> 字符作为后缀就行了。</p>
+<h2 id="匹配零个或多个字符：">匹配零个或多个字符：<code>*</code></h2>
+<p><code>+</code> 最少匹配一个，<code>*</code> 匹配零个或多个字符（或字符集合）。</p>
+<h2 id="匹配零个或一个字符：">匹配零个或一个字符：<code>?</code></h2>
+<p><code>?</code> 只能匹配一个字符（或字符集合）的零次或一次出现，最多不超过一次。</p>
+<h2 id="匹配的重复次数：">匹配的重复次数：<code>&#123;&#125;</code></h2>
+<p>前面的匹配无法控制匹配次数，为了解决这些问题并让程序员对重复性匹配有更多的控制，正则表达式语言提供了一个用来设定重复次数（interval）的语法。重复次数要用 <code>&#123;</code> 和 <code>&#125;</code> 字符来给出，把数值写在它们之间。</p>
+<ul>
+<li>精确的匹配次数：<code>&#123;1&#125;</code>，恰好匹配一次</li>
+<li>匹配次数范围：<code>&#123;0, 4&#125;</code>，最少零次，最多四次</li>
+<li>至少重复多少次：<code>&#123;2, &#125;</code>，至少重复两次</li>
+</ul>
+<h2 id="防止过多重复">防止过多重复</h2>
+<p>因为 <code>*</code> 和 <code>+</code> 都是所谓的&quot;贪婪型”元字符，它们在进行匹配时的行为模式是多多益善而不是适可而止的。它们会尽可能地从一段文本的开头一直匹配到这段文本的末尾，而不是从这段文本的开头匹配到碰到第一个匹配时为止。</p>
+<p>在不需要这种“贪婪行为&quot;的时候该怎么办？答案是使用这些元字符的“懒惰型”版本（&quot;懒惰”在这里的含义是匹配尽可能少的字符，与“贪婪型”元字符的行为模式刚好相反)。懒惰型元字符的写法很简单，只要给贪婪型元字符加上一个 <code>?</code> 后缀即可。</p>
+<table>
+<thead>
+<tr>
+<th>贪婪型（Greedy）元字符</th>
+<th>懒惰型（Reluctant）元字符</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>*?</td>
+</tr>
+<tr>
+<td>+</td>
+<td>+?</td>
+</tr>
+<tr>
+<td>{n, }</td>
+<td>{n, }?</td>
+</tr>
+</tbody>
+</table>
+<h1>位置匹配</h1>
+<p>位置匹配用来解决在什么地方进行字符串匹配操作的问题。使用边界限定符，也就是在正则表达式里用一些特殊的元字符来表明我们想让匹配操作在什么位置（或边界）发生。<strong>边界限定符匹配的是某个位置，而不是具体的内容。</strong></p>
+<h2 id="单词边界：-b">单词边界：<code>\b</code></h2>
+<p>第一种边界（也是最常用的边界）是由限定符 <code>\b</code> 指定的单词边界。顾名思义，<code>\b</code> 用来匹配一个单词的开始或结尾。b 代表单词 boundary（边界）。</p>
+<p>它匹配的是一个这样的位置，这个位置位于一个能够用来构成单词的字符（字母、数字和下划线，也就是与 \w 相匹配的字符）和一个不能用未构成单词的字符（也就是与 \W 相匹配的宇符）之间或者构成单词的 \w 的开始和结束位置，相当于如下正则的竖点线处：(^<span style="border-right: 2px dotted #dc00ff; padding-left: 2px; margin-right: 2px;"> </span>\w|\w<span style="border-right: 2px dotted #dc00ff; padding-left: 2px; margin-right: 2px;"> </span>$|\W<span style="border-right: 2px dotted #dc00ff; padding-left: 2px; margin-right: 2px;"> </span>\w|\w<span style="border-right: 2px dotted #dc00ff; padding-left: 2px; margin-right: 2px;"> </span>\W)。</p>
+<p>如果想匹配单词本身，只需在单词前后加上 <code>\b</code> 即可，例如：<code>\bcap\b</code>，将匹配下面前后都是空白的字符：</p>
+<pre>
+  The captain wore his <b style="background: #f0f0f0;">cap</b> and cape proudly as he sat listening to the recap of how his crew saved the men from a capsized vessel.
+</pre>
+<p>如果想不匹配一个单词边界，可以使用 <code>\B</code>，即字母数字下划线之间，或非字母数字下划线之间。例如，我们可以使用 \B-\B 来查找其下面句子前后都有多余空格的连字符：</p>
+<pre>
+  Please enter the nine-digit id as it appears on your color  <b style="background: #f0f0f0;">-</b>  coded pass-key.
+</pre>
+<h2 id="字符串边界：">字符串边界：<code>^</code> <code>$</code></h2>
+<p>单词边界可以用来进行与单词有关的位置匹配（单词的开头、单词的结束、整个单词等）。字符串边界有着类似的用途，只不过是用来进行与字符串有关的位置匹配而已（字符串的开头、字符串的结束、整个字符串等）。用来定义字符串边界的元字符有两个：一个是用来定义字符串开头的 <code>^</code> ，另一个是用来定义字符串结尾的 <code>$</code>。</p>
+<h2 id="分行匹配模式">分行匹配模式</h2>
+<p>有许多正则表达式都支待使用一些特殊的元字符去改变另外一些元字符行为的做法，用来启用分行匹配模式（multiline mode）的 (?m) 记号就是一个能够改变其他元字符行为的元字符序列。分行匹配模式将使得正则表达式引擎把行分隔符当作一个字符串分隔符来对待。</p>
+<p>Java 下使用 <code>Pattern.MULTILINE</code> 来启用，或者嵌入 (?m) 到正则最前面，例如匹配行注释：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Pattern.compile(<span class="string">&quot;(?m)^\\s*//.*$&quot;</span>);</span><br><span class="line"><span class="comment">// or</span></span><br><span class="line">Pattern.compile(<span class="string">&quot;^\\s*//.*$&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>JavaScript 下可以通过字面量的形式定义在后面的 flag 中，或者使用对象的形式，例如同样匹配行注释：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/^\s*\/\/.*$/m</span><br><span class="line"><span class="comment">// or</span></span><br><span class="line"><span class="keyword">new</span> <span class="title class_">RegExp</span>(<span class="string">&quot;^\s*\/\/.*$&quot;</span>, <span class="string">&quot;m&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>在分行匹配模式下，<code>^</code> 不仅匹配正常的字符串开头，还将匹配行分隔符（换行符）后面的开始位置（这个位置是不可见的）; 类似地，<code>$</code> 不仅匹配正常的字符串结尾，还将匹配行分隔符（换行符）后面的结束位置。</p>
+<h1>使用子表达式</h1>
+<h2 id="子表达式：">子表达式：<code>()</code></h2>
+<p>子表达式是一个更大的表达式的一部分；把一个表达式划分为一系列子表达式的目的是为了把那些子表达式当作一个独立元素来使用。子表达式必须用 <code>(</code> 和 <code>)</code> 括起来。</p>
+<p>子表达式可以被当作整体和前面描述的重复匹配的元字符组合等。</p>
+<h2 id="子表达式嵌套">子表达式嵌套</h2>
+<p>子表达式允许嵌套。事实上，子表达式允许多重嵌套，这种嵌套的层次在理论上没有限制，但在实际工作中还是应该遵循适可而止的原则。</p>
+<p>例如：<code>((A)(B(C)))</code>，A、B、C 都是独立的正则表达式。</p>
+<h1>回溯引用</h1>
+<h2 id="回溯引用匹配-n">回溯引用匹配 <code>\n</code></h2>
+<p>假设你有一段文本，你想把这段文本里所有连续重复出现的单词（打字错误，其中有一个单词输了两遍）找出来。显然，在搜索某个单词的第二次出现时，这个单词必须是已知的。回溯引用（backreference）允许正则表达式模式引用前面的匹配结果（具体到这个例子，就是前面匹配到的单词）。</p>
+<p>下面是一段包含着 3 组重复单词的文本，它们就是我们要找的东西：</p>
+<p><strong>文本</strong></p>
+<pre>
+  This is a block of of text, several words here are are repeated, and and they should not be.
+</pre>
+<p><strong>正则</strong></p>
+<p><code>[ ]+(\w+)[ ]+\1</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  This is a block <b style="background: #f0f0f0;">of of</b> text, several words here <b style="background: #f0f0f0;">are are</b> repeated, <b style="background: #f0f0f0;">and and</b> they should not be.
+</pre>
+<p><strong>分析</strong></p>
+<p>这个模式的最后一部分是 \1；这是一个回溯引用，而它引用的正是前面划分出来的那个子表达式：当 (\w+) 匹配到单词 of 的时候，\1 也匹配单词 of；当 (\w+) 匹配到单词 and 的时候，\1 也匹配单词 and。</p>
+<p>\1 到底代表着什么？它代表着模式里的第1 个子表达式，\2 代表着第 2 个子表达式、\3 代表着第 3 个；依次类推。可以把回溯引用想象成变量 。</p>
+<blockquote>
+<p>Java 中需要对回溯引用的反斜杠转义，变为：<code>[ ]+(\w+)[ ]+\\1</code></p>
+</blockquote>
+<h2 id="命名捕获：-name-X-k-name">命名捕获：<code>(?&lt;name&gt;X)</code> <code>\k&lt;name&gt;</code></h2>
+<p>正如看到的那样，子表达式是通过它们的相对位置未引用的：\1 对应着笫 1 个子表达式，\5 对应着笫 5 个子表达式，等等。虽然受到普遍的支持，但这种语法存在着一个严重的不足：如果子表达式的相对位置发生了变化，整个模式也许就不能再完成原来的工作，删除或添加子表达式的后果可能更为严重。</p>
+<p>为了弥补这一不足，一些比较新的正则表达式实现还支持“命名捕获&quot;（named capture）: 给某个子表达式起一个唯一的名字，然后用这个名字（而不是相对位置）来引用这个子表达式。</p>
+<p>在 Java、JavaScript 中，可以使用语法 <code>(?&lt;name&gt;X)</code> 为捕获组分配显式名称。其中 X 是通常的正则表达式。</p>
+<p>Java 中可以通过 <code>Matcher#group(String name)</code> 来访问命名捕获组匹配的内容，JavaScript 中通过 <code>match.groups.name</code> 直接访问。</p>
+<p>例如找到下面的以 , 结尾的单词：</p>
+<p><strong>文本</strong></p>
+<pre>
+  This is a block of of text, several words here are are repeated, and and they should not be.
+</pre>
+<p><strong>正则</strong></p>
+<p><code>[ ]+(?&lt;stopWord&gt;\\w+,)[ ]+</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  This is a block of of <b style="background: #f0f0f0;">text,</b> several words here are are <b style="background: #f0f0f0;">repeated,</b> and and they should not be.
+</pre>
+<p>如果要回溯引用命名捕获分组，可以使用 <code>\k&lt;name&gt;</code>。</p>
+<blockquote>
+<p>Java 中同样需要对这个反斜杠转义，变为：<code>\\k&lt;name&gt;</code></p>
+</blockquote>
+<p>之前通过位置引用的使用命名分组可以修改为：<code>[ ]+(?&lt;repeatWord&gt;\\w+)[ ]+\\k&lt;repeatWord&gt;</code></p>
+<h2 id="回溯引用在替换中的应用">回溯引用在替换中的应用</h2>
+<p>正则不仅可以用来搜索匹配，也可以用在复杂的替换操作中，尤其是需要使用回溯引用的场合。</p>
+<p>例如你需要把原始文本里的电子邮件地址全都转换为 HTML 中可点击的链接：</p>
+<p><strong>文本</strong></p>
+<pre>
+  Hello, ben@forta.com is my email address.
+</pre>
+<p><strong>正则</strong></p>
+<p><code>(\w+[\w\.]*@[\w\.]+\.\w+)</code></p>
+<p><strong>替换</strong></p>
+<p><code>&lt;a href=&quot;mailto:$1'&gt;$1&lt;/a&gt;</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  Hello, &lt;a href="mailto:ben@forta.com"&gt;ben@forta.com&lt;/a&gt; is my email address.
+</pre>
+<p>替换操作需要用到两个正则表达式：一个用来给出搜索模式，另一个用来给出匹配文本的替换模式。回溯引用可以跨模式使用，在第一个模式里被匹配的子表达式可以用在第二个模式里，回溯引用可以被引用任意多次。</p>
+<p>我们再来看一个例子。在一个用来保存用户信息的数据库里，电话号码被保存为 313-555-1234。现在，你需要把电话号码重新排版为 (313) 555-1234。下面就是这个例子：</p>
+<p><strong>文本</strong></p>
+<pre>
+313-555-1234 
+248-555-9999 
+810-555-9000
+</pre>
+<p><strong>正则</strong></p>
+<p><code>(\d&#123;3&#125;)(-)(\d&#123;3&#125;)(-)(\d&#123;4&#125;)</code></p>
+<p><strong>替换</strong></p>
+<p><code>($1) $3-$5</code></p>
+<p><strong>结果</strong></p>
+<pre>
+(313) 555-1234
+(248) 555-9999 
+(810) 555-9000  
+</pre>
+<p>正则将内容被划分为 5 个子表达式（5 个组成部分），这 5 个部分都可以单独拿出来使用，我们只使用了其中的 3 个。</p>
+<h1>前后查找</h1>
+<p>到目前为止，我们见过的正则表达式都是用来匹配文本的，但有时我们还需要用正则表达式<strong>标记要匹配的文本的位置</strong>（而不仅仅是文本本身）。这就引出了前后查找（lookaround，对某一位置的前、后内容进行查找）的概念,</p>
+<h2 id="向前查找：-X">向前查找：<code>(?=X)</code></h2>
+<p>向前查找（lookahead）指定了一个必须匹配但不在结果中返回的模式。向前查找实际就是一个子表达式，而且从格式上看也确实如此。从语法上看，一个向前查找模式其实就是一个以 <code>?=</code> 开头的子表达式，需要匹配的文本跟在 = 的后面。</p>
+<p>例如，我们想把一些 URL 地址的协议提取出来：</p>
+<p><strong>文本</strong></p>
+<pre>
+http://www.forta.com/ 
+https://mail.forta.com/ 
+ftp://ftp.forta.com/
+</pre>
+<p><strong>正则</strong></p>
+<p><code>.+(?=:)</code></p>
+<p><strong>结果</strong></p>
+<pre>
+<b style="background: #f0f0f0;">http</b>://www.forta.com/ 
+<b style="background: #f0f0f0;">https</b>://mail.forta.com/ 
+<b style="background: #f0f0f0;">ftp</b>://ftp.forta.com/
+</pre>
+<p><strong>分析</strong></p>
+<p>模式 <code>.+</code> 匹配任意文本（第 1 个匹配是 http），子表达式 <code>(?=:)</code>  匹配 :。注意，被匹配到的 : 并没有出现在最终的匹配结果里；我们用 <code>?=</code> 向正则表达式引擎表明：从  :  位置处先前查找，但不要把它包括在最终的匹配结果里。</p>
+<blockquote>
+<p>向前查找（和向后查找）匹配本身其实是有返回结果的，只是这个结果的字节长度永远是 0 而已。因此，前后查找操作有时也被称为零宽度（zero - width）匹配操作。</p>
+</blockquote>
+<h2 id="向后查找：-X">向后查找：<code>(?&lt;=X)</code></h2>
+<p>除了向前查找，许多正则表达式实现还支持向后查找，也就是从标记位置向后查找，向后查找操作符是 <code>?&lt;=</code>。</p>
+<blockquote>
+<p>向后查找的 &lt; 可以看作左闭合处需满足条件，然后向右边开放处匹配</p>
+</blockquote>
+<p>例如我们想把一份产品目录里面的产品价格提取出来：</p>
+<p><strong>文本</strong></p>
+<pre>
+  ABC01: $23.45 
+  HGG42: $5.31 
+  CFMX1: $899.00 
+  XTC99: $69.96 
+  Total items found: 4
+</pre>
+<p><strong>正则</strong></p>
+<p><code>&#123;?&lt;=\$)[0-9.]+</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  ABC01: $<b style="background: #f0f0f0;">23.45</b>
+  HGG42: $<b style="background: #f0f0f0;">5.31</b>
+  CFMX1: $<b style="background: #f0f0f0;">899.00</b>
+  XTC99: $<b style="background: #f0f0f0;">69.96</b>
+  Total items found: 4  
+</pre>
+<p><code>(?&lt;=\$)</code> 只匹配 $，但不消费它：最终的匹配结果里只有价格数字（没有前缀的 $ 字符）。</p>
+<blockquote>
+<p>向前查找 X 模式的长度是可变的，可以包含 . 或 + 之类的元字符。</p>
+<p>向后查找模式只能是固定长度，所有正则实现都遵守该限制。</p>
+</blockquote>
+<h2 id="结合前后查找">结合前后查找</h2>
+<p>向前查找和向后查找可以组合在一起使用。</p>
+<p>例如我们想获取 title 标签内的内容：</p>
+<p><strong>文本</strong></p>
+<pre>
+  &lt;HEAD&gt;
+  	&lt;TITLE&gt;Ben Forta's Homepage&lt;/TITLE&gt;
+  &lt;/HEAD&gt;
+</pre>
+<p><strong>正则</strong></p>
+<p><code>(?&lt;=\&lt;[tT][iI][tT][lL][eE]&gt;).*(?=\&lt;\/[tT][iI][tT][lL][eE]&gt;)</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  &lt;HEAD&gt;
+  	&lt;TITLE&gt;<b style="background: #f0f0f0;">Ben Forta's Homepage</b>&lt;/TITLE&gt;
+  &lt;/HEAD&gt;
+</pre>
+<h2 id="对前后查找取非">对前后查找取非</h2>
+<p>向前查找和向后查找通常用来匹配文本，其目的是为了确定将被返回为匹配结果的文本的位置（通过指定匹配结果的前后必须是哪些文本）。 这种用法被称为正向前查找（positive lookahead）和正向后查找（positive lookbehind） 。术语“正”指的是寻找匹配的事实。</p>
+<p>前后查找还有一种不太常见的用法叫作负前后查找（negative lookaround）。负向前查找（negative lookahead）将向前查找不与给定模式相匹配的文本，负向后查找（negative lookbehind）将向后查找不与给定模式相匹配的文本。</p>
+<p>前后查找必须用 ! 来取非（它将替换掉 = ）。下表列出了所有的前后查找操作符。</p>
+<table>
+<thead>
+<tr>
+<th>操作符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(?=)</code></td>
+<td>正向前查找</td>
+</tr>
+<tr>
+<td><code>(?!)</code></td>
+<td>负向前查找</td>
+</tr>
+<tr>
+<td><code>(?&lt;=)</code></td>
+<td>正向后查找</td>
+</tr>
+<tr>
+<td><code>(?&lt;!)</code></td>
+<td>负向后查找</td>
+</tr>
+</tbody>
+</table>
+<p>为了掩饰正向后查找和负向后查找的区别，我们来看一个例子，下面是一段既包含价格又包含数量的文本，我们先来查找且只查找价格：</p>
+<p><strong>文本</strong></p>
+<pre>
+  I paid $30 for 100 apples, 
+  50 oranges, and 60 pears. 
+  I saved $5 on this order.
+</pre>
+<p><strong>正则</strong></p>
+<p><code>(?&lt;=\$)\d+</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  I paid $<b style="background: #f0f0f0;">30</b> for 100 apples, 
+  50 oranges, and 60 pears. 
+  I saved $<b style="background: #f0f0f0;">5</b> on this order.
+</pre>
+<p>接下来，我们再去查找且只查找数量：</p>
+<p><strong>正则</strong></p>
+<p><code>\b(?&lt;!\$)\d+\b</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  I paid $30 for <b style="background: #f0f0f0;">100</b> apples, 
+  <b style="background: #f0f0f0;">50</b> oranges, and <b style="background: #f0f0f0;">60</b> pears. 
+  I saved $5 on this order.
+</pre>
+<p><strong>分析</strong></p>
+<p><code>\d+</code> 还是匹配数值，但这次只匹配数量，不匹配价格。表达式 <code>(?&lt;!\$)</code> 是一个负向后查找，它使得最终的匹配结果只包含那些不以 $ 开头的数值。把操作符 <code>?&lt;=</code> 改为操作符 <code>?&lt;!</code> 使得整个模式从一个正向后查找变成了一个负向后查找 。</p>
+<h2 id="使用前后查找拆分字符串">使用前后查找拆分字符串</h2>
+<p>正则有时也被用做字符串的拆分中，通过匹配分隔符的正则，将字符串一分为二拆分为自子串。但有时候我们想保留匹配的分隔符，则可以利用前后查找的零宽度只标记位置的特性来拆分字符串。</p>
+<p>例如我们想把一段表达式根据逻辑运算符拆分开来，并保留逻辑运算符：</p>
+<p><strong>文本</strong></p>
+<pre>
+  age > 18 and gender == male or age < 18 && gender == female
+</pre>
+<p><strong>正则</strong></p>
+<p><code>(?&lt;=\s(and|or|&amp;&amp;|\|\|)\s)｜(?=\s(and|or|&amp;&amp;|\|\|)\s)</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  age > 18
+   and 
+  gender == male
+   or 
+  age < 18
+   && 
+  gender == female
+</pre>
+<h1>嵌入条件</h1>
+<p>正则表达式语言还有一种威力强大（但不经常被用到）的功能在表达式的内部嵌入条件处理功能。</p>
+<blockquote>
+<p>Java 的 Pattern 不支持该带条件的表达式</p>
+</blockquote>
+<p>嵌入条件语法也使用了 <code>?</code> ，这并没有什么让人感到吃惊的地方，因为嵌入条件不外乎以下两种情况。</p>
+<ul>
+<li>根据一个回溯引用来进行条件处理。</li>
+<li>根据一个前后查找来进行条件处理。</li>
+</ul>
+<h2 id="回溯引用条件">回溯引用条件</h2>
+<p>回溯引用条件只在一个前面的子表达式搜索取得成功的情况下才允许使用一个表达式。</p>
+<p>用来定义这种条件的语法是 <code>(?(backreference)true-regex)</code> ，其中 <code>?</code> 表明这是一个条件，括号里的 backreference 是一个回溯引用，true-regex 是一个只在 backreference 存在时才会被执行的子表达式。</p>
+<p>听起来很费解，我们还是用一个例子来说明好了：你需要把一段文本里的 <code>&lt;IMG&gt;</code> 标签全都找出来；不仅如此，如果某个 <code>&lt;IMG&gt;</code> 标签是一个链接（被括在 <code>&lt;A&gt;</code> 和 <code>&lt;/A&gt;</code>  标签之间）的话，你还要把整个链接标签匹配出来。</p>
+<p><strong>文本</strong></p>
+<pre>
+&lt;!-- Nav bar --&gt;
+&lt;TD&gt;
+&lt;A HREF="/home"&gt;&lt;IMG SRC="/images/home.gif"&gt;&lt;/A&gt;
+&lt;IMG SRC="/images/spacer.gif">
+&lt;A HREF="/search"&gt;&lt;IMG SRC="/images/search.gif"&gt;&lt;/A&gt;
+&lt;IMG SRC="/images/spacer.gif">
+&lt;A HREF="/help"&gt;&lt;IMG SRC="/images/help.gif"&gt;&lt;/A&gt;
+&lt;/TD&gt;
+</pre>
+<p><strong>正则</strong></p>
+<p><code>(&lt;[Aa]\s+[^&gt;]+&gt;\s*)?&lt;[Ii][Mm][Gg]\s+[^&gt;]+&gt;(?(1)\s*&lt;/[Aa]&gt;)</code></p>
+<p><strong>结果</strong></p>
+<pre>
+&lt;!-- Nav bar --&gt;
+&lt;TD&gt;
+<b style="background: #f0f0f0;">&lt;A HREF="/home"&gt;&lt;IMG SRC="/images/home.gif"&gt;&lt;/A&gt;</b>
+<b style="background: #f0f0f0;">&lt;IMG SRC="/images/spacer.gif"></b>
+<b style="background: #f0f0f0;">&lt;A HREF="/search"&gt;&lt;IMG SRC="/images/search.gif"&gt;&lt;/A&gt;</b>
+<b style="background: #f0f0f0;">&lt;IMG SRC="/images/spacer.gif"></b>
+<b style="background: #f0f0f0;">&lt;A HREF="/help"&gt;&lt;IMG SRC="/images/help.gif"&gt;&lt;/A&gt;</b>
+&lt;/TD&gt;
+</pre>
+<p><strong>分析</strong></p>
+<p><code>(?(1)\s*&lt;/[Aa]&gt;)</code> 是一个回溯引用条件，?(1) 的含义是：如果第一个回溯引用（具体到本例，就是 <code>&lt;A&gt;</code> 标签）存在，则使用 <code>\s*&lt;/[Aa]&gt;</code> 继续进行匹配（换句话说，只有当前面的 <code>&lt;A&gt;</code> 标签匹配成功，才继续进行后面的匹配）。如果 (1) 存在，<code>\s*&lt;/[Aa]&gt;</code> 将匹配结束标签 <code>&lt;/A&gt;</code> 之后出现的任意空白字符。</p>
+<p>条件还可以有否则表达式，否则表达式只在给定的回溯引用不存在（也就是条件没有得到满足）时才会被执行。用来定义这种条件的语法是 <code>(?(backre­ference)true-regex|false-regex)</code> 这个语法接受一个条件和两个将分别在这个条件得到满足和没有得到满足时执行的子表达式。</p>
+<h2 id="前后查找条件">前后查找条件</h2>
+<p>前后查找条件只在一个向前查找或向后查找操作取得成功的情况下才允许一个表达式被使用。定义一个前后查找条件的语法与定义一个回溯引用条件的语法大同小异，只需把回溯引用（括号里的回溯引用编号）替换为一个完整的前后查找表达式就行了。</p>
+<p>作为一个例子，请你思考一下怎样匹配美国的邮政编码（简称 ZIP 编码）。美国邮政编码有两种格式，一种是 12345 形式的 ZIP 格式，另一种是 12345-6789 形式的 ZIP+4 格式。只有 ZIP+4 格式才必须使用连字符来分隔前 5 位和后 4 位数字。</p>
+<p><strong>文本</strong></p>
+<pre>
+  11111 
+  22222 
+  33333-
+  44444-4444
+</pre>
+<p><strong>正则</strong></p>
+<p><code>\d&#123;5&#125;(?(?=-)-\d&#123;4&#125;)</code></p>
+<p><strong>结果</strong></p>
+<pre>
+  <b style="background: #f0f0f0;">11111</b>
+  <b style="background: #f0f0f0;">22222</b>
+  33333- 
+  <b style="background: #f0f0f0;">44444-4444</b>
+</pre>
+<p><strong>分析</strong></p>
+<p>\d{5} 匹配前 5 位数字。接下来是一个 <code>(?(?=-)-\d&#123;4&#125;)</code> 形式的向前查找条件。这个条件使用了 <code>?=-</code> 来匹配（但不消费）一个连字符，如果条件得到满足（那个连字符存在），<code>-\d&#123;4&#125;</code> 将匹配那个连字符和随后的 4 位数。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Regex/" rel="tag"># Regex</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/middleware/Kafka-VS-RabbitMQ/" rel="prev" title="Kafka VS RabbitMQ">
+                  <i class="fa fa-chevron-left"></i> Kafka VS RabbitMQ
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/middleware/Nacos-%E5%85%A5%E9%97%A8/" rel="next" title="Nacos 入门">
+                  Nacos 入门 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"d2a35274a14c9666feecb19102e6e0d3"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

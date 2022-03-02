@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="概述 MyBatis 是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。MyBatis 免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects）为数据库中的记录。 MyBatis 作为一款持久层框架，它趋向于以数据库为中心，因此主要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mybatis 快速入门">
+<meta property="og:url" content="https://www.zeral.cn/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="概述 MyBatis 是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。MyBatis 免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects）为数据库中的记录。 MyBatis 作为一款持久层框架，它趋向于以数据库为中心，因此主要">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/jpa/mybatis/640.png">
+<meta property="og:image" content="https://www.zeral.cn/images/jpa/mybatis/mybatis-mapper-proxy.svg">
+<meta property="article:published_time" content="2020-09-23T16:02:58.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.364Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Mybatis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/jpa/mybatis/640.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/","path":"persistence/Mybatis-快速入门/","title":"Mybatis 快速入门"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Mybatis 快速入门 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">对比 ORM 框架</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">XML or Annotation</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">动态 SQL</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E6%97%B6%E5%8A%A8%E6%80%81-SQL-%E5%AE%9A%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text">编译时动态 SQL 定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8A%A8%E6%80%81-SQL-%E5%AE%9A%E4%B9%89"><span class="nav-number">4.2.</span> <span class="nav-text">运行时动态 SQL 定义</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">对象关系映射</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%AF%B9%E4%B8%80"><span class="nav-number">5.1.</span> <span class="nav-text">一对一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%AF%B9%E5%A4%9A"><span class="nav-number">5.2.</span> <span class="nav-text">一对多</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">使用注意</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">核心处理流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA-SqlSessionFactory"><span class="nav-number">7.1.</span> <span class="nav-text">构建 SqlSessionFactory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E-SqlSessionFactory-%E4%B8%AD%E8%8E%B7%E5%8F%96-SqlSession"><span class="nav-number">7.2.</span> <span class="nav-text">从 SqlSessionFactory 中获取 SqlSession</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-Mapper-%E5%AE%9A%E4%B9%89%E8%AF%AD%E5%8F%A5%E5%92%8C%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84"><span class="nav-number">7.3.</span> <span class="nav-text">使用 Mapper 定义语句和结果映射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E8%AF%AD%E5%8F%A5%E5%92%8C%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84"><span class="nav-number">7.4.</span> <span class="nav-text">执行语句和结果映射</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">8.</span> <span class="nav-text">Spring Mybatis Mapper 注册机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ImportBeanDefinitionRegistrar"><span class="nav-number">8.1.</span> <span class="nav-text">ImportBeanDefinitionRegistrar</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BeanDefinitionRegistryPostProcessor"><span class="nav-number">8.2.</span> <span class="nav-text">BeanDefinitionRegistryPostProcessor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ClassPathBeanDefinitionScanner"><span class="nav-number">8.3.</span> <span class="nav-text">ClassPathBeanDefinitionScanner</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/Mybatis-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mybatis 快速入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-09-24 00:02:58" itemprop="dateCreated datePublished" datetime="2020-09-24T00:02:58+08:00">2020-09-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Persistence/" itemprop="url" rel="index"><span itemprop="name">Persistence</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>概述</h1>
+<p><code>MyBatis</code> 是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。MyBatis 免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects）为数据库中的记录。</p>
+<p><code>MyBatis</code> 作为一款持久层框架，它趋向于以数据库为中心，因此主要的关注点会落在 SQL 定义、结果映射上，相对来说比较轻量，也更容易入手，对于 SQL 优化也比较容易，但也正是由于偏重 SQL，将会和使用的数据库强关联。</p>
+<h1>对比 ORM 框架</h1>
+<p>同时使用面向对象的软件和关系数据库既麻烦又费时。由于对象和关系数据库中的数据表示方式之间存在<strong>范式不匹配</strong>，因此开发成本要高得多。</p>
+<p>相比 <code>ORM</code> 框架，<code>ORM</code> 框架更多的将关注点放在面向对象的域模型和业务逻辑层，<code>ORM</code> 框架一般会遵循 <code>JPA</code> 标准，比如最常见的实现 <code>Hibernate</code>。</p>
+<p><code>ORM</code> 框架的主要目的之一是降低与特定数据库的耦合性，它抽象了数据库系统，因此在不同数据库切换、移植时会更加容易，抽象的代价是与之而来的复杂性的增加，但也提供了更多丰富的功能特性：数据变更追踪、审计、一/二级缓存、并发版本控制、数据懒加载、级联操作，以及丰富的查询方式：<code>SQL</code>、<code>HQL</code>、<code>JPQL</code>、<code>Criteria API</code>、<code>Query DSL</code> 等；</p>
+<span id="more"></span>
+<h1>XML or Annotation</h1>
+<p>在使用 MyBatis 开发应用时，最大一部分工作是在和 <a target="_blank" rel="noopener" href="https://mybatis.org/mybatis-3/zh/sqlmap-xml.html"><code>Mapper（映射器）</code></a>打交道，Mapper 中主要又分为两部分：</p>
+<ul>
+<li>sql 语句定义（select、insert、update、delete、sql）</li>
+<li>结果集映射 resultMap</li>
+</ul>
+<p>而这两部分既可以通过 XML 也可以通过注解来定义，同样是为代码运行提供元数据，使用哪种更好呢？</p>
+<p>每种方法都有其优点和缺点，通常，由开发人员决定哪种策略更适合他们。由于它们的定义方式，注解在其声明时提供了大量上下文，从而导致更短更简洁的配置。但是，XML 擅长在不触及源代码或重新编译它们的情况下连接组件。一些开发人员更喜欢将配置靠近源，而另一些开发人员则认为注解类不再是 POJO，而且配置变得分散且难以控制。</p>
+<p><strong>MyBatis 的 XML 提供了全量的功能，注解受限于灵活性不能覆盖所有方面，比如嵌套结果映射等，但是能基本的满足开发使用。</strong></p>
+<blockquote>
+<p>个人建议：优先考虑使用 XML。</p>
+</blockquote>
+<h1>动态 SQL</h1>
+<p>动态 SQL 定义又分为<strong>编译时定义</strong>和<strong>运行时定义</strong>。</p>
+<h2 id="编译时动态-SQL-定义">编译时动态 SQL 定义</h2>
+<p><strong>编译时定义</strong>通常是使用 XML 或注解提供元数据的方式提前定义好，对于 XML 通常提供以下标签：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://mybatis.org/mybatis-3/zh/dynamic-sql.html#if"><code>if</code></a>  -  条件拼接</li>
+<li><a target="_blank" rel="noopener" href="https://mybatis.org/mybatis-3/zh/dynamic-sql.html#chooseWhenOtherwise"><code>choose (when, otherwise)</code></a>  -  多条件选择，类似 switch</li>
+<li><a target="_blank" rel="noopener" href="https://mybatis.org/mybatis-3/zh/dynamic-sql.html#trimWhereSet"><code>trim (where, set)</code></a>  -  动态 where 条件适配</li>
+<li><code>foreach</code> - 集合遍历</li>
+</ul>
+<p>要在注解中使用动态元素，可以通过 <code>script</code> 标签来完成：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Update(&#123;&quot;&lt;script&gt;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;update Author&quot;,</span></span><br><span class="line"><span class="meta">  &quot;  &lt;set&gt;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;    &lt;if test=&#x27;username != null&#x27;&gt;username=#&#123;username&#125;,&lt;/if&gt;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;    &lt;if test=&#x27;password != null&#x27;&gt;password=#&#123;password&#125;,&lt;/if&gt;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;    &lt;if test=&#x27;email != null&#x27;&gt;email=#&#123;email&#125;,&lt;/if&gt;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;    &lt;if test=&#x27;bio != null&#x27;&gt;bio=#&#123;bio&#125;&lt;/if&gt;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;  &lt;/set&gt;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;where id=#&#123;id&#125;&quot;,</span></span><br><span class="line"><span class="meta">  &quot;&lt;/script&gt;&quot;&#125;)</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">updateAuthorValues</span><span class="params">(Author author)</span>;</span><br></pre></td></tr></table></figure>
+<h2 id="运行时动态-SQL-定义">运行时动态 SQL 定义</h2>
+<p>虽然通过 XML 直接注入 SQL 片段参数也能实现运行时动态定义 SQL，但 MyBatis 提供了更加安全且灵活的定义方式：<a target="_blank" rel="noopener" href="https://mybatis.org/mybatis-dynamic-sql/docs/introduction.html">MyBatis Dynamic SQL</a>。</p>
+<p>该库通过实现类似于 SQL 的 DSL(domain-specific language) - 领域特定语言来工作，该 DSL 创建一个包含完整 SQL 语句和该语句所需的任何参数的对象。MyBatis 可以将 SQL 语句对象直接用作映射器方法的参数。</p>
+<p>该库内置了很多易用的<a target="_blank" rel="noopener" href="https://mybatis.org/mybatis-dynamic-sql/docs/conditions.html">条件方法</a>，结合 Java8 的 <code>Predicate</code>、<code>Supplier</code> 等函数，可以实现复杂的条件拼接。</p>
+<p><strong>作为一个 SQL 构建器，它并没有实现所有 SQL 的语法，比如查询的 WITH、HAVING、部分子查询写法等。</strong></p>
+<h1>对象关系映射</h1>
+<p>对于普通的查询都能通过映射 POJO 对象或 Map 或基础类型来完成，对于存在对象关系的映射：</p>
+<h2 id="一对一">一对一</h2>
+<p>在 XML 中可通过 <code>association</code> 标签加载关联，在注解中使用 <code>result</code> 的 <code>one</code> 属性，加载方式分为两种：</p>
+<ul>
+<li>
+<p>嵌套 Select 查询：通过执行另外一个 SQL 映射语句来加载期望的复杂类型。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resultMap</span> <span class="attr">id</span>=<span class="string">&quot;blogResult&quot;</span> <span class="attr">type</span>=<span class="string">&quot;Blog&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;title&quot;</span> <span class="attr">column</span>=<span class="string">&quot;blog_title&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">association</span> <span class="attr">property</span>=<span class="string">&quot;author&quot;</span> <span class="attr">column</span>=<span class="string">&quot;author_id&quot;</span> <span class="attr">javaType</span>=<span class="string">&quot;Author&quot;</span> <span class="attr">select</span>=<span class="string">&quot;selectAuthor&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resultMap</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 查询博客 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectBlog&quot;</span> <span class="attr">resultMap</span>=<span class="string">&quot;blogResult&quot;</span>&gt;</span></span><br><span class="line">  SELECT * FROM BLOG WHERE ID = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 查询博客的作者 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectAuthor&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;Author&quot;</span>&gt;</span></span><br><span class="line">  SELECT * FROM AUTHOR WHERE ID = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>在查询完 blog 后，会通过 association 标签中定义的 column 找到结果集中的该字段结果，并使用该字段结果去调用 selectAuthor 中定义的语句，并将结果返回给 Blog 对象中 author 对象。</p>
+<p>在注解中通过 result 的 one 属性定义：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Results(id=&quot;blogResult&quot;, value = &#123;</span></span><br><span class="line"><span class="meta">    @Result(column=&quot;blog_title&quot;, property=&quot;title&quot;),</span></span><br><span class="line"><span class="meta">    @Result(column=&quot;author_id&quot;, property=&quot;author&quot;, one=@One(select = &quot;selectAuthor&quot;))</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line">Blog <span class="title function_">selectBlog</span><span class="params">(<span class="type">int</span> id)</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>嵌套结果映射：使用嵌套的结果映射来处理连接结果的重复子集。</p>
+<p>比如对该查询结果进行映射：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 查询博客及博客作者 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectBlogDetails&quot;</span> <span class="attr">resultMap</span>=<span class="string">&quot;detailedBlogResultMap&quot;</span>&gt;</span></span><br><span class="line">  select</span><br><span class="line">       B.id as blog_id,</span><br><span class="line">       B.title as blog_title,</span><br><span class="line">       B.author_id as blog_author_id,</span><br><span class="line">       A.id as author_id,</span><br><span class="line">       A.username as author_username,</span><br><span class="line">       A.password as author_password,</span><br><span class="line">       A.email as author_email,</span><br><span class="line">       A.bio as author_bio,</span><br><span class="line">       A.favourite_section as author_favourite_section</span><br><span class="line">  from Blog B</span><br><span class="line">       left outer join Author A on B.author_id = A.id</span><br><span class="line">  where B.id = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>映射关联查询中的 Blog 对象中的一对一 Author ：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resultMap</span> <span class="attr">id</span>=<span class="string">&quot;detailedBlogResultMap&quot;</span> <span class="attr">type</span>=<span class="string">&quot;Blog&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">constructor</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">idArg</span> <span class="attr">column</span>=<span class="string">&quot;blog_id&quot;</span> <span class="attr">javaType</span>=<span class="string">&quot;int&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">constructor</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;title&quot;</span> <span class="attr">column</span>=<span class="string">&quot;blog_title&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">association</span> <span class="attr">property</span>=<span class="string">&quot;author&quot;</span> <span class="attr">javaType</span>=<span class="string">&quot;Author&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">id</span> <span class="attr">property</span>=<span class="string">&quot;id&quot;</span> <span class="attr">column</span>=<span class="string">&quot;author_id&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;username&quot;</span> <span class="attr">column</span>=<span class="string">&quot;author_username&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;password&quot;</span> <span class="attr">column</span>=<span class="string">&quot;author_password&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;email&quot;</span> <span class="attr">column</span>=<span class="string">&quot;author_email&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;bio&quot;</span> <span class="attr">column</span>=<span class="string">&quot;author_bio&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;favouriteSection&quot;</span> <span class="attr">column</span>=<span class="string">&quot;author_favourite_section&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">association</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">resultMap</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><strong>@one 注解 API 不支持嵌套结果映射。这是由于 Java 注解中的限制，不允许循环引用。</strong></p>
+<blockquote>
+<p>对于关联表和主表字段名相同的，必须使用不同别名，否则在返回结果集时会映射出错。</p>
+<p>可以使用 <code>columnPrefix</code> 指定关联表字段的统一前缀。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="一对多">一对多</h2>
+<p>一对多在 XML 中使用 <code>collection</code> 标签，在注解中使用 result 的 many 标签加载关联，同样，我们可以使用嵌套 Select 查询，或基于连接的嵌套结果映射集合：</p>
+<ul>
+<li>
+<p>嵌套 Select 查询：</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resultMap</span> <span class="attr">id</span>=<span class="string">&quot;blogResult&quot;</span> <span class="attr">type</span>=<span class="string">&quot;Blog&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">collection</span> <span class="attr">property</span>=<span class="string">&quot;posts&quot;</span> <span class="attr">javaType</span>=<span class="string">&quot;ArrayList&quot;</span> <span class="attr">column</span>=<span class="string">&quot;id&quot;</span> <span class="attr">ofType</span>=<span class="string">&quot;Post&quot;</span> </span></span><br><span class="line"><span class="tag">  <span class="attr">select</span>=<span class="string">&quot;selectPostsForBlog&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resultMap</span>&gt;</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">&lt;!-- 查询博客 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectBlog&quot;</span> <span class="attr">resultMap</span>=<span class="string">&quot;blogResult&quot;</span>&gt;</span></span><br><span class="line">  SELECT * FROM BLOG WHERE ID = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">&lt;!-- 查询博客下的所有文章 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectPostsForBlog&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;Post&quot;</span>&gt;</span></span><br><span class="line">  SELECT * FROM POST WHERE BLOG_ID = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>对于使用注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Results(id=&quot;blogResult&quot;, value = &#123;</span></span><br><span class="line"><span class="meta">    @Result(column=&quot;blog_title&quot;, property=&quot;title&quot;),</span></span><br><span class="line"><span class="meta">    @Result(column=&quot;id&quot;, property=&quot;posts&quot;, many=@Many(select = &quot;selectPostsForBlog&quot;))</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line">Blog <span class="title function_">selectBlog</span><span class="params">(<span class="type">int</span> id)</span>;</span><br></pre></td></tr></table></figure>
+<p><code>javaType</code> 是指集合的类型，一般可以推断出，不用写，<code>ofType</code> 是指集合元素的类型。</p>
+</li>
+<li>
+<p>嵌套结果映射：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 查询博客及下面的所有文章 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectBlogDetails&quot;</span> <span class="attr">resultMap</span>=<span class="string">&quot;detailedBlogResultMap&quot;</span>&gt;</span></span><br><span class="line">  select</span><br><span class="line">       B.id as blog_id,</span><br><span class="line">       B.title as blog_title,</span><br><span class="line">       B.author_id as blog_author_id,</span><br><span class="line">       P.id as post_id,</span><br><span class="line">       P.blog_id as post_blog_id,</span><br><span class="line">       P.author_id as post_author_id,</span><br><span class="line">       P.created_on as post_created_on,</span><br><span class="line">       P.section as post_section,</span><br><span class="line">       P.subject as post_subject,</span><br><span class="line">       P.draft as draft,</span><br><span class="line">       P.body as post_body,</span><br><span class="line">  from Blog B</span><br><span class="line">       inner join Post p on B.id = P.blog_id</span><br><span class="line">  where B.id = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>可以使用下面的结果映射</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- Very Complex Result Map --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">resultMap</span> <span class="attr">id</span>=<span class="string">&quot;detailedBlogResultMap&quot;</span> <span class="attr">type</span>=<span class="string">&quot;Blog&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">constructor</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">idArg</span> <span class="attr">column</span>=<span class="string">&quot;blog_id&quot;</span> <span class="attr">javaType</span>=<span class="string">&quot;int&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">constructor</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;title&quot;</span> <span class="attr">column</span>=<span class="string">&quot;blog_title&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">collection</span> <span class="attr">property</span>=<span class="string">&quot;posts&quot;</span> <span class="attr">ofType</span>=<span class="string">&quot;Post&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">id</span> <span class="attr">property</span>=<span class="string">&quot;id&quot;</span> <span class="attr">column</span>=<span class="string">&quot;post_id&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">result</span> <span class="attr">property</span>=<span class="string">&quot;subject&quot;</span> <span class="attr">column</span>=<span class="string">&quot;post_subject&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">collection</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resultMap</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><strong>@many 注解 API 不支持嵌套结果映射。这是由于 Java 注解中的限制，不允许循环引用。</strong></p>
+</li>
+</ul>
+<h1>使用注意</h1>
+<ul>
+<li>XML 符号转义</li>
+</ul>
+<p>在 XML 中配置查询 sql 时，对于部分符号需要特殊转义</p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>转义符号</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;</td>
+<td><code>&amp;lt;</code></td>
+<td>小于号</td>
+</tr>
+<tr>
+<td>&lt;=</td>
+<td><code> &amp;lt;=</code></td>
+<td>小于等于号</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td><code>&amp;gt;</code></td>
+<td>大于号</td>
+</tr>
+<tr>
+<td>&gt;=</td>
+<td><code>&amp;gt;=</code></td>
+<td>大于等于号</td>
+</tr>
+<tr>
+<td>&amp;</td>
+<td><code>&amp;amp;</code></td>
+<td>和</td>
+</tr>
+<tr>
+<td>’</td>
+<td><code>&amp;apos;</code></td>
+<td>单引号</td>
+</tr>
+<tr>
+<td>&quot;</td>
+<td><code>&amp;quot;</code></td>
+<td>双引号</td>
+</tr>
+</tbody>
+</table>
+<p>或者可以将包含特殊符号的语句用 <code>CDATA</code> 包裹起来</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;![CDATA[</span><br><span class="line">  sql statement </span><br><span class="line">]]&gt;</span><br></pre></td></tr></table></figure>
+<h1>核心处理流程</h1>
+<h2 id="构建-SqlSessionFactory">构建 SqlSessionFactory</h2>
+<p>每个基于 MyBatis 的应用都是以一个 <code>SqlSessionFactory</code> 的实例为核心的。SqlSessionFactory 的实例可以通过 <code>SqlSessionFactoryBuilder</code> 获得。而 SqlSessionFactoryBuilder 则可以从 XML 配置文件或一个预先配置的 <code>Configuration</code> 实例来构建出 SqlSessionFactory 实例。</p>
+<p>在 <code>MyBatis-Spring</code> 中，可使用 <code>SqlSessionFactoryBean</code>来创建 <code>SqlSessionFactory</code>。</p>
+<h2 id="从-SqlSessionFactory-中获取-SqlSession">从 SqlSessionFactory 中获取 SqlSession</h2>
+<p>既然有了 SqlSessionFactory，顾名思义，我们可以从中获得 <code>SqlSession</code> 的实例，通过 SqlSessionFactory 的 <code>openSession</code> 方法。</p>
+<p><strong>SqlSession 提供了在数据库执行 SQL 命令所需的所有方法。你可以通过 SqlSession 实例来直接执行已映射的 SQL 语句。</strong></p>
+<h2 id="使用-Mapper-定义语句和结果映射">使用 Mapper 定义语句和结果映射</h2>
+<p>映射器主要定义了语句和结果映射。</p>
+<p>通过映射器接口，我们可以与 XML 配置形成分离，使用和指定语句的参数和返回值相匹配的接口（比如 BlogMapper.class），使我们的代码不仅更清晰，更加类型安全，还不用担心可能出错的字符串字面值以及强制类型转换。</p>
+<p>Mybatis 本身可以通过配置文件定义 Mapper 的位置来帮助程序定位和查找映射器。</p>
+<p>在 <code>Mybatis-Spring</code> 中，最简单的方法是委托给 Spring 帮我们扫描注册 Bean，具体在下一节中详细介绍。</p>
+<p>扫描到的 Mapper，语句，结果映射（ResultMap）等都会放到 <code>Configuration</code> 类中，在后面的执行中我们将会从这里查找。</p>
+<h2 id="执行语句和结果映射">执行语句和结果映射</h2>
+<p>通过 Mapper 的定义我们拿到了要执行的语句，也知道了结果要如何映射。在我们调用 Mapper 的接口时，会反射调用 <code>MapperProxy</code> 代理类，该代理类又委托给 <code>MapperMethod</code> 代理类，最终方法代理类将使用 <code>SqlSession</code> 实例去执行，SqlSession 使用从 <code>Configuration</code> 类拿到的语句，交给 <code>Executor</code> 执行器去执行查询，如果定义了 <code>ResultHandler</code> 则使用该处理器处理结果，否则将使用从 <code>Configuration</code> 中找到的 <code>ResultMap</code> 来处理映射，ResultMap 对不同的字段类型使用 <code>TypeHandlerRegistry</code> 查找已注册的合适的 <code>TypeHandler</code> 进行处理。</p>
+<h1>Spring Mybatis Mapper 注册机制</h1>
+<p><strong>Mybatis</strong> 结合 <strong>Spring</strong> 将 <strong>Mapper</strong> 注册到 <strong>Spring IoC</strong> 的机制是这样的：</p>
+<p><img data-src="../../images/jpa/mybatis/640.png" alt="640"></p>
+<p>其实里面涉及到 <strong>Spring</strong> 和 <strong>Mybatis</strong> 的知识点还是比较多的，但是我们只要梳理出来流程就比较容易理解和掌握。</p>
+<h2 id="ImportBeanDefinitionRegistrar">ImportBeanDefinitionRegistrar</h2>
+<p><code>ImportBeanDefinitionRegistrar</code> 是一个非常重要的接口，凡是要把第三方整合到 <strong>Spring</strong> 的开发者都应该掌握这个接口。这接口用来动态的注册某一些具有相同特征的一批类到 <strong>Spring IoC</strong>，借助于<code>@Import</code>注解“附着在”自定义的注解上，就像 <strong>Mybatis-Spring</strong> 的用法一样。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Import(MapperScannerRegistrar.class)</span></span><br><span class="line"><span class="meta">@Repeatable(MapperScans.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> MapperScan &#123;</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后将该注解附着到标记有<code>@Configuration</code>或者具有相同功能的配置类上，Spring 会在处理配置类时处理我们的 <code>Import</code> 注解。</p>
+<p><code>MapperScannerRegistrar</code> 实现了该接口，该接口只定义了一个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 根据导入的 <span class="doctag">@Configuration</span> 类上给定的注解元数据，根据需要注册 Bean 的定义。</span></span><br><span class="line"><span class="comment"> * 请注意，由于与 <span class="doctag">@Configuration</span> 类处理相关的生命周期限制，可能无法在此处注册 BeanDefinitionRegistryPostProcessor 类型。</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> importingClassMetadata 导入类注解的元数据</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> registry 当前的 bean 定义注册表</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span>;</span><br></pre></td></tr></table></figure>
+<p>其中参数 <code>importingClassMetadata</code> 包含了 <code>@Import</code> 所依附的配置类上的所有注解。这意味着我们可以拿到对应注解的元信息并作为我们动态导入的判断依据，上面就是从 <code>@MapperScan</code> 获取了 <strong>Mapper</strong> 所在的包以及其它信息。</p>
+<p>在拿到 <code>MapperScan</code> 注解的元数据后，我们为 <code>MapperScannerConfigurer</code> 提供了配置信息，该配置类又实现了 <code>BeanDefinitionRegistryPostProcessor</code> ，其继承于 <code>BeanDefinitionRegistry</code>。</p>
+<p><code>BeanDefinitionRegistry</code> 就是用来注册 <strong>Spring Bean</strong> 的。那么到底是如何注册的呢？这就该下一个主角登场了。</p>
+<h2 id="BeanDefinitionRegistryPostProcessor">BeanDefinitionRegistryPostProcessor</h2>
+<p><code>BeanDefinitionRegistryPostProcessor</code> 是 <code>BeanFactoryPostProcessor</code> 的子接口。</p>
+<p><code>BeanFactoryPostProcessor</code> 的作用是在 <strong>Spring Bean</strong> 的定义信息已经加载但还没有实例化的时候执行 <code>postProcessBeanFactory()</code> 来处理一些额外的逻辑，比如对 Bean 配置元数据进行操作。也就是说，Spring IoC 容器允许 <code>BeanFactoryPostProcessor</code> 读取配置元数据，并有可能在容器实例化除 <code>BeanFactoryPostProcessor</code> 实例之外的任何 bean之前更改它。</p>
+<p>而 <code>BeanDefinitionRegistryPostProcessor</code> 的作用是在 <code>BeanFactoryPostProcessor</code> 增加了一个前置处理，当一个 <strong>Bean</strong> 实现了该接口后，始化前先执行该接口的 <code>postProcessBeanDefinitionRegistry()</code> 方法，然后再执行其父类的方法 <code>postProcessBeanFactory()</code>。这样就把一个 <strong>Spring Bean</strong> 的初始化周期更加细化，让我们在各个阶段有定制它的可能。</p>
+<p><code>MapperScannerRegistrar</code> 并没有在该后置处理中注册 Bean，它将注册动作委托给 <code>ClassPathMapperScanner</code> 去扫描注册。</p>
+<h2 id="ClassPathBeanDefinitionScanner">ClassPathBeanDefinitionScanner</h2>
+<p>从名字上来看这个类就是在类路径下扫描 <strong>Bean</strong> 定义并将符合条件的批量通过 <code>BeanDefinitionRegistry</code> 注册到 <strong>Spring IoC</strong>。</p>
+<p>它提供了可配置的过滤器来检出需要被注入 <strong>Spring IoC</strong> 的 <strong>Bean</strong>，默认的过滤器包括用 Spring 的 <code>@Component</code>、<code>@Repository</code>、 <code>@Service</code>、<code>@Controller</code> 注释的类 。还支持 Java EE 6 的 <code>javax.annotation.ManagedBean</code> 和 JSR-330 的 <code>javax.inject.Named</code> 注解，如果这些注解可用。当然你可以通过 <code>addIncludeFilter</code> 来新增被包含的 <strong>Bean</strong>，或者 <code>addExcludeFilter</code> 来排除一些 Bean。然后只需要调用其 <code>scan</code> 方法对特定的包进行扫描注入。</p>
+<p>Mybatis 的 <code>ClassPathMapperScanner</code> 继承于 Spring 的 <code>ClassPathBeanDefinitionScanner</code> ，它为 Mapper 提供了 Mybatis 需要的参数变量，比如：<code>SqlSessionFactory</code> 以及 封装了 <code>SqlSession</code> 后线程安全的 <code>SqlSessionTemplate</code>，<code>SqlSessionTemplate</code> 还提供与 Spring 事物管理一起工作的能力。</p>
+<p>在扫描到特定包下的 Mapper 对象时，会选择用实现 <code>FactoryBean</code> 接口的 <code>MapperFactoryBean</code> 作为该 Mapper 的工厂类，工厂类对其 Mapper 的获取最终委托给 Mybatis 的 <code>Configuration</code> 类来获取，Configuration 内部维护了已找到的 Mapper、结果映射配置等，Configuration 通过使用 <code>MapperProxyFactory</code> 实例化一个该 Mapper 的 <code>MapperProxy</code> 代理类，最终在我们调用 Mapper 接口时，会通过实现了 InvokeHandler 的代理类的 Invoke 去真正执行逻辑，流程如下图：</p>
+<p><img data-src="../../images/jpa/mybatis/mybatis-mapper-proxy.svg" alt="mybatis-mapper-proxy"></p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Mybatis/" rel="tag"># Mybatis</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/concurrency/Java-%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/" rel="prev" title="Java 并发编程入门">
+                  <i class="fa fa-chevron-left"></i> Java 并发编程入门
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/middleware/JMS-vs-AMQP/" rel="next" title="JMS vs AMQP">
+                  JMS vs AMQP <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"47ef9a5cc647135937b1c5ae52b32d73"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

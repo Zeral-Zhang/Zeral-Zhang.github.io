@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="问题 作为一个例子，我将使用在线图书订购应用程序的简化版本。在这样的应用程序中，我可能会创建一个如下所示的实体来代表采购订单： 1234567891011@Entitypublic class PurchaseOrder &amp;#123;    @Id    private String id;    private String customerId;    @OneToMany(cascade &#x3D;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="解决 Hibernate N+1 问题">
+<meta property="og:url" content="https://www.zeral.cn/persistence/%E8%A7%A3%E5%86%B3-Hibernate-N+1-%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="问题 作为一个例子，我将使用在线图书订购应用程序的简化版本。在这样的应用程序中，我可能会创建一个如下所示的实体来代表采购订单： 1234567891011@Entitypublic class PurchaseOrder &amp;#123;    @Id    private String id;    private String customerId;    @OneToMany(cascade &#x3D;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-03-10T15:05:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.242Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Hibernate">
+<meta property="article:tag" content="N+1 Problem">
+<meta property="article:tag" content="Entity Graph">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://www.zeral.cn/persistence/%E8%A7%A3%E5%86%B3-Hibernate-N+1-%E9%97%AE%E9%A2%98/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/persistence/%E8%A7%A3%E5%86%B3-Hibernate-N+1-%E9%97%AE%E9%A2%98/","path":"persistence/解决-Hibernate-N+1-问题/","title":"解决 Hibernate N+1 问题"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>解决 Hibernate N+1 问题 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">抓取</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">解决方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%BF%E5%85%8D%E4%BD%BF%E7%94%A8%E7%AB%8B%E5%8D%B3%E6%8A%93%E5%8F%96%EF%BC%88Eager-Fetching%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">避免使用立即抓取（Eager Fetching）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AA%E6%8A%93%E5%8F%96%E4%BD%A0%E7%9C%9F%E5%AE%9E%E9%9C%80%E8%A6%81%E7%9A%84%E6%95%B0%E6%8D%AE"><span class="nav-number">3.2.</span> <span class="nav-text">只抓取你真实需要的数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-JPQL-%E4%B8%AD%E4%BD%BF%E7%94%A8-Fetch-Join"><span class="nav-number">3.3.</span> <span class="nav-text">在 JPQL 中使用 Fetch Join</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-BatchSize-%E6%89%B9%E9%87%8F%E6%8A%93%E5%8F%96"><span class="nav-number">3.4.</span> <span class="nav-text">使用 BatchSize 批量抓取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BD%93%E5%9B%BE%EF%BC%88Entity-Graph%EF%BC%89"><span class="nav-number">3.5.</span> <span class="nav-text">实体图（Entity Graph）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fetch-Graphs%EF%BC%88%E6%8A%93%E5%8F%96%E5%9B%BE%EF%BC%89"><span class="nav-number">3.5.1.</span> <span class="nav-text">Fetch Graphs（抓取图）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Load-Graphs%EF%BC%88%E5%8A%A0%E8%BD%BD%E5%9B%BE%EF%BC%89"><span class="nav-number">3.5.2.</span> <span class="nav-text">Load Graphs（加载图）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E5%9B%BE%EF%BC%88Named-Entity-Graph%EF%BC%89"><span class="nav-number">3.5.3.</span> <span class="nav-text">命名实体图（Named Entity Graph）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%9F%A5%E8%AF%A2%E6%93%8D%E4%BD%9C%E4%B8%AD%E4%BD%BF%E7%94%A8-Entity-Graphs"><span class="nav-number">3.5.4.</span> <span class="nav-text">在查询操作中使用 Entity Graphs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E5%AE%9E%E4%BD%93%E5%9B%BE%EF%BC%88Dynamic-Entity-Graph%EF%BC%89"><span class="nav-number">3.5.5.</span> <span class="nav-text">动态实体图（Dynamic Entity Graph）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spring-Data-JPA-%E4%B8%AD%E4%BD%BF%E7%94%A8-Entity-Graph"><span class="nav-number">3.5.6.</span> <span class="nav-text">Spring Data JPA 中使用 Entity Graph</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%9C%A8%E9%97%AE%E9%A2%98"><span class="nav-number">3.5.7.</span> <span class="nav-text">存在问题</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/%E8%A7%A3%E5%86%B3-Hibernate-N+1-%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          解决 Hibernate N+1 问题
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-03-10 23:05:00" itemprop="dateCreated datePublished" datetime="2019-03-10T23:05:00+08:00">2019-03-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JPA/" itemprop="url" rel="index"><span itemprop="name">JPA</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>问题</h1>
+<p>作为一个例子，我将使用在线图书订购应用程序的简化版本。在这样的应用程序中，我可能会创建一个如下所示的实体来代表采购订单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PurchaseOrder</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="keyword">private</span> String id;</span><br><span class="line">    <span class="keyword">private</span> String customerId;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@OneToMany(cascade = ALL, fetch = EAGER)</span></span><br><span class="line">    <span class="meta">@JoinColumn(name = &quot;purchase_order_id&quot;)</span></span><br><span class="line">    <span class="keyword">private</span> List&lt;PurchaseOrderItem&gt; purchaseOrderItems = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+<p>采购订单包括订单 ID，客户 ID 以及正在购买的一个或多个商品。 PurchaseOrderItem 实体可能具有以下结构 -</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PurchaseOrderItem</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="keyword">private</span> String id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String bookId;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在假设我们需要查找客户的订单以在其采购订单历史记录中显示它们。以下查询将用于此目的 -</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">    P</span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">    PurchaseOrder P</span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line">    P.customerId <span class="operator">=</span> :customerId</span><br></pre></td></tr></table></figure>
+<p>转换为 SQL 时看起来如下所示 -</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">    purchaseor0_.id <span class="keyword">as</span> id1_1_,</span><br><span class="line">    purchaseor0_.customer_id <span class="keyword">as</span> customer2_1_ </span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">    purchase_order purchaseor0_ </span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">    purchaseor0_.customer_id <span class="operator">=</span> ?</span><br></pre></td></tr></table></figure>
+<p>这一个查询将返回客户拥有的所有采购订单。但是，为了获取订单商品，在我们遍历订单商品时，JPA 将为每个订单发出单独的查询。例如，如果客户有 5 个订单，那么 JPA 将发出 5 个额外的查询来获取这些订单中包含的订单商品。这就是 <code>N + 1</code> 问题 - 每个订单的查询导致 N 个订单商品的查询。</p>
+<h1>抓取</h1>
+<p>在理解问题和探索解决方法之前，我们先理解下 JPA 的抓取操作。</p>
+<p>抓取本质上讲是从数据库中获取数据并将其提供给应用程序的过程。调整应用程序的抓取方式将决定应用程序如何执行，就宽度（值/列）和/或深度（结果/行）而言，获取太多数据会增加 JDBC 通信和 ResultSet 处理方面的不必要开销。抓取的数据太少可能会导致需要进行额外的抓取。调整应用程序获取数据的方式可以影响整体应用程序性能。</p>
+<p>抓取的概念主要分为两个问题：</p>
+<ul>
+<li>什么时候数据需要被抓取？立即还是延迟？</li>
+<li>数据以何种方式被抓取？</li>
+</ul>
+<p>hibernate 在不同的范围定义了抓取，通过 hibernate 的 <code>Fetch</code> 注解我们可以定义如何抓取数据，通过 <code>javax.persistence</code> 中 <code>@Baisc</code>、<code>@ManyToOne</code>、<code>@OneToMany</code> 等注解上的 <code>fetch</code> 属性 <code>javax.persistence.FetchType</code> 定义何时抓取数据。</p>
+<p><strong><em>静态</em>（编译时）</strong></p>
+<p>我们可以在定义映射时静态定义抓取策略。</p>
+<ul>
+<li><code>SELECT</code></li>
+</ul>
+<p>执行单独的 SQL 查询以加载数据。可以是 EAGER（立即发出第二个查询）或 LAZY（延迟第二个查询直到需要数据）。这就是通常所说的 N + 1 策略。</p>
+<ul>
+<li><code>JOIN</code></li>
+</ul>
+<p>通过使用 SQL 外部联接 (OUTER JOIN) 抓取要获取的数据。使用该类型时数据以 EAGER 形式加载，即使指明了 LAZY。</p>
+<blockquote>
+<p>当使用主键查询单个实体时，该注解正常工作。例如 Spring Data JPA 中的 findOne、findById，当使用 findAll 时，会继续使用 N+1 查询。</p>
+<p>Join 查询会产生重复的结果，需要使用 Set 存储结果集等其它方式去重。</p>
+</blockquote>
+<ul>
+<li><code>BATCH</code></li>
+</ul>
+<p>根据批次大小，使用 IN 限制作为 SQL WHERE 子句的一部分，执行单独的 SQL 查询以加载相关数据项。同样可以和 EAGER 或 LAZY 一起使用。</p>
+<ul>
+<li><code>SUBSELECT</code></li>
+</ul>
+<p>根据集合所有者构建单独的 SQL 查询加载关联的数据。同样可以和 EAGER 或 LAZY 一起使用。</p>
+<blockquote>
+<p>子查询会将所有关联的数据全部加载到内存中，例如用在 @OneToMany 上时，如果关联数据不多时可以使用。</p>
+</blockquote>
+<p><em><strong>动态（运行时）</strong></em></p>
+<p>动态提供了更加灵活的运行时抓取策略定义方式。</p>
+<ul>
+<li><em>fetch profiles</em></li>
+</ul>
+<p>在映射中定义，但可以在会话上启用/禁用。</p>
+<ul>
+<li>HQL/JPQL</li>
+</ul>
+<p>Hibernate 和 JPA Criteria 查询都可以指定特定于该查询的抓取定义。</p>
+<ul>
+<li>entity graphs</li>
+</ul>
+<p>从 Hibernate 4.2（JPA 2.1）开始，实体图为我们提供了更加详细的抓取方案定义。</p>
+<p>了解了抓取之后，我们就可以找到解决问题的方法。</p>
+<h1>解决方法</h1>
+<h2 id="避免使用立即抓取（Eager-Fetching）">避免使用立即抓取（Eager Fetching）</h2>
+<p>这是问题背后的主要原因。我们应该从我们的映射中摆脱所有立即抓取。它们几乎没有任何好处可以证明它们在生产级应用中的使用。我们应该将所有关系标记为懒惰。</p>
+<h2 id="只抓取你真实需要的数据">只抓取你真实需要的数据</h2>
+<p>有时候我们并不想在查询订单时关联出所有的订单记录，我们可以将订单记录设为懒加载，在自己真实需要时再去查询对应的数据。</p>
+<h2 id="在-JPQL-中使用-Fetch-Join">在 JPQL 中使用 Fetch Join</h2>
+<p>初始化延迟关联的更好选择是使用带有抓取连接的 JPQL 查询。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Query</span> <span class="variable">q</span> <span class="operator">=</span> <span class="built_in">this</span>.em.createQuery(<span class="string">&quot;SELECT o FROM Order o JOIN FETCH o.items i WHERE o.id = :id&quot;</span>);</span><br><span class="line">q.setParameter(<span class="string">&quot;id&quot;</span>, orderId);</span><br><span class="line">newOrder = (Order) q.getSingleResult();</span><br></pre></td></tr></table></figure>
+<p>这告诉实体管理器在同一查询中加载所选实体和关系。</p>
+<h2 id="使用-BatchSize-批量抓取">使用 BatchSize 批量抓取</h2>
+<p>批量抓取是惰性选择抓取策略的优化。假设该订单的商品条目有 25 个，当配置了 BatchSize 后，在请求订单时，查询将变为 3 条，每条语句使用 In 查询 5 个商品条目。</p>
+<p>使用 <code>@BatchSize</code> 注解可以配置到懒加载的集合或对象上。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@BatchSize(size=100)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PurchaseOrderItem</span> &#123;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@OneToMany</span></span><br><span class="line"><span class="meta">@BatchSize(size = 5)</span> /</span><br><span class="line"><span class="keyword">private</span> List&lt;PurchaseOrderItem&gt; <span class="title function_">purchaseOrderItems</span><span class="params">()</span> = &#123; ... &#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="实体图（Entity-Graph）">实体图（Entity Graph）</h2>
+<p>实体图是特定化查询或操作的模板。它们在创建**抓取方案（fetch plans）**时使用。应用程序开发人员使用抓取方案将相关的持久字段组合在一起以提高运行时性能。</p>
+<p>默认情况下，实体字段或属性是**懒抓取（lazy fetch）**的。开发人员将字段或属性指定为抓取方案的一部分，持久性 provider 将立即抓取（eager fetch）它们。</p>
+<p>我们可以使用<strong>注解</strong>或<strong>部署描述符(比如 web.xml)<strong>静态创建实体图，也可以使用</strong>标准接口动态创建</strong>实体图。</p>
+<p>实体图定义了在查找或查询操作期间需要立即抓取的字段。</p>
+<p>默认，实体的所有字段都是懒抓取，除非指定了实体元数据的 <code>fetch</code> 属性为 <code>javax.persistence.FetchType.EAGER</code>。但是主键和版本字段始终是立即抓取的，不需要将其显式添加到实体图中。</p>
+<p>创建的实体图可以是 <code>fetch graph(抓取图)</code> 或 <code>load graph(加载图)</code>。</p>
+<h3 id="Fetch-Graphs（抓取图）">Fetch Graphs（抓取图）</h3>
+<p>当 <code>javax.persistence.fetchgraph</code> 属性用于指定实体图时，实体图的属性节点指定的属性将被视为 <code>FetchType.EAGER</code>，未指定的属性将被视为 <code>FetchType.LAZY</code>。 以下规则适用，具体取决于属性类型。</p>
+<h3 id="Load-Graphs（加载图）">Load Graphs（加载图）</h3>
+<p>当 <code>javax.persistence.loadgraph</code> 属性用于指定实体图时，实体图的属性节点指定的属性将被视为 <code>FetchType.EAGER</code>，未指定的属性将根据其指定的或默认的<code>FetchType</code> 进行处理。</p>
+<h3 id="命名实体图（Named-Entity-Graph）">命名实体图（Named Entity Graph）</h3>
+<p>命名实体图是由应用于实体类的 <code>@NamedEntityGraph</code> 注解定义的实体图，或应用程序部署描述符中的 <code>named-entity-graph</code> 元素。部署描述符中定义的命名实体图覆盖任何具有相同名称的基于注解的实体图。</p>
+<p>通过使用 <code>javax.persistence.NamedAttributeNode</code> 注解在 <code>@NamedEntityGraph</code> 的 <code>attributeNodes</code> 元素中指定字段，将字段添加到实体图中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@NamedEntityGraph(name=&quot;emailEntityGraph&quot;, attributeNodes=&#123;</span></span><br><span class="line"><span class="meta">    @NamedAttributeNode(&quot;subject&quot;),</span></span><br><span class="line"><span class="meta">    @NamedAttributeNode(&quot;sender&quot;)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EmailMessage</span> &#123;</span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    String messageId;</span><br><span class="line">    String subject;</span><br><span class="line">    String body;</span><br><span class="line">    String sender;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过在 <code>@NamedEntityGraphs</code> 注解中对多个 <code>@NamedEntityGraph</code> 定义进行分组，可以将多个 <code>@NamedEntityGraph</code> 定义应用于类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@NamedEntityGraphs(&#123;</span></span><br><span class="line"><span class="meta">    @NamedEntityGraph(name=&quot;previewEmailEntityGraph&quot;, attributeNodes=&#123;</span></span><br><span class="line"><span class="meta">        @NamedAttributeNode(&quot;subject&quot;),</span></span><br><span class="line"><span class="meta">        @NamedAttributeNode(&quot;sender&quot;),</span></span><br><span class="line"><span class="meta">        @NamedAttributeNode(&quot;body&quot;)</span></span><br><span class="line"><span class="meta">    &#125;),</span></span><br><span class="line"><span class="meta">    @NamedEntityGraph(name=&quot;fullEmailEntityGraph&quot;, attributeNodes=&#123;</span></span><br><span class="line"><span class="meta">        @NamedAttributeNode(&quot;sender&quot;),</span></span><br><span class="line"><span class="meta">        @NamedAttributeNode(&quot;subject&quot;),</span></span><br><span class="line"><span class="meta">        @NamedAttributeNode(&quot;body&quot;),</span></span><br><span class="line"><span class="meta">        @NamedAttributeNode(&quot;attachments&quot;)</span></span><br><span class="line"><span class="meta">    &#125;)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EmailMessage</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+<p>通过为命名实体图调用 <code>EntityManager.getEntityGraph</code> 来获取定义的命名实体图。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EntityGraph&lt;EmailMessage&gt; eg = em.getEntityGraph(<span class="string">&quot;emailEntityGraph&quot;</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="在查询操作中使用-Entity-Graphs">在查询操作中使用 Entity Graphs</h3>
+<p>要为有类型和无类型查询指定实体图，请在查询对象上调用 <code>setHint</code> 方法，并指定 <code>javax.persistence.loadgraph</code> 或 <code>javax.persistence.fetchgraph</code> 作为属性名称，并将 <code>EntityGraph</code> 实例指定为值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">EntityGraph&lt;EmailMessage&gt; eg = em.getEntityGraph(<span class="string">&quot;previewEmailEntityGraph&quot;</span>);</span><br><span class="line">List&lt;EmailMessage&gt; messages = em.createNamedQuery(<span class="string">&quot;findAllEmailMessages&quot;</span>)</span><br><span class="line">        .setParameter(<span class="string">&quot;mailbox&quot;</span>, <span class="string">&quot;inbox&quot;</span>)</span><br><span class="line">        .setHint(<span class="string">&quot;javax.persistence.loadgraph&quot;</span>, eg)</span><br><span class="line">        .getResultList();</span><br></pre></td></tr></table></figure>
+<p>有类型的查询使用相同的技术：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">EntityGraph&lt;EmailMessage&gt; eg = em.getEntityGraph(<span class="string">&quot;previewEmailEntityGraph&quot;</span>);</span><br><span class="line"></span><br><span class="line">CriteriaQuery&lt;EmailMessage&gt; cq = cb.createQuery(EmailMessage.class);</span><br><span class="line">Root&lt;EmailMessage&gt; message = cq.from(EmailMessage.class);</span><br><span class="line">TypedQuery&lt;EmailMessage&gt; q = em.createQuery(cq);</span><br><span class="line">q.setHint(<span class="string">&quot;javax.persistence.loadgraph&quot;</span>, eg);</span><br><span class="line">List&lt;EmailMessage&gt; messages = q.getResultList();</span><br></pre></td></tr></table></figure>
+<h3 id="动态实体图（Dynamic-Entity-Graph）">动态实体图（Dynamic Entity Graph）</h3>
+<p>创建动态实体图可以使用：<code>EntityManager.createEntityGraph</code></p>
+<p>动态实体图 类似于命名的 entity graph。唯一的区别是，entity graph 是通过 Java API 定义的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">EntityGraph</span> <span class="variable">graph</span> <span class="operator">=</span> <span class="built_in">this</span>.em.createEntityGraph(Order.class);</span><br><span class="line"><span class="type">Subgraph</span> <span class="variable">itemGraph</span> <span class="operator">=</span> graph.addSubgraph(<span class="string">&quot;items&quot;</span>);</span><br><span class="line">    </span><br><span class="line"><span class="type">Map</span> <span class="variable">hints</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">hints.put(<span class="string">&quot;javax.persistence.loadgraph&quot;</span>, graph);</span><br><span class="line">  </span><br><span class="line"><span class="type">Order</span> <span class="variable">order</span> <span class="operator">=</span> <span class="built_in">this</span>.em.find(Order.class, orderId, hints);</span><br></pre></td></tr></table></figure>
+<p>使用代码动态创建 entity graph 允许我们可以不使用实体上的注解。因此，如果您需要创建一个不会重复使用的特定于用例的图表，我建议使用动态实体图。如果要重用实体图，则更容易注释命名实体图。</p>
+<h3 id="Spring-Data-JPA-中使用-Entity-Graph">Spring Data JPA 中使用 Entity Graph</h3>
+<p>在 Spring Data JPA 中，我们可以通过在查询接口方法上使用注解 <code>org.springframework.data.jpa.repository.EntityGraph</code> 来定义命名实体图或动态实体图：</p>
+<ul>
+<li>
+<p>通过指定 <code>value</code> 属性指定命名实体图</p>
+</li>
+<li>
+<p>通过指定 <code>attributePaths</code> 属性动态定义实体图</p>
+<p>该属性为数组类型，我们可以定义多个 <code>attribute</code>，也可以通过 <code>property.nestedProperty</code> 形式来定义实体对象字段嵌套的属性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EntityGraph(attributePaths = &#123;&quot;questions&quot;, &quot;questions.questionOptions&quot;, &quot;questions.answers&quot;&#125;)</span></span><br><span class="line">    Optional&lt;Questionnaire&gt; <span class="title function_">findOneByProject_Id</span><span class="params">(Long id)</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="存在问题">存在问题</h3>
+<ol>
+<li>
+<p>从理论上讲，抓取类型为 fetch 时，只有指定的属性会被立即加载，但是在 Hibernate <code>5.4.11</code> 之前，它还会读取实体映射属性上定义的抓取时机为 Eager 的属性，<a target="_blank" rel="noopener" href="https://hibernate.atlassian.net/browse/HHH-8776">该问题（HHH-8776）</a>已被修复。对应于 <code>spring-boot-starter-data-jpa</code> 版本 <code>2.2.5.RELEASE+</code> 都可以正常使用。</p>
+</li>
+<li>
+<p><strong>JPA 图抓取规范不适用于 Hibernate 中的 basic（<code>@Basic</code>）属性。</strong> 换句话说，默认情况下，<code>@Basic</code> 这些属性依赖于默认的提取策略。默认的提取策略为 <code>FetchType.EAGER</code>。即使未明确指定这些属性，在使用实体图抓取的情况下也会加载这些属性。<strong>除非我们开启了字节码增强功能，基本属性使用 <code>@Basic(fetch = FetchType.LAZY)</code> 才会起作用。</strong></p>
+</li>
+<li>
+<p>Spring Data JPA 暂只支持在注解中定义抓取属性，不能运行时动态指定。我们可以借助 <a target="_blank" rel="noopener" href="https://github.com/Cosium/spring-data-jpa-entity-graph">https://github.com/Cosium/spring-data-jpa-entity-graph</a> 该库弥补这个问题，或者自己拓展一个基础仓库类。</p>
+</li>
+</ol>
+<p>如下代码所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@NoRepositoryBean</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">BaseRepository</span>&lt;T, ID&gt; <span class="keyword">extends</span> <span class="title class_">JpaRepository</span>&lt;T, ID&gt; &#123;</span><br><span class="line">		Page&lt;T&gt; <span class="title function_">findAll</span><span class="params">(Predicate predicate, Pageable pageable, JpaEntityGraph jpaEntityGraph)</span>;</span><br><span class="line"></span><br><span class="line">    Iterable&lt;T&gt; <span class="title function_">findAll</span><span class="params">(Predicate predicate, JpaEntityGraph jpaEntityGraph)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Transactional(readOnly = true)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseRepositoryImpl</span>&lt;T, ID <span class="keyword">extends</span> <span class="title class_">Serializable</span>&gt; <span class="keyword">extends</span> <span class="title class_">SimpleJpaRepository</span>&lt;T, ID&gt; <span class="keyword">implements</span> <span class="title class_">BaseRepository</span>&lt;T, ID&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">log</span> <span class="operator">=</span> LoggerFactory.getLogger(BaseRepositoryImpl.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> EntityManager entityManager;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> JpaEntityInformation&lt;T, ID&gt; entityInformation;</span><br><span class="line">    <span class="keyword">private</span> EntityPath&lt;T&gt; path;</span><br><span class="line">    <span class="keyword">private</span> Querydsl querydsl;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> JPAQueryFactory jpaQueryFactory;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">BaseRepositoryImpl</span><span class="params">(JpaEntityInformation&lt;T, ID&gt; entityInformation, EntityManager entityManager)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>(entityInformation, entityManager);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>.entityManager = entityManager;</span><br><span class="line">        <span class="built_in">this</span>.entityInformation = entityInformation;</span><br><span class="line">        <span class="built_in">this</span>.jpaQueryFactory = <span class="keyword">new</span> <span class="title class_">JPAQueryFactory</span>(entityManager);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="built_in">this</span>.path = SimpleEntityPathResolver.INSTANCE.createPath(entityInformation.getJavaType());</span><br><span class="line">            <span class="built_in">this</span>.querydsl = <span class="keyword">new</span> <span class="title class_">Querydsl</span>(entityManager, <span class="keyword">new</span> <span class="title class_">PathBuilder</span>&lt;T&gt;(path.getType(), path.getMetadata()));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            log.error(<span class="string">&quot;&#123;&#125; 未找到 Q 生成文件，请检查代码&quot;</span>, entityInformation.getJavaType().getSimpleName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Page&lt;T&gt; <span class="title function_">findAll</span><span class="params">(Predicate predicate, Pageable pageable, JpaEntityGraph jpaEntityGraph)</span> &#123;</span><br><span class="line">        Assert.notNull(pageable, <span class="string">&quot;Pageable must not be null!&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 避免内存分页，修复 HHH000104: firstResult/maxResults specified with collection fetch; applying in memory! 警告</span></span><br><span class="line">        <span class="comment">// 解决方法如该文章描述分两步查：https://vladmihalcea.com/fix-hibernate-hhh000104-entity-fetch-pagination-warning-message/</span></span><br><span class="line">        SingularAttribute&lt;? <span class="built_in">super</span> T, ?&gt; idAttribute = entityInformation.getIdAttribute();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">assert</span> idAttribute != <span class="literal">null</span>;</span><br><span class="line">        JPQLQuery&lt;T&gt; query = querydsl.applyPagination(pageable, doCreateQuery(<span class="literal">null</span>, predicate).select(ExpressionUtils.path(getDomainClass(), path, idAttribute.getName())));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> QueryResults&lt;T&gt; results = query.fetchResults();</span><br><span class="line"></span><br><span class="line">        <span class="type">Predicate</span> <span class="variable">pagePredicate</span> <span class="operator">=</span> ExpressionUtils.in(ExpressionUtils.path(<span class="built_in">this</span>.path.getClass(), idAttribute.getName()), results.getResults());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> AbstractJPAQuery&lt;Object, JPAQuery&lt;Object&gt;&gt; domainContentQuery = doCreateQuery(jpaEntityGraph, pagePredicate);</span><br><span class="line">        <span class="keyword">for</span> (Sort.Order o : pageable.getSort()) &#123;</span><br><span class="line">            domainContentQuery.orderBy(<span class="keyword">new</span> <span class="title class_">OrderSpecifier</span>&lt;&gt;(o.isAscending() ? Order.ASC : Order.DESC, Expressions.stringPath(o.getProperty())));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> PageableExecutionUtils.getPage(domainContentQuery.select(path).fetch(), pageable, results::getTotal);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Iterable&lt;T&gt; <span class="title function_">findAll</span><span class="params">(Predicate predicate, JpaEntityGraph jpaEntityGraph)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> doCreateQuery(jpaEntityGraph, predicate).select(path).fetch();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new &#123;<span class="doctag">@link</span> JPQLQuery&#125; count query for the given &#123;<span class="doctag">@link</span> Predicate&#125;.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> predicate, can be &#123;<span class="doctag">@literal</span> null&#125;.</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> the Querydsl count &#123;<span class="doctag">@link</span> JPQLQuery&#125;.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> JPQLQuery&lt;?&gt; createCountQuery(<span class="meta">@Nullable</span> Predicate... predicate) &#123;</span><br><span class="line">        <span class="keyword">return</span> doCreateQuery(<span class="literal">null</span>, predicate);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> AbstractJPAQuery&lt;?, ?&gt; doCreateQuery(JpaEntityGraph jpaEntityGraph, <span class="meta">@Nullable</span> Predicate... predicate) &#123;</span><br><span class="line"></span><br><span class="line">        AbstractJPAQuery&lt;?, ?&gt; query = querydsl.createQuery(path);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (predicate != <span class="literal">null</span>) &#123;</span><br><span class="line">            query = query.where(predicate);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, Object&gt; hints = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;(Jpa21Utils.tryGetFetchGraphHints(entityManager, jpaEntityGraph, entityInformation.getJavaType()));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;String, Object&gt; hint : hints.entrySet()) &#123;</span><br><span class="line">            query.setHint(hint.getKey(), hint.getValue());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> query;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Hibernate/" rel="tag"># Hibernate</a>
+              <a href="/tags/N-1-Problem/" rel="tag"># N+1 Problem</a>
+              <a href="/tags/Entity-Graph/" rel="tag"># Entity Graph</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/concurrency/ForkJoin-%E6%A1%86%E6%9E%B6%E5%85%A5%E9%97%A8/" rel="prev" title="Fork/Join 框架入门">
+                  <i class="fa fa-chevron-left"></i> Fork/Join 框架入门
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/java/Java-%E7%BC%93%E5%AD%98%E5%85%A5%E9%97%A8/" rel="next" title="Java Cache 入门">
+                  Java Cache 入门 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"af91e39e4379a4156b3cb7fffc31c26c"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

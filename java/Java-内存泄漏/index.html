@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="1. 引言 Java 的核心优势之一是借助 JVM 内置的垃圾收集器（或简称 GC）的自动内存管理。GC 隐式地负责分配和释放内存，因此能够处理大多数内存泄漏问题。 尽管 GC 有效地处理了很大一部分内存，但它不能保证针对内存泄漏的万无一失的解决方案。 GC 非常聪明，但并非完美无缺。即使在有责任心的开发人员的应用程序中，内存泄漏仍然可能存在。 在某些情况下，应用程序会生成大量多余的对象，从而耗尽">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 内存泄漏">
+<meta property="og:url" content="https://www.zeral.cn/java/Java-%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="1. 引言 Java 的核心优势之一是借助 JVM 内置的垃圾收集器（或简称 GC）的自动内存管理。GC 隐式地负责分配和释放内存，因此能够处理大多数内存泄漏问题。 尽管 GC 有效地处理了很大一部分内存，但它不能保证针对内存泄漏的万无一失的解决方案。 GC 非常聪明，但并非完美无缺。即使在有责任心的开发人员的应用程序中，内存泄漏仍然可能存在。 在某些情况下，应用程序会生成大量多余的对象，从而耗尽">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/gc-mark-sweep.gif">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/memory_Leak_In_Java.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/memory-with-static.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/memory-without-static.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/unclosed-streams-memory-leak.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/before_implementing_equals_and_hashcode.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/afterimplementing_equals_and_hashcode.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/inner_Classes_That_Reference_Outer_Classes.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/static_Classes_That_Reference_Outer_Classes.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/finalize_method_overridden.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/finalize_method_not_overridden.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/thread-local.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/verbose-garbage-collection.jpg">
+<meta property="article:published_time" content="2020-07-16T04:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.212Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="JVM">
+<meta property="article:tag" content="Memory Leak">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/jvm/gc-mark-sweep.gif">
+
+
+<link rel="canonical" href="https://www.zeral.cn/java/Java-%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/java/Java-%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F/","path":"java/Java-内存泄漏/","title":"Java 内存泄漏"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Java 内存泄漏 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">1. 引言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">2. 什么是内存泄漏</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">3. Java 中的内存泄漏类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E9%9D%99%E6%80%81%E5%AD%97%E6%AE%B5%E7%9A%84%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 静态字段的内存泄漏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E6%9C%AA%E5%85%B3%E9%97%AD%E8%B5%84%E6%BA%90"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 未关闭资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-equals-%E5%92%8C-hashcode-%E5%AE%9E%E7%8E%B0%E4%B8%8D%E5%BD%93"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 equals 和 hashcode() 实现不当</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E4%BD%BF%E7%94%A8%E9%9D%9E%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 使用非静态内部类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E9%80%9A%E8%BF%87-finalize-%E6%96%B9%E6%B3%95"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 通过 finalize() 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-number">3.6.</span> <span class="nav-text">3.6 字符串常量池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-7-%E4%BD%BF%E7%94%A8-ThreadLocal"><span class="nav-number">3.7.</span> <span class="nav-text">3.7 使用 ThreadLocal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-8-%E8%BF%87%E6%9C%9F%E5%BC%95%E7%94%A8"><span class="nav-number">3.8.</span> <span class="nav-text">3.8 过期引用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-9-%E6%9C%AA%E6%AD%A3%E7%A1%AE%E4%BD%BF%E7%94%A8%E7%BC%93%E5%AD%98"><span class="nav-number">3.9.</span> <span class="nav-text">3.9 未正确使用缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-10-%E7%9B%91%E5%90%AC%E5%99%A8%E5%92%8C%E5%85%B6%E5%AE%83%E5%9B%9E%E8%B0%83"><span class="nav-number">3.10.</span> <span class="nav-text">3.10 监听器和其它回调</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">4. 处理内存泄漏的其他策略</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%90%AF%E7%94%A8%E5%88%86%E6%9E%90"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 启用分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%AF%A6%E7%BB%86%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 详细垃圾回收</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E4%BD%BF%E7%94%A8%E5%BC%95%E7%94%A8%E5%AF%B9%E8%B1%A1%E9%81%BF%E5%85%8D%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 使用引用对象避免内存泄漏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E5%9F%BA%E5%87%86%E6%B5%8B%E8%AF%95"><span class="nav-number">4.4.</span> <span class="nav-text">4.4 基准测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E4%BB%A3%E7%A0%81%E8%AF%84%E6%B5%8B"><span class="nav-number">4.5.</span> <span class="nav-text">4.5 代码评测</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">5. 结论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/Java-%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java 内存泄漏
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-07-16 12:00:00" itemprop="dateCreated datePublished" datetime="2020-07-16T12:00:00+08:00">2020-07-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>1. 引言</h1>
+<p><code>Java</code> 的核心优势之一是借助 <code>JVM</code> 内置的垃圾收集器（或简称 <code>GC</code>）的自动内存管理。GC 隐式地负责分配和释放内存，因此能够处理大多数内存泄漏问题。</p>
+<p>尽管 GC 有效地处理了很大一部分内存，但它不能保证针对内存泄漏的万无一失的解决方案。 GC 非常聪明，但并非完美无缺。即使在有责任心的开发人员的应用程序中，内存泄漏仍然可能存在。</p>
+<p>在某些情况下，应用程序会生成大量多余的对象，从而耗尽关键的内存资源，有时会导致整个应用程序的故障。</p>
+<p>内存泄漏是 <code>Java</code> 中的真正问题。在本教程中，<strong>我们将看到导致内存泄漏的潜在原因是什么，如何在运行时识别它们，以及如何在应用程序中对其进行处理。</strong></p>
+<span id="more"></span>
+<p><img data-src="../../images/java/jvm/gc-mark-sweep.gif" alt="Mark &amp; sweep GC"></p>
+<h1>2. 什么是内存泄漏</h1>
+<p>内存泄漏指<strong>当堆中存在不再使用的对象，但是垃圾回收器无法将其从内存中删除的情况</strong>，因此不必要地对其进行了维护。</p>
+<p>内存泄漏很严重，因为它会<strong>阻塞内存资源并随着时间的推移降低系统性能</strong>。如果不加以处理，该应用程序最终将耗尽其资源，最终以致命的 <code>java.lang.OutOfMemoryError</code> 终止。</p>
+<p>堆内存中有两种不同类型的对象-已引用和未引用。引用对象是那些在应用程序中仍具有活动引用的对象，而未引用的对象则没有任何活动引用。</p>
+<p>垃圾收集器会定期删除未引用的对象，但是它永远不会收集仍在引用的对象。这是可能发生内存泄漏的地方：</p>
+<p><img data-src="../../images/java/jvm/memory_Leak_In_Java.png" alt="Memory Leak"></p>
+<p><strong>Symptoms of a Memory Leak</strong></p>
+<ul>
+<li>当应用程序长时间连续运行时，性能严重下降</li>
+<li>应用程序中的 <code>OutOfMemoryError</code> 堆错误</li>
+<li>自发和奇怪的应用程序崩溃</li>
+<li>该应用程序偶尔会用完连接对象</li>
+</ul>
+<p>让我们仔细看看其中一些场景以及如何处理它们。</p>
+<h1>3. Java 中的内存泄漏类型</h1>
+<p>在任何应用程序中，由于多种原因都会发生内存泄漏。在本节中，我们将讨论最常见的那些。</p>
+<h2 id="3-1-静态字段的内存泄漏">3.1 静态字段的内存泄漏</h2>
+<p>可能导致潜在内存泄漏的第一种情况是大量使用静态变量。</p>
+<p>在 Java 中，静态字段的寿命通常与正在运行的应用程序的整个寿命匹配（除非 ClassLoader 符合垃圾收集的条件）。</p>
+<p>让我们创建一个填充静态列表的简单 Java 程序：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">StaticTest</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> List&lt;Double&gt; list = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">populateList</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++) &#123;</span><br><span class="line">            list.add(Math.random());</span><br><span class="line">        &#125;</span><br><span class="line">        Log.info(<span class="string">&quot;Debug Point 2&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        Log.info(<span class="string">&quot;Debug Point 1&quot;</span>);</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">StaticTest</span>().populateList();</span><br><span class="line">        Log.info(<span class="string">&quot;Debug Point 3&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在，如果我们在程序执行过程中分析堆内存，那么我们将看到在调试点 1 和 2 之间，按预期，堆内存增加了。</p>
+<p>但是，当我们在调试点 3 保留 populateList() 方法时，堆内存尚未被垃圾回收，正如我们在此 VisualVM 响应中看到的那样：</p>
+<p><img data-src="../../images/java/jvm/memory-with-static.png" alt="Memory with static"></p>
+<p>但是，在上面的程序的第 2 行中，如果我们仅删除关键字 static，那么它将对内存使用量带来巨大的变化，此 Visual VM 响应显示：</p>
+<p><img data-src="../../images/java/jvm/memory-without-static.png" alt="Memory without static"></p>
+<p>调试点之前的第一部分几乎与我们在静态情况下获得的结果相同。但是这一次我们离开 populateList() 方法之后，<strong>列表的所有内存都被垃圾回收了，因为我们没有对其的任何引用。</strong></p>
+<p>因此，我们需要非常注意静态变量的使用。如果将集合或大型对象声明为静态，那么它们会在应用程序的整个生命周期中保留在内存中，从而阻塞了本来可以在其他地方使用的重要内存。</p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>尽量减少使用静态变量</li>
+<li>使用单例时，依赖于延迟加载对象而不是急于加载的实现</li>
+</ul>
+<h2 id="3-2-未关闭资源">3.2 未关闭资源</h2>
+<p>每当我们建立新连接或打开流时，JVM 就会为这些资源分配内存。一些示例包括数据库连接，输入流和会话对象。</p>
+<p>忘记关闭这些资源可能会阻塞内存，从而使它们无法进入 GC。甚至在发生异常的情况下也会发生这种情况，该异常会阻止程序执行到达处理关闭这些资源的代码语句。</p>
+<p>在任何一种情况下，资源留下的开放连接都会消耗内存，如果我们不处理它们，它们可能会降低性能，甚至可能导致 <code>OutOfMemoryError</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test(expected = OutOfMemoryError.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">givenURL_whenUnclosedStream_thenOutOfMemory</span><span class="params">()</span></span><br><span class="line">  <span class="keyword">throws</span> IOException, URISyntaxException &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">str</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">    <span class="type">URLConnection</span> <span class="variable">conn</span> </span><br><span class="line">      <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://norvig.com/big.txt&quot;</span>).openConnection();</span><br><span class="line">    <span class="type">BufferedReader</span> <span class="variable">br</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BufferedReader</span>(</span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">InputStreamReader</span>(conn.getInputStream(), StandardCharsets.UTF_8));</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">while</span> (br.readLine() != <span class="literal">null</span>) &#123;</span><br><span class="line">        str += br.readLine();</span><br><span class="line">    &#125; </span><br><span class="line">    </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>让我们看看从 URL 加载大文件时应用程序的内存情况：</p>
+<p><img data-src="../../images/java/jvm/unclosed-streams-memory-leak.png" alt="Java unclosed streams memory leak"></p>
+<p>如我们所见，堆使用率随着时间逐渐增加 – 这是由于不关闭流而导致的内存泄漏的直接影响。</p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>始终使用 <code>finally</code> 块关闭资源</li>
+<li>关闭资源的代码（即使在 <code>finally</code> 块中）本身也不应该有任何异常</li>
+<li>使用 <code>Java 7+</code> 时，我们可以利用 <code>try-with-resources</code> 块</li>
+</ul>
+<h2 id="3-3-equals-和-hashcode-实现不当">3.3 <em>equals</em> 和 <em>hashcode()</em> 实现不当</h2>
+<p>在定义新类时，一个非常普遍的疏忽是没有为 <code>equals()</code> 和 <code>hashCode()</code> 方法编写适当的重写方法。</p>
+<p><code>HashSet</code> 和 <code>HashMap</code> 在许多操作中使用这些方法，如果未正确覆盖它们，则它们可能成为潜在内存泄漏问题的根源。</p>
+<p>让我们以一个简单的 <code>Person</code> 类为例，并将其用作 <code>HashMap</code> 中的键：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> String name;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Person</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在，我们将重复的 <code>Person</code> 对象插入使用此键的 <code>Map</code> 中。</p>
+<p>请记住，<code>Map</code> 不能包含重复的键：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">givenMap_whenEqualsAndHashCodeNotOverridden_thenMemoryLeak</span><span class="params">()</span> &#123;</span><br><span class="line">    Map&lt;Person, Integer&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">0</span>; i&lt;<span class="number">100</span>; i++) &#123;</span><br><span class="line">        map.put(<span class="keyword">new</span> <span class="title class_">Person</span>(<span class="string">&quot;jon&quot;</span>), <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    Assert.assertFalse(map.size() == <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里，我们使用 <code>Person</code> 作为键。由于 <code>Map</code> 不允许使用重复的键，因此，作为键插入的大量重复的 <code>Person</code> 对象不应增加内存。</p>
+<p>但是，由于我们尚未定义适当的 <code>equals()</code> 方法，因此重复的对象堆积并增加了内存，这就是为什么我们在内存中看到多个对象的原因。为此，<code>VisualVM</code> 中的堆内存如下所示：</p>
+<p><img data-src="../../images/java/jvm/before_implementing_equals_and_hashcode.png" alt="Before implementing equals and hashcode"></p>
+<p>但是，如果我们正确地重写了<code>equals()</code> 和 <code>hashCode()</code> 方法，则此 <code>Map</code> 中将仅存在一个 <code>Person</code> 对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> String name;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Person</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">equals</span><span class="params">(Object o)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (o == <span class="built_in">this</span>) <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        <span class="keyword">if</span> (!(o <span class="keyword">instanceof</span> Person)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">Person</span> <span class="variable">person</span> <span class="operator">=</span> (Person) o;</span><br><span class="line">        <span class="keyword">return</span> person.name.equals(name);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">hashCode</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">result</span> <span class="operator">=</span> <span class="number">17</span>;</span><br><span class="line">        result = <span class="number">31</span> * result + name.hashCode();</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;	</span><br></pre></td></tr></table></figure>
+<p>正确覆盖 <code>equals()</code> 和 <code>hashCode()</code> 之后，同一程序的堆内存如下所示：</p>
+<p><img data-src="../../images/java/jvm/afterimplementing_equals_and_hashcode.png" alt="After implementing equals and hashcode"></p>
+<p><strong>如果不重写这些方法，则发生内存泄漏的可能性非常高</strong>，因为 <code>Hibernate</code> 无法比较对象，并会使用重复的对象填充其缓存。</p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>根据经验，定义新实体时，请始终覆盖 <code>equals()</code> 和 <code>hashCode()</code> 方法</li>
+<li>不仅要覆盖，而且还必须以最佳方式覆盖这些方法</li>
+</ul>
+<h2 id="3-4-使用非静态内部类">3.4 使用非静态内部类</h2>
+<p>这是在非静态内部类（匿名类）的情况下发生的。为了进行初始化，这些内部类始终需要封闭类的实例。</p>
+<p>默认情况下，每个非静态内部类都有对其包含类的隐式引用。如果我们在应用程序中使用此内部类的对象，<strong>则即使在包含类的对象超出范围后，也不会对其进行垃圾回收。</strong></p>
+<p>考虑一个类其中包含对大量笨重对象的引用，并且具有一个非静态内部类。现在，当我们创建内部类的对象时，内存模型如下所示：</p>
+<p><img data-src="../../images/java/jvm/inner_Classes_That_Reference_Outer_Classes.png" alt="Inner Classes That Reference Outer Classes"></p>
+<p>但是，如果仅将内部类声明为静态，则相同的内存模型如下所示：</p>
+<p><img data-src="../../images/java/jvm/static_Classes_That_Reference_Outer_Classes.png" alt="Static Classes That Reference Outer Classes"></p>
+<p>发生这种情况是因为内部类对象隐式持有对外部类对象的引用，从而使其成为垃圾回收的无效候选对象。对于匿名类，也会发生同样的情况。</p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>如果内部类不需要访问包含的类成员，请考虑将其转换为静态类</li>
+</ul>
+<h2 id="3-5-通过-finalize-方法">3.5 通过 <em>finalize()</em> 方法</h2>
+<p>使用终结器是潜在的内存泄漏问题的另一个来源。每当覆盖类的 <code>finalize()</code> 方法时，<strong>该类的对象不会立即被垃圾收集</strong>。取而代之的是， <code>GC</code> 将它们排入队列以进行最终确定，这将在以后的某个时间点进行。</p>
+<p>另外，如果用 <code>finalize()</code> 方法编写的代码不是很优化，并且终结器队列无法跟上 <code>Java</code> 垃圾收集器的速度，那么迟早，我们的应用程序注定会遇到 <code>OutOfMemoryError</code>。</p>
+<p>为了说明这一点，让我们考虑一下我们有一个覆盖了 <code>finalize()</code> 方法的类，并且该方法需要一点时间来执行。</p>
+<p><img data-src="../../images/java/jvm/finalize_method_overridden.png" alt="finalize method overridden"></p>
+<p>但是，如果只删除覆盖的 <code>finalize()</code> 方法，则同一程序将给出以下响应：</p>
+<p><img data-src="../../images/java/jvm/finalize_method_not_overridden.png" alt="finalize method not overridden"></p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>我们应该始终避免使用终结器</li>
+</ul>
+<h2 id="3-6-字符串常量池">3.6 字符串常量池</h2>
+<p>在 <code>Java 7</code> 之前，<code>JVM</code> 将 <strong><code>Java</code> 字符串池放置在永久代 <code>PermGen</code> 空间中，该空间的大小是固定的 - 无法在运行时扩展，并且不适合进行垃圾回收。</strong></p>
+<p>默认的字面量创建方法和 String 的 <code>intern</code> 方法会在字符串常量池保留字符串。</p>
+<p>在 <code>PermGen</code>（而不是堆 <code>Heap</code>）中保留 <code>String</code> 的风险是，如果我们保留过多的 <code>String</code>，我们可能会从 <code>JVM</code> 中获得 <code>OutOfMemory</code> 错误。</p>
+<p>从 <code>Java 7</code> 开始，<code>Java</code> 字符串池**存储在 <code>Heap</code> 空间中，该空间由 <code>JVM</code> 进行垃圾回收。**这种方法的优点是减少了 <code>OutOfMemory</code> 错误的风险，因为未引用的字符串将从池中删除，从而释放内存。</p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>
+<p>解决此问题的最简单方法是升级到最新的 Java 版本</p>
+</li>
+<li>
+<p>或者要在 6 之前使用大量字符串或长字符串，请增加 <code>PermGen</code> 空间的大小，以避免任何潜在的 <code>OutOfMemoryErrors</code>：</p>
+<p><code>-XX:MaxPermSize=512m</code></p>
+</li>
+</ul>
+<h2 id="3-7-使用-ThreadLocal">3.7 使用 <em>ThreadLocal</em></h2>
+<p><em><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html">ThreadLocal</a></em> 是一种使我们能够将状态隔离到特定线程，从而使我们能够实现线程安全的结构。</p>
+<p>使用此构造时，<strong>每个线程将保留对其 <em>ThreadLocal</em> 变量副本的隐式引用，并将维护自己的副本，只要线程是活动的。</strong></p>
+<p><img data-src="../../images/java/jvm/thread-local.png" alt="ThreadLocal"></p>
+<blockquote>
+<p>实线代表强引用，虚线代表弱引用（<code>WeakReference</code>）</p>
+<p>JVM 进行垃圾回收时，无论内存是否充足，都会回收被弱引用关联的对象。在 java 中，用 <code>java.lang.ref.WeakReference</code> 类来表示。可以在缓存中使用弱引用。</p>
+</blockquote>
+<p>尽管有其优点，但使用 <em><code>ThreadLocal</code></em> 变量还是有争议的，因为如果使用不当，它们会导致内存泄漏。</p>
+<p><strong><em>ThreadLocal</em> 导致内存泄漏</strong></p>
+<p>一旦持有线程不再存活，就应该对 <em>ThreadLocals</em> 进行垃圾回收。但是，将 <em>ThreadLocals</em> 与现代应用程序服务器一起使用时会出现问题。</p>
+<p>现代应用程序服务器使用线程池来处理请求，而不是创建新请求（例如，对于 <code>Apache Tomcat</code> 为 <a target="_blank" rel="noopener" href="https://tomcat.apache.org/tomcat-7.0-doc/config/executor.html"><code>Executor</code></a>）。此外，他们还使用单独的类加载器。</p>
+<p>由于应用程序服务器中的<a target="_blank" rel="noopener" href="https://www.baeldung.com/thread-pool-java-and-guava">线程池</a>使用线程重用的概念，因此它们永远不会被垃圾回收 - 而是被重用以满足另一个请求。</p>
+<p>现在，如果任何类创建了一个 <code>ThreadLocal</code> 变量，但未明确删除它，那么即使在 Web 应用程序停止后，该对象的副本也将与工作线程一起保留，从而阻止垃圾回收该对象。</p>
+<p>从上图中可以看出，<code>ThreadLocalMap</code> 使用 <code>ThreadLocal</code> 的弱引用作为 <code>key</code>，如果一个 <code>ThreadLocal</code> 不存在外部<strong>强引用</strong>时，<code>Key(ThreadLocal)</code> 势必会被 <code>GC</code> 回收，这样就会导致 <code>ThreadLocalMap</code> 中 <code>key</code> 为 <code>null</code>， 而 <code>value</code> 还存在着强引用，只有 <code>thead</code> 线程退出以后，<code>value</code> 的强引用链条才会断掉。</p>
+<p>但如果当前线程再迟迟不结束的话，这些 <code>key</code> 为 <code>null</code> 的 <code>Entry</code> 的 <code>value</code> 就会一直存在一条强引用链：</p>
+<blockquote>
+<p>Thread Ref -&gt; Thread -&gt; ThreaLocalMap -&gt; Entry -&gt; value</p>
+</blockquote>
+<p>永远无法回收，造成内存泄漏。</p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>
+<p>在不再使用 <em>ThreadLocal</em> 时清理是一个好习惯 - <em>ThreadLocal</em> 提供了<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html#remove()"><em>remove()</em></a> 方法，该方法将删除此变量的当前线程值</p>
+</li>
+<li>
+<p><strong>不要使用 <code>ThreadLocal.set(null)</code> 来清除值</strong> - 实际上并不会清除值，而是查找与当前线程关联的 <code>Map</code> 并将键值对分别设置为当前线程和 <code>null</code></p>
+</li>
+<li>
+<p>最好将 <em>ThreadLocal</em> 视为需要在 <em>finally</em> 块中关闭的资源，以确保即使在发生异常的情况下也始终关闭该资源：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    threadLocal.set(System.nanoTime());</span><br><span class="line">    <span class="comment">//... further processing</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">finally</span> &#123;</span><br><span class="line">    threadLocal.remove();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="3-8-过期引用">3.8 过期引用</h2>
+<p>虽然绝大多数情况下我们在编写代码时不必考虑内存的回收，但是一旦我们自身管理了这些内存，垃圾回收可能就无法正常工作。让我们先来看一下一个简单的 Stack 类的实现，看看能不能找出内存泄漏的问题：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Stack</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> Object[] elements;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> <span class="variable">size</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">DEFAULT_INITAL_CAPACITY</span> <span class="operator">=</span> <span class="number">16</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Stack</span><span class="params">()</span> &#123;</span><br><span class="line">        elements = <span class="keyword">new</span> <span class="title class_">Object</span>[DEFAULT_INITAL_CAPACITY];</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">push</span><span class="params">(Object e)</span> &#123;</span><br><span class="line">        ensureCapacity();</span><br><span class="line">        elements[size++] = e;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> Object <span class="title function_">pop</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span>(size == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">EmptyStackException</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> elements[--size];</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">ensureCapacity</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span>(elements.length == size)</span><br><span class="line">            elements = Arrays.copyOf(elements, <span class="number">2</span> * size + <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么它的问题在哪里？如果堆栈增大然后缩小，弹出的对象被外部程序引用，那么即使使用该堆栈的程序没有引用该对象，从堆栈弹出的对象也不会被垃圾回收。 这是因为虽然弹出了对象的引用，但是堆栈自身还保留对这些对象的<strong>过时引用 （obsolete reference）</strong>。<strong>所以垃圾回收器永远不会回收这部分对象。</strong></p>
+<p>垃圾收集语言中的内存泄漏（更适当地称为<strong>无意的对象保留 unintentional object retentions</strong>）是隐蔽的。 如果无意中保留了对象引用，那么不仅这个对象排除在垃圾回收之外，而且该对象引用的任何对象也是如此。 即使只有少数对象引用被无意地保留下来，也可以阻止垃圾回收机制对许多对象的回收，这对性能产生很大的影响。</p>
+<p>此类问题的<strong>解决方法</strong>很简单：一旦引用过时，则将其清空。 就我们的 <code>Stack</code> 类而言，对某个项目的引用在从堆栈中弹出后便会过时。 正确的 <code>pop</code> 方法版本如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">pop</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (size == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">EmptyStackException</span>();</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> elements[--size];</span><br><span class="line">    elements[size] = <span class="literal">null</span>; <span class="comment">// 消除过期对象引用</span></span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>清空好处</strong>：如果它们以后又被错误地引用，程序立即抛出 <code>NullPointerException</code> 异常，而不是悄悄地做继续做错误的事情。尽可能快地发现程序中的错误是有好处的。<br>
+<strong>清空对象引用应该是例外而不是规范</strong>，不是所有的对象结束引用都需要手动清空，GC 自身能很好的做到，<strong>除非我们自身管理了内存时，才需要警惕。</strong></p>
+<p>在 <code>JDK</code> 中，已经有现成的 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/util/Stack.html"><code>Stack</code></a> 类供我们使用，来看看它是怎么实现 <code>pop</code> 的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> E <span class="title function_">pop</span><span class="params">()</span> &#123;</span><br><span class="line">        E       obj;</span><br><span class="line">        <span class="type">int</span>     <span class="variable">len</span> <span class="operator">=</span> size();</span><br><span class="line"></span><br><span class="line">        obj = peek(); <span class="comment">//这个方法将栈顶的元素取出来，但并不会把栈顶元素弹出</span></span><br><span class="line">        removeElementAt(len - <span class="number">1</span>); <span class="comment">//这是 Stack 父类的方法,将栈顶元素弹出</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">removeElementAt</span><span class="params">(<span class="type">int</span> index)</span> &#123;</span><br><span class="line">        modCount++;</span><br><span class="line">        <span class="keyword">if</span> (index &gt;= elementCount) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ArrayIndexOutOfBoundsException</span>(index + <span class="string">&quot; &gt;= &quot;</span> +</span><br><span class="line">                                                     elementCount);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (index &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ArrayIndexOutOfBoundsException</span>(index);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> elementCount - index - <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (j &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            System.arraycopy(elementData, index + <span class="number">1</span>, elementData, index, j);</span><br><span class="line">        &#125;</span><br><span class="line">        elementCount--;</span><br><span class="line">        <span class="comment">// 可以看到，jdk 的实现就是显式地把引用清空，以此告诉 GC 将过期引用回收</span></span><br><span class="line">        elementData[elementCount] = <span class="literal">null</span>; <span class="comment">/* to let gc do its work */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>如果我们自身管理了对象的内存，<strong>首先应该尽可能的将变量定义在狭窄的范围内</strong></li>
+<li>消除过时引用的最佳方法是让包含引用的变量超出范围</li>
+<li>如果我们清楚知道该对象已经不再使用，可以手动清空对象使 GC 清楚可以被回收</li>
+</ul>
+<h2 id="3-9-未正确使用缓存">3.9 未正确使用缓存</h2>
+<p>一旦将对象引用放入缓存中，很容易忘记它的存在，并且在它变得无关紧要之后，仍然保留在缓存中。对于这个问题有几种解决方案。如果你正好想实现一个缓存：只要在缓存之外存在对某个项（entry）的键（key）引用，那么这项就是明确有关联的，就可以用 <code>WeakHashMap</code> 来表示缓存；这些项在过期之后自动删除。记住，只有当缓存中某个项的生命周期是由外部引用到键（key）而不是值（value）决定时，<code>WeakHashMap</code> 才有用。这点和 <code>ThreadLocal</code> 很像。</p>
+<p>更常见的情况是，缓存项有用的生命周期不太明确，随着时间的推移一些项变得越来越没有价值。在这种情况下，缓存应该偶尔清理掉已经废弃的项。这可以通过一个后台线程（也许是 <code>ScheduledThreadPoolExecutor</code>）或将新的项添加到缓存时顺便清理。<code>LinkedHashMap</code> 类使用它的 <code>removeEldestEntry</code> 方法实现了后一种方案。对于更复杂的缓存，可能直接需要使用 <code>java.lang.ref</code>。</p>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>使用成熟的缓存实现类</li>
+<li>如果简单实用，可以使用 <code>WeakHashMap</code> 或者定期清理缓存或设置过期时间等策略</li>
+</ul>
+<h2 id="3-10-监听器和其它回调">3.10 监听器和其它回调</h2>
+<p>如果你实现了一个API，其客户端注册回调，但是没有显式地撤销注册回调，除非采取一些操作，否则它们将会累积。确保回调是垃圾收集的一种方法是只存储弱引用（<code>weak references</code>），例如，仅将它们保存在 <code>WeakHashMap</code>的键（<code>key</code>）中。</p>
+<p>比如 JDK 中虚拟机状态监听器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">VMState</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> VirtualMachineImpl vm;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Listeners</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;WeakReference&lt;VMListener&gt;&gt; listeners = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;WeakReference&lt;VMListener&gt;&gt;();</span><br><span class="line">		......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>如何预防？</strong></p>
+<ul>
+<li>自身管理对象内存时，要正确实现对象的管理操作</li>
+<li>使用弱引用以便不使用时让 <code>GC</code> 回收</li>
+</ul>
+<h1>4. 处理内存泄漏的其他策略</h1>
+<p>尽管在处理内存泄漏时没有一种万能的解决方案，但是有一些方法可以使这些泄漏最小化。</p>
+<h2 id="4-1-启用分析">4.1 启用分析</h2>
+<p>Java Profiler 是监视和诊断通过应用程序的内存泄漏的工具。他们分析了我们应用程序内部发生的事情 - 例如，内存分配方式。</p>
+<p><strong>使用分析器，我们可以比较不同的方法并找到可以最佳利用资源的领域。</strong></p>
+<p>在之前的例子中，我们一直使用 <code>Java VisualVM</code>。还有其它不同类型的 <code>Profiler</code>，例如 <code>Mission Control</code>，<code>JProfiler</code>，<code>YourKit</code> 和 <code>Netbeans Profiler</code> 等。</p>
+<h2 id="4-2-详细垃圾回收">4.2 详细垃圾回收</h2>
+<p>通过启用详细的垃圾收集，我们可以跟踪 <code>GC</code> 的详细信息。为此，我们需要将以下内容添加到我们的 <code>JVM</code> 配置中：</p>
+<p><code>-verbose:gc</code></p>
+<p>通过添加此参数，我们可以看到 <code>GC</code> 内部发生的情况的详细信息：</p>
+<p><img data-src="../../images/java/jvm/verbose-garbage-collection.jpg" alt="verbose garbage collection"></p>
+<h2 id="4-3-使用引用对象避免内存泄漏">4.3 使用引用对象避免内存泄漏</h2>
+<p>我们还可以诉诸于 <code>java.lang.ref</code> 包内置的 Java 引用对象来处理内存泄漏。使用 <code>java.lang.ref</code> 包，而不是直接引用对象，通过使用对对象的特殊引用，使它们易于垃圾回收。</p>
+<p>在引入引用类之前，只有强引用可用。例如，下面的代码行展示了一个强引用 <code>obj</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br></pre></td></tr></table></figure>
+<p>obj 引用存储在堆中的对象。只要 obj 引用存在，垃圾收集器就永远不会释放用于保存该对象的存储。一个对象可以被多种引用类型引用。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">类型</th>
+<th style="text-align:center">对应类</th>
+<th style="text-align:center">特征</th>
+<th>使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">强引用</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">强引用的对象被引用时不会被 GC 回收</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:center">软引用</td>
+<td style="text-align:center">SoftReference</td>
+<td style="text-align:center">如果物理内存充足则不会被 GC 回收，如果物理内存不充足则会被 GC 回收。</td>
+<td><strong>实现内存敏感型数据缓存</strong></td>
+</tr>
+<tr>
+<td style="text-align:center">弱引用</td>
+<td style="text-align:center">WeakReference</td>
+<td style="text-align:center">一旦被 GC 扫描到则会被回收</td>
+<td><strong>用于实现规范化的映射</strong>。如果映射仅包含特定值的一个实例，则称为规范化。比如 <strong><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/9/docs/api/java/util/WeakHashMap.html"><em><code>WeakHashMap</code></em></a></strong>；<br /><strong>解决 Lapsed Listener 问题</strong>，上面所述监听器回调问题</td>
+</tr>
+<tr>
+<td style="text-align:center">虚引用</td>
+<td style="text-align:center">PhantomReference</td>
+<td style="text-align:center">不会影响对象的生命周期，形同于无，任何时候都可能被 GC 回收</td>
+<td>**确定何时从内存中删除对象，**这有助于安排对内存敏感的任务。例如，我们可以等待一个大对象被删除再加载另一个对象。<br />**避免使用 <em>finalize</em> 方法，并改进 finalization 过程</td>
+</tr>
+<tr>
+<td style="text-align:center"></td>
+<td style="text-align:center">FinalReference</td>
+<td style="text-align:center">用于收尾机制(finalization)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-4-基准测试">4.4 基准测试</h2>
+<p>我们可以通过执行基准测试来衡量和分析 Java 代码的性能。这样，我们可以比较替代方法执行相同任务的性能。这可以帮助我们选择更好的方法，并且可以帮助我们节省内存。</p>
+<h2 id="4-5-代码评测">4.5 代码评测</h2>
+<p>最后，我们通过最经典的，古老的方式来进行简单的代码演练。</p>
+<p>在某些情况下，即使是这种简单的方法也可以帮助消除一些常见的内存泄漏问题。</p>
+<h1>5. 结论</h1>
+<p>内存泄漏很难解决，要找到它们需要对 Java 语言进行复杂的掌握和命令。在处理内存泄漏时，没有一种千篇一律的解决方案，因为泄漏可能通过各种多样的事件发生。</p>
+<p>但是，如果我们采用最佳实践并定期执行严格的代码演练和分析，则可以最大程度地减少应用程序中内存泄漏的风险。</p>
+<p>与往常一样，可以在 <a target="_blank" rel="noopener" href="https://github.com/eugenp/tutorials/tree/master/core-java-modules/core-java-perf">GitHub</a> 上获得用于生成本教程中描述的 VisualVM 响应的代码段。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+              <a href="/tags/Memory-Leak/" rel="tag"># Memory Leak</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/data-structure/Java-HashMap-%E5%AE%9E%E7%8E%B0/" rel="prev" title="Java HashMap">
+                  <i class="fa fa-chevron-left"></i> Java HashMap
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/persistence/db/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B4%A2%E5%BC%95%E5%88%9D%E6%8E%A2/" rel="next" title="数据库索引初探">
+                  数据库索引初探 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"fe7161fbad15c91200339af371c2da45"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

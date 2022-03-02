@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="延迟队列定义 首先，队列这种数据结构相信大家都不陌生，它是一种先进先出的数据结构。普通队列中的元素是有序的，先进入队列中的元素会被优先取出进行消费； 延时队列相比于普通队列最大的区别就体现在其延时的属性上，普通队列的元素是先进先出，按入队顺序进行处理，而延时队列中的元素在入队时会指定一个延迟时间，表示其希望能够在经过该指定时间后处理。 延时队列的应用 延时队列在项目中的应用还是比较多的，尤其像电商">
+<meta property="og:type" content="article">
+<meta property="og:title" content="延迟队列实现">
+<meta property="og:url" content="https://www.zeral.cn/data-structure/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97-%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="延迟队列定义 首先，队列这种数据结构相信大家都不陌生，它是一种先进先出的数据结构。普通队列中的元素是有序的，先进入队列中的元素会被优先取出进行消费； 延时队列相比于普通队列最大的区别就体现在其延时的属性上，普通队列的元素是先进先出，按入队顺序进行处理，而延时队列中的元素在入队时会指定一个延迟时间，表示其希望能够在经过该指定时间后处理。 延时队列的应用 延时队列在项目中的应用还是比较多的，尤其像电商">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/max-heap.png">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/delay-queue.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/zset.svg">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/skip-list-add-element.gif">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/rabbitmq/rabbitmq-delay-queue.png">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/timer-wheel.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/hashed-wheel-timer.png">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/timing-wheels.png">
+<meta property="og:image" content="https://www.zeral.cn/images/data-structure/timing-wheels-2.png">
+<meta property="article:published_time" content="2021-06-29T02:40:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.206Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="DelayQueue">
+<meta property="article:tag" content="RDelayedQueue">
+<meta property="article:tag" content="PriorityQueue">
+<meta property="article:tag" content="Binary Heap">
+<meta property="article:tag" content="Timer Wheel">
+<meta property="article:tag" content="SkipList">
+<meta property="article:tag" content="Redission">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/data-structure/max-heap.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/data-structure/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97-%E5%AE%9E%E7%8E%B0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/data-structure/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97-%E5%AE%9E%E7%8E%B0/","path":"data-structure/延迟队列-实现/","title":"延迟队列实现"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>延迟队列实现 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97%E5%AE%9A%E4%B9%89"><span class="nav-number">1.</span> <span class="nav-text">延迟队列定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%B6%E6%97%B6%E9%98%9F%E5%88%97%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">延时队列的应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%B6%E6%97%B6%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">延时队列的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97%E4%B8%8E%E4%BA%8C%E5%8F%89%E5%A0%86"><span class="nav-number">3.1.</span> <span class="nav-text">优先队列与二叉堆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Java-Timer-%E5%92%8C-ScheduledThreadPoolExecutor"><span class="nav-number">3.2.</span> <span class="nav-text">Java Timer 和  ScheduledThreadPoolExecutor</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Timer"><span class="nav-number">3.2.1.</span> <span class="nav-text">Timer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ScheduledThreadPoolExecutor"><span class="nav-number">3.2.2.</span> <span class="nav-text">ScheduledThreadPoolExecutor</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Java-DelayQueue-%E5%BB%B6%E6%97%B6%E9%98%9F%E5%88%97"><span class="nav-number">3.3.</span> <span class="nav-text">Java DelayQueue 延时队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redisson-RDelayedQueue"><span class="nav-number">3.4.</span> <span class="nav-text">Redisson RDelayedQueue</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis-ZSet"><span class="nav-number">3.4.1.</span> <span class="nav-text">Redis ZSet</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B7%B3%E8%A1%A8%EF%BC%88Skip-List%EF%BC%89"><span class="nav-number">3.4.2.</span> <span class="nav-text">跳表（Skip List）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%B7%B3%E8%A1%A8%E4%B8%8E%E5%B9%B3%E8%A1%A1%E6%A0%91%E3%80%81%E5%93%88%E5%B8%8C%E8%A1%A8%E7%9A%84%E6%AF%94%E8%BE%83"><span class="nav-number">3.4.2.1.</span> <span class="nav-text">跳表与平衡树、哈希表的比较</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RabbitMQ-%E5%AE%9E%E7%8E%B0%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97"><span class="nav-number">3.5.</span> <span class="nav-text">RabbitMQ 实现延迟队列</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97%EF%BC%88Dead-Letter-Queue%EF%BC%89"><span class="nav-number">3.5.1.</span> <span class="nav-text">死信队列（Dead Letter Queue）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E7%94%9F%E5%AD%98%E6%97%B6%E9%97%B4%EF%BC%88Time-To-Live%EF%BC%89"><span class="nav-number">3.5.2.</span> <span class="nav-text">消息生存时间（Time To Live）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%B6%E9%97%B4%E8%BD%AE%EF%BC%88Timer-Wheel%EF%BC%89"><span class="nav-number">3.6.</span> <span class="nav-text">时间轮（Timer Wheel）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Netty-HashedWheelTimer"><span class="nav-number">3.6.1.</span> <span class="nav-text">Netty HashedWheelTimer</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">3.6.1.1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">3.6.1.2.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.6.1.3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93%E4%B8%80%E4%B8%8B"><span class="nav-number">3.6.1.4.</span> <span class="nav-text">小结一下</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Kafka-TimingWheel"><span class="nav-number">3.6.2.</span> <span class="nav-text">Kafka TimingWheel</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%97%A7%E7%9A%84%E7%82%BC%E7%8B%B1%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.6.2.1.</span> <span class="nav-text">旧的炼狱设计</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%96%B0%E7%9A%84%E7%82%BC%E7%8B%B1%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.6.2.2.</span> <span class="nav-text">新的炼狱设计</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%86%E5%B1%82%E6%97%B6%E9%97%B4%E8%BD%AE"><span class="nav-number">3.6.2.3.</span> <span class="nav-text">分层时间轮</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%97%B6%E9%97%B4%E8%BD%AE%E4%B8%AD%E6%A1%B6%E7%9A%84%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8"><span class="nav-number">3.6.2.4.</span> <span class="nav-text">时间轮中桶的双向链表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-DelayQueue-%E9%A9%B1%E5%8A%A8%E6%97%B6%E9%92%9F"><span class="nav-number">3.6.2.5.</span> <span class="nav-text">使用 DelayQueue 驱动时钟</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93%E4%B8%80%E4%B8%8B-2"><span class="nav-number">3.6.2.6.</span> <span class="nav-text">小结一下</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/data-structure/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97-%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          延迟队列实现
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-29 10:40:00" itemprop="dateCreated datePublished" datetime="2021-06-29T10:40:00+08:00">2021-06-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/DataStructure/" itemprop="url" rel="index"><span itemprop="name">DataStructure</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="延迟队列定义"><strong>延迟队列定义</strong></h2>
+<p>首先，队列这种数据结构相信大家都不陌生，它是一种先进先出的数据结构。普通队列中的元素是有序的，先进入队列中的元素会被优先取出进行消费；</p>
+<p>延时队列相比于普通队列最大的区别就体现在其延时的属性上，普通队列的元素是先进先出，按入队顺序进行处理，而延时队列中的元素在入队时会指定一个延迟时间，表示其希望能够在经过该指定时间后处理。</p>
+<h2 id="延时队列的应用">延时队列的应用</h2>
+<p>延时队列在项目中的应用还是比较多的，尤其像电商类平台：</p>
+<p>1、订单成功后，在30分钟内没有支付，自动取消订单</p>
+<p>2、外卖平台发送订餐通知，下单成功后 60s 给用户推送短信。</p>
+<p>3、如果订单一直处于某一个未完结状态时，及时处理关单，并退还库存</p>
+<p>4、淘宝新建商户一个月内还没上传商品信息，将冻结商铺等</p>
+<p>。。。。</p>
+<p>上边的这些场景都可以应用延时队列解决。</p>
+<span id="more"></span>
+<h2 id="延时队列的实现">延时队列的实现</h2>
+<h3 id="优先队列与二叉堆">优先队列与二叉堆</h3>
+<p>**堆（heap）**是一种特殊的基于树的数据结构，它本质上是一个满足堆属性的几乎完整的树，通常使用数组来实现。</p>
+<p><strong>堆</strong>是一种称为优先级队列的抽象数据类型的最高效率实现，实际上，优先级队列通常称为“堆”，无论它们如何实现。在堆中，最高（或最低）优先级的元素总是存储在根，也称为大顶堆（小顶堆）。但是，堆不是排序结构；它可以被认为是部分有序的。当需要重复删除具有最高（或最低）优先级的对象时，堆是一种有用的数据结构。</p>
+<p>堆最常见的使用情况就是动态求极值，动态指我们会放入和移出，所以需要动态求极值。由于根节点就是极值，这样 O(1) 也可以取到极值，但是调整过程需要 O(logN)。</p>
+<p>堆的常见实现是<strong>二叉堆</strong>（<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Binary_heap">binary heap</a>），对应其树的表现形式为二叉树，下图为大顶堆（<strong>父节点的权值大于儿子的权值</strong>）：</p>
+<img data-src="../../images/data-structure/max-heap.png" alt="Max-Heap-new" style="zoom: 50%;" />
+<h3 id="Java-Timer-和-ScheduledThreadPoolExecutor">Java Timer 和  ScheduledThreadPoolExecutor</h3>
+<h4 id="Timer">Timer</h4>
+<p>Java Timer 可以实现延时任务，也可以实现周期性任务。Timer 内部使用优先队列存储任务，该优先队列使用二叉堆实现，并使用<strong>单个线程</strong>不断地拿优先队列的第一个任务的执行时间和当前时间做对比。如果时间到了先看看这个任务是不是周期性执行的任务，如果是则修改当前任务时间为下次执行的时间，如果不是周期性任务则将任务从优先队列中移除。最后执行任务。如果时间还未到则调用 <code>wait()</code> 等待。</p>
+<p>文档建议使用 <code>java.util.concurrent</code> 包下 <code>ScheduledThreadPoolExecutor</code> 替代 <code>Timer</code>，原因在于：</p>
+<p>该类是<strong>单线程执行</strong>，那么如果一个任务执行的时间过久则会影响下一个任务的执行时间(当然你任务的 run 要是异步执行也行)。</p>
+<p>并且从代码可以看到<strong>对异常没有做什么处理</strong>，那么一个任务出错的时候会导致之后的任务都无法执行。</p>
+<h4 id="ScheduledThreadPoolExecutor">ScheduledThreadPoolExecutor</h4>
+<p><code>ScheduledThreadPoolExecutor</code> ，它是一个线程池，用于以给定的速率或延迟重复执行任务。 它实际上是 <code>Timer / TimerTask</code> 组合的更通用的替代品，因为它允许多个服务线程，接受各种时间单位，并且不需要子类化 TimerTask （只需实现 Runnable ）。 使用一个线程配置 ScheduledThreadPoolExecutor 其等效于 Timer 。</p>
+<p>该类继承了 <code>ThreadPoolExecutor</code>，实现了 <code>ScheduledExecutorService</code>。可以定性操作就是正常线程池差不多了。区别就在于两点，一个是 <code>ScheduledFutureTask</code> ，一个是 <code>DelayedWorkQueue</code>。</p>
+<p>其实 <code>DelayedWorkQueue</code> 就是优先队列，也是利用数组实现的二叉堆-小顶堆。而 <code>ScheduledFutureTask</code> 继承自 <code>FutureTask</code> 重写了 <code>run</code> 方法，实现了周期性任务的需求。</p>
+<p>由于是线程池，可以多线程执行，可以传入 Callable 异常自己处理，或者被线程吞掉，不会影响其它线程。</p>
+<h3 id="Java-DelayQueue-延时队列">Java DelayQueue 延时队列</h3>
+<p><code>JDK</code> 中提供了一组实现延迟队列的 <code>API</code>，位于 <code>java.util.concurrent</code> 包下 <code>DelayQueue</code>。</p>
+<p><code>DelayQueue</code> 是一个**线程安全的无界阻塞（<code>BlockingQueue</code>）**队列，内部封装了一个 <code>PriorityQueue</code>（优先队列），<code>PriorityQueue</code> 内部使用<code>完全二叉堆</code>来实现队列元素排序，我们在向 <code>DelayQueue</code> 队列中添加元素时，会给元素一个 <code>Delay</code>（延迟时间）作为排序条件，队列中最小的元素会优先放在队首。队列中的元素只有到了 <code>Delay</code> 时间才允许从队列中取出。放入的元素通过实现 <code>Delayed</code> 接口来提供延迟时间，并实现其 <code>Comparable</code> 来比较后期时间先后。</p>
+<p><code>take</code> 方法检索并删除此队列的头，如有必要，阻塞直到延迟过期的元素在此队列上可用。</p>
+<blockquote>
+<p>有限时间的阻塞使用当前 leader 线程的等待来完成，该线程被设计用来等待队列头部的元素。使用 Leader-Follower 模式的这种变体用于最小化不必要的定时等待。 当一个线程成为领导者时，它只等待下一次延迟到期，而其他线程则无限期地等待。领导线程必须在从 take() 或 poll(…) 返回之前向某个其他线程发出信号，除非某个其他线程在此期间成为领导。</p>
+</blockquote>
+<p><code>poll</code> 检索并删除此队列的头部，如果此队列没有延迟过期的元素，则返回 null。</p>
+<p>由于是无界队列，所以 <code>put</code>、<code>offset</code> 入队元素永远不会阻塞。</p>
+<p>先简单实现一下看看效果，添加三个 <code>order</code> 入队 <code>DelayQueue</code>，分别设置订单在当前时间的 <code>5秒</code>、<code>10秒</code>、<code>15秒</code>后取消。</p>
+<p><img data-src="../../images/data-structure/delay-queue.png" alt="DelayQueue"></p>
+<h3 id="Redisson-RDelayedQueue">Redisson RDelayedQueue</h3>
+<p>Redission 是 Redis 的 Java Client，为我们实现了很多易于使用的分布式集合类，这里就包括了延时队列，它允许以指定的延迟将每个元素传输到目标队列。实现其 <code>RDelayedQueue</code> 接口的类是 <code>RedissonDelayedQueue</code>，内部使用三个集合结构来实现：</p>
+<ul>
+<li>延时队列 List：数据入队的队列</li>
+<li>目标队列 List：过期数据所在的队列</li>
+<li>timeoutSet 过期时间 ZSet：分数值为 timeout 值，辅助判断元素是否过期</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">RBlockingQueue&lt;String&gt; destinationQueue = client.getBlockingQueue(<span class="string">&quot;block_queue&quot;</span>);</span><br><span class="line">RDelayedQueue&lt;String&gt; delayedQueue = client.getDelayedQueue(destinationQueue);</span><br><span class="line"><span class="type">int</span> <span class="variable">memberCount</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">1</span>; i &lt;= memberCount; i++) &#123;</span><br><span class="line">    <span class="comment">// 向延迟队列放入数据</span></span><br><span class="line">    <span class="type">long</span> <span class="variable">time</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">    delayedQueue.offer(time + <span class="string">&quot;---&quot;</span> + i, <span class="number">30</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="variable">consumerCount</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">while</span> (consumerCount != memberCount) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 阻塞队列有数据就返回，否则 wait</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">take</span> <span class="operator">=</span> destinationQueue.take();</span><br><span class="line">        consumerCount++;</span><br><span class="line">        System.out.println(<span class="string">&quot;take:&quot;</span> + take);</span><br><span class="line">        <span class="type">long</span> <span class="variable">time</span> <span class="operator">=</span> Long.parseLong(take.split(<span class="string">&quot;---&quot;</span>)[<span class="number">0</span>]);</span><br><span class="line">        <span class="comment">// 消费可能产生的延迟</span></span><br><span class="line">        System.out.println(<span class="string">&quot;延迟时间:&quot;</span> + (System.currentTimeMillis() - time) + <span class="string">&quot; ms&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">delayedQueue.destroy();</span><br></pre></td></tr></table></figure>
+<h4 id="Redis-ZSet">Redis ZSet</h4>
+<p>Redis 有一个有序集合（Sorted Set）的数据结构 ZSet，ZSet 中每个成员都有一个对应 Score，ZSET 中的成员按 Score 和 ZSET 中成员的排序顺序进行排序和访问。</p>
+<p><img data-src="../../images/middleware/redis/zset.svg" alt="ZSet"></p>
+<p>那么我们可以通过以下这几个操作使用 Redis 的 ZSet 来实现一个延迟队列：</p>
+<ol>
+<li>入队操作：<code>ZADD KEY timestamp task</code>，我们将需要处理的任务，按其需要延迟处理时间作为 Score 加入到 ZSet 中。Redis 的 ZADD 的时间复杂度是 <code>O(logN)</code>，<code>N</code> 是 ZSet 中元素个数，因此我们能相对比较高效的进行入队操作。</li>
+<li>起一个进程定时（比如每隔一秒）通过 <code>ZREANGEBYSCORE</code> 或 <code>ZRANGE</code> 方法查询 ZSet 中 Score 最小的元素，具体操作为：<code>ZRANGEBYSCORE KEY -inf +inf limit 0 1 WITHSCORES</code> 或 <code>ZRANGE KEY 0 0 WITHSCORES</code>。查询结果有两种情况：<br>
+a. 查询出的分数小于等于当前时间戳，说明到这个任务需要执行的时间了，则去异步处理该任务，并移除该过期任务 <code>ZREM KEY task</code>；<br>
+b. 查询出的分数大于当前时间戳，说明 ZSet 中所有的任务都还没有到需要执行的时间，则休眠一秒后继续查询；<br>
+同样的，<code>ZRANGEBYSCORE</code> 操作的时间复杂度为 <code>O(logN + M)</code>，其中 <code>N</code> 为 ZSet 中元素个数，<code>M</code> 为查询的元素个数，因此我们定时查询操作也是比较高效的。</li>
+</ol>
+<p>Redis 的 ZSet 有序集合使用跳表这种数据结构来存储和管理有序数据。</p>
+<h4 id="跳表（Skip-List）">跳表（Skip List）</h4>
+<p>跳表是一种基于链表，并使用多层数组索引已达到近乎二分查找效率的<strong>有序</strong>数据结构，和二分查找一样，它使得包含 n 个元素的有序序列的查找和插入操作的平均时间复杂度都是 <code>O(logN)</code>。</p>
+<p>我们知道，不借助额外空间的情况下，在链表中查找一个值，需要按照顺序一个个查找，时间复杂度为 O(N)，其中 N 为链表长度。但是链表对于插入、删除的时间复杂度只有 <code>O(1)</code>。数组和链表刚好相反，对于查找直接可以使用索引，在链表上使用数组索引就可以大大提高查询其性能，也是一种典型的用空间换时间的思想。</p>
+<p><img data-src="../../images/data-structure/skip-list-add-element.gif" alt="skip-list-add-element"></p>
+<h5 id="跳表与平衡树、哈希表的比较">跳表与平衡树、哈希表的比较</h5>
+<ul>
+<li>跳表和各种平衡树（如 AVL、红黑树等）的元素都是有序排列的，而哈希表不是有序的。因此，在哈希表上只能做单个 key 的查找，不适宜做范围查找。所谓范围查找，指的是查找那些大小在指定的两个值之间的所有节点。</li>
+<li>在做范围查找的时候，平衡树比跳表操作要复杂。在平衡树上，我们找到指定范围的小值之后，还需要以中序遍历的顺序继续寻找其它不超过大值的节点。如果不对平衡树进行一定的改造，这里的中序遍历并不容易实现。而在跳表上进行范围查找就非常简单，只需要在找到小值之后，对第1层链表进行若干步的遍历就可以实现。</li>
+<li>平衡树的插入和删除操作可能引发子树的调整（再平衡），逻辑复杂，而跳表的插入和删除只需要修改相邻节点的指针，操作简单又快速。</li>
+<li>从内存占用上来说，跳表比平衡树更灵活一些。一般来说，平衡树每个节点包含 2 个指针（分别指向左右子树），而跳表每个节点包含的指针数目平均为 1/(1-p)，具体取决于参数 p 的大小，p 为有 (i+1) 层指针的概率。如果像 Redis 里的实现一样，取 p=1/4，那么平均每个节点包含 1.33 个指针，比平衡树更有优势。</li>
+<li>查找单个 key，跳表和平衡树的时间复杂度都为 <code>O(logN)</code>，大体相当；而哈希表在保持较低的哈希值冲突概率的前提下，查找时间复杂度接近 <code>O(1)</code>，性能更高一些。所以我们平常使用的各种 Map 或 dictionary 结构，大都是基于哈希表实现的。</li>
+<li>从算法实现难度上来比较，跳表比平衡树要简单得多。</li>
+</ul>
+<h3 id="RabbitMQ-实现延迟队列">RabbitMQ 实现延迟队列</h3>
+<p>RabbitMQ 本身并不直接提供对延迟队列的支持，我们依靠 RabbitMQ 的 <strong>TTL</strong> 以及<strong>死信队列</strong>功能，来实现延迟队列的效果。那就让我们首先来了解一下，RabbitMQ 的死信队列以及 TTL 功能。</p>
+<h4 id="死信队列（Dead-Letter-Queue）"><strong>死信队列（Dead Letter Queue）</strong></h4>
+<p>死信队列实际上是一种 RabbitMQ 的消息处理机制，当 RabbmitMQ 在生产和消费消息的时候，消息遇到如下的情况，就会变成“死信”：</p>
+<ol>
+<li>消息被拒绝<code>basic.reject/basic.nack</code> 并且不再重新投递 <code>requeue=false</code></li>
+<li>消息超时未消费，也就是 TTL 过期了</li>
+<li>消息队列到达最大长度</li>
+</ol>
+<p>消息一旦变成一条死信，便会被重新投递到死信交换机（Dead-Letter-Exchange），然后死信交换机根据绑定规则转发到对应的死信队列上，监听该队列就可以让消息被重新消费。</p>
+<h4 id="消息生存时间（Time-To-Live）"><strong>消息生存时间（Time To Live）</strong></h4>
+<p>TTL（Time-To-Live）是 RabbitMQ 的一种高级特性，表示了一条消息的最大生存时间，单位为毫秒。如果一条消息在 TTL 设置的时间内没有被消费，那么它就会变成一条死信，进入我们上面所说的死信队列。</p>
+<p>有两种不同的方式可以设置消息的 TTL 属性，一种方式是直接在创建队列的时候设置整个队列的 TTL 过期时间，所有进入队列的消息，都被设置成了统一的过期时间，一旦消息过期，马上就会被丢弃，进入死信队列；</p>
+<p>另一种方式是针对单条消息设置。不过需要注意的是，使用这种方式设置的 TTL，消息可能不会按时死亡，因为 RabbitMQ 只会检查第一个消息是否过期。比如这种情况，第一个消息设置了 20s 的 TTL，第二个消息设置了 10s 的 TTL，那么 RabbitMQ 会等到第一个消息过期之后，才会让第二个消息过期。</p>
+<p>解决这个问题的方法也很简单，只需要安装 RabbitMQ 的一个插件即可：</p>
+<p><strong><a href="https://link.zhihu.com/?target=https%3A//www.rabbitmq.com/community-plugins.html">https://www.rabbitmq.com/community-plugins.html</a></strong></p>
+<p>安装好这个插件后，所有的消息就都能按照被设置的 TTL 过期了。</p>
+<p><img data-src="../../images/middleware/rabbitmq/rabbitmq-delay-queue.png" alt="rabbitmq-delay-queue"></p>
+<p><strong>延迟消费模式：</strong><br>
+生产者发布消息到缓冲队列<code>buffer-queue</code>中，消息在<code>buffer-queue</code>中经过TTL时间成为死信后，会通过<code>buffer-queue</code>设置的死信交换机<code>dlx.exchange</code>重新路由出去。<code>worker-queue</code>为实际的工作队列，通过路由键<code>dlx.routing.key</code>与死信交换机<code>dlx.exchange</code>绑定，最终死信消息会重新路由到实际的工作队列<code>worker-queue</code>中，被消费处理。<br>
+<strong>延迟重试模式：</strong><br>
+生产者发布消息到实际的工作队列<code>buffer-queue</code>中，被消费者消费处理但是处理失败。消费者将处理失败的消息丢到缓冲队列<code>buffer-queue</code>，失败的消息在<code>buffer-queue</code>中经过TTL时间成为死信后，会通过<code>buffer-queue</code>设置的死信交换机<code>dlx.exchange</code>重新路由出去。<code>worker-queue</code>为实际的工作队列，通过路由键<code>dlx.routing.key</code>与死信交换机<code>dlx.exchange</code>绑定，处理失败的消息在<code>buffer-queue</code>中经过一段时间的延迟后，最终又路由回到<code>worker-queue</code>中，被再次消费处理，这就是延迟重试。</p>
+<p>使用 RabbitMQ 来实现延迟队列，我们可以很好的利用一些 RabbitMQ 的特性，比如消息可靠发送、消息可靠投递、死信队列来保障消息至少被消费一次以及未被正确处理的消息不会被丢弃。另外，通过 RabbitMQ 集群的特性，可以很好的解决单点故障问题，不会因为单个节点挂掉导致延迟队列不可用或者消息丢失。</p>
+<h3 id="时间轮（Timer-Wheel）">时间轮（Timer Wheel）</h3>
+<p>Timer Wheel 时间轮算法，是一种实现延迟队列的巧妙且高效的算法，被应用在 Netty，Zookeeper，Kafka 等各种框架中。</p>
+<p><img data-src="../../images/data-structure/timer-wheel.jpg" alt="Timer Wheel"></p>
+<p>如上图所示，时间轮是一个存储延迟消息的循环队列，其底层一般采用数组实现，可以高效循环遍历。这个循环队列中的每个元素对应一个桶（Bucket），桶中存放任务列表，这个列表一般是一个双向环形链表，链表中每一项都代表一个需要执行的延迟任务。双向链表的优点是，如果我们可以访问列表中的链接单元，它允许 O(1) 插入/删除列表项，比优先队列的 O(logN) 要快很多。</p>
+<p>时间轮会有表盘指针，表示时间轮当前所指时间，随着时间推移，该指针会不断前进，并处理对应位置上的延迟任务列表。表盘有自己的刻度数，每个刻度数代表一定的过期时间，对于超出表盘时间的延迟任务，有两种实现方案，一种是像 Netty 的 <code>HashedWheelTimer</code> 在每个延迟任务中维护自己轮次，一种是像 Kafka <code>TimingWheel</code> 将表盘分层，就像我们手表的时分秒一样。</p>
+<h4 id="Netty-HashedWheelTimer">Netty HashedWheelTimer</h4>
+<p>我们以 Netty 的 <code>HashedWheelTimer</code> 为例，来说明时间轮中几个关键的概念。</p>
+<h5 id="概念">概念</h5>
+<p><strong>Tick Duration 刻度持续时间</strong></p>
+<p>此计时器不会按时执行计划的任务  <code>TimerTask</code>，他只是一个“近似”的超时调度器。 <code>HashedWheelTimer</code> 会在每个刻度处中检查是否有任何任务落后于计划并执行它们。</p>
+<p><strong>Ticks Per Wheel 每个轮盘的刻度数</strong></p>
+<p><code>HashedWheelTimer</code> 维护着一个名为 “wheel” 的数据结构。简单地说，轮盘是一个 <code>TimerTasks</code> 的哈希表，其哈希函数是“任务的到期时间”。每个轮子的默认刻度数是 512。</p>
+<p><strong>Round Duration 计时周期</strong></p>
+<p>轮盘指针走完一圈耗时，roundDuration = ticksPerWheel ∗ tickDuration。当任务的延期时长 delay 超出计时周期时，任务放入对应桶中的同时保存剩余圈数：roundsRemaining = delay / roundDuration。</p>
+<blockquote>
+<p>不要创建太多 HashedWheelTimer 实例，由于该类在初始化时会创建一个工作线程（如果有传入线程池，则使用该线程池创建），所以最好在应用中共享该实例，以防止过多线程的浪费。</p>
+</blockquote>
+<h5 id="使用">使用</h5>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1s 持续时间，5 个刻度</span></span><br><span class="line"><span class="keyword">final</span> <span class="type">Timer</span> <span class="variable">timer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashedWheelTimer</span>(Executors.defaultThreadFactory(), <span class="number">1</span>, TimeUnit.SECONDS, <span class="number">5</span>);</span><br><span class="line"><span class="type">CountDownLatch</span> <span class="variable">latch</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CountDownLatch</span>(<span class="number">3</span>);</span><br><span class="line"></span><br><span class="line">System.out.println(<span class="string">&quot;                  开始时间：&quot;</span> + LocalDateTime.now());</span><br><span class="line"><span class="comment">// 定时任务</span></span><br><span class="line"><span class="type">TimerTask</span> <span class="variable">task1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TimerTask</span>() &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">(Timeout timeout)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;order1 第&quot;</span> + (count) + <span class="string">&quot;次  5s 后执行时间：&quot;</span> + LocalDateTime.now());</span><br><span class="line">        <span class="keyword">if</span> (count++ &lt; <span class="number">4</span>) &#123;</span><br><span class="line">            timer.newTimeout(<span class="built_in">this</span>, <span class="number">5</span>, TimeUnit.SECONDS); <span class="comment">// 结束时候再次注册</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            latch.countDown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">timer.newTimeout(task1, <span class="number">5</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line"><span class="type">TimerTask</span> <span class="variable">task2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TimerTask</span>() &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">(Timeout timeout)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;order2 第&quot;</span> + (count) + <span class="string">&quot;次 10s 后执行时间：&quot;</span> + LocalDateTime.now());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (count++ &lt; <span class="number">4</span>) &#123;</span><br><span class="line">            timer.newTimeout(<span class="built_in">this</span>, <span class="number">10</span>, TimeUnit.SECONDS); <span class="comment">// 结束时候再注册</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            latch.countDown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">timer.newTimeout(task2, <span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 延迟任务</span></span><br><span class="line">timer.newTimeout(timeout -&gt; &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;order3 15s 后执行一次时间  ：&quot;</span> + LocalDateTime.now());</span><br><span class="line">    latch.countDown();</span><br><span class="line">&#125;, <span class="number">15</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">latch.await();</span><br></pre></td></tr></table></figure>
+<p>通过结束时再注册相同的延迟时间可以实现定时任务，从执行结果来看，也可以看到时间轮存在一定的误差，但是误差可以通过刻度数和精度来弥补。</p>
+<h5 id="实现">实现</h5>
+<p><img data-src="../../images/data-structure/hashed-wheel-timer.png" alt="baf4213d8966123c4ebbf9810646001e"></p>
+<p>通过 <code>newTimeout</code> 将新的定时任务 <code>TimerTask</code> 包装为 <code>Timeout</code>，并根据传入的延期时间和轮盘的刻度数*刻度持续时间来计算该任务对应的轮次，添加到如上图所绘的 <code>timeouts</code> 的 <code>MPSC（Multiple Producer Single Consumer）</code>多生产者单消费者队列。</p>
+<p><strong>单个的工作线程</strong>执行轮盘的轮询，通过工作线程的 sleep 休眠过了单个刻度的持续时间时，会将新添的定时任务的 timeouts 队列移入到相应的桶中，并执行该桶中到期的任务，也就是轮次为 0 的到期任务，其它轮次的定时任务相应减少轮次。由于单线程的原因，<strong>单个的任务执行超过刻度持续时间会影响该刻度桶中的其它任务执行</strong>。桶中的任务执行完后指针将移动到下一个刻度，然后重复该工作。</p>
+<p>具体源码解析可查看：<a target="_blank" rel="noopener" href="https://www.javadoop.com/post/HashedWheelTimer">HashedWheelTimer 使用及源码分析</a>。</p>
+<h5 id="小结一下">小结一下</h5>
+<p>总体上看 Netty 的实现就是上文说的时间轮通过轮数的实现，完全一致。可以看出时间精度由 TickDuration 把控，并且工作线程的除了处理执行到时的任务还做了其他操作，因此任务不一定会被精准的执行。</p>
+<p>而且任务的执行如果不是新起一个线程，或者将任务扔到线程池执行，那么耗时的任务会阻塞下个任务的执行。</p>
+<p>并且会有很多无用的 tick 推进，例如 TickDuration 为1秒，此时就一个延迟 350 秒的任务，那就是有 349 次无用的操作。</p>
+<p>但是从另一面来看，如果任务都执行很快(当然你也可以异步执行)，并且任务数很多，通过分批执行，并且增删任务的时间复杂度都是 O(1) 来说。时间轮还是比通过优先队列实现的延时任务来的合适些。</p>
+<h4 id="Kafka-TimingWheel">Kafka TimingWheel</h4>
+<p>Kafka 有一个被称为“请求炼狱（<code>request purgatory</code>）”的数据结构，炼狱会保留任何尚未满足其完成条件但也没出现错误的请求。问题是：我们如何满足高效跟踪集群中的数万个异步请求何时达成条件的任务？，比如下面列举的请求类型：</p>
+<ul>
+<li>不能认为带有 <code>acks=all</code> 的生产者请求已经完成，除非所有同步副本已经被确认。而且即使领导者 (leader) 出错，该请求也不能丢失。</li>
+<li>消费者的 <code>min.bytes=1</code> 的抓取请求只能等到至少有一个新字节的数据时才会被响应，这样可以避免消费者忙于检查新数据的到达。</li>
+</ul>
+<p>这些请求只有在 (a) 条件满足时或者 (b) 超时出现时才能被认为已完成。</p>
+<h5 id="旧的炼狱设计">旧的炼狱设计</h5>
+<p>炼狱中的请求在满足条件时稍后完成，或者在超过请求的超时参数中指定的时间时强制完成（超时）。在旧的设计中，它使用 Java <code>DelayQueue</code> 来实现定时器。</p>
+<p>当一个请求完成时，该请求不会立即从定时器或观察者列表中删除，而是会在条件检查期间被发现时才会删除。当删除没有跟上时，服务器可能会耗尽 JVM 堆并导致 <code>OutOfMemoryError</code>。</p>
+<p>为了缓解这种情况，使用一个单独的线程，称为收割者线程，在当炼狱中的请求数量（挂起或已完成）超过配置的份额时，它会从炼狱中清除已完成的请求。清除操作会扫描定时器队列和所有观察者列表以查找已完成的请求并将其删除。</p>
+<p>通过将此配置参数调低，服务器实际上可以避免内存问题。但是，如果服务器过于频繁地扫描所有列表，则必须付出显着的性能损失。</p>
+<h5 id="新的炼狱设计">新的炼狱设计</h5>
+<p>新设计的目标是允许立即删除已完成的请求并显着减轻由于昂贵的清除过程造成的负担。它需要在计时器和请求中交叉引用条目。此外，强烈希望有 O(1) 的插入/删除成本，因为每个请求/完成都会发生插入/删除操作。</p>
+<p>为了满足这些要求，我们设计了一种基于<a target="_blank" rel="noopener" href="http://www.cs.columbia.edu/~nahum/w6998/papers/ton97-timing-wheels.pdf">分层时间轮</a>的新炼狱实现。</p>
+<h5 id="分层时间轮">分层时间轮</h5>
+<p>一个简单的时间轮是存放着定时任务桶的循环队列。我们把 <code>u</code> 称为时间单位。一个大小为 <code>n</code> 的时间轮有 <code>n</code> 个桶，可以在 <code>n * u</code> 时间间隔内保存任务。每个桶都保存了属于相应时间范围内的定时任务。一开始，第一个桶保存 <code>[0, u)</code> 的任务，第二个桶保存 <code>[u, 2u)</code>, … 的任务，第 <code>n</code> 个桶保存 <code>[u * (n -1), u * n)]</code>。每过时间单位 <code>u</code> 的间隔，指针走了一格并移动到下一个存储桶，之前桶中的所有定时器任务到期，定时器立即运行过期的任务，清空的桶可用于下一轮倒计时。由于指针移动到新的用于倒计时开始的桶，因此，新的任务只会从该桶开始倒计时。所以如果当前桶的时间为 <code>t</code>，指针移动之后，它变成了 <code>[t + u * n, t + (n + 1) * u)</code> 的桶。时间轮的插入/删除（启动定时器/停止定时器）成本为 O(1)，而基于优先级队列的定时器，例如 <code>java.util.concurrent.DelayQueue</code> 和 <code>java.util.Timer</code>，插入/删除成本为 O(logN)。请注意，<code>DelayQueue</code> 或 <code>Timer</code> 都不支持随机删除。</p>
+<p><img data-src="../../images/data-structure/timing-wheels.png" alt="Hierarchical timing wheels"></p>
+<p>简单时间轮的一个主要缺点是它假设定时器的请求距离在当前时间 <code>n * u</code> 的时间间隔内。如果定时器请求超出此间隔，则为溢出，Netty 的单层时间轮是在每个定时任务中维护了轮次。分层时间轮用于处理此类溢出。它是一个分层组织的时间轮，将溢出委托给上层轮。最低级别具有最好的时间精度。当我们向上移动层次结构时，时间精度将变大。如果一个轮子在一级的精度是 u，刻度数是 n，那么在第二级的精度应该是 n*u，第三级 n2 * u，以此类推。在每一层，溢出都委托给更高一层的轮子。当较高级别的轮子 tick 推进时，它会将定时器任务重新插入较低级别。可以按需创建移出的轮层级数。当上层桶中的桶到期时，其中的所有任务都会递归地重新插入定时器。然后将任务移至更细粒度的轮子或者被执行。插入（start-timer）成本是 O(m)，其中 m 是轮盘的数量，与系统中的请求数量相比通常非常小，删除（stop-timer）成本仍然是 O(1)。</p>
+<p><img data-src="../../images/data-structure/timing-wheels-2.png" alt="Doubly linked list for buckets in timing wheels"></p>
+<h5 id="时间轮中桶的双向链表">时间轮中桶的双向链表</h5>
+<p>在新设计中，我们对时间轮中的桶使用自己的双向链表实现。双向链表的优点是，如果我们可以访问列表中的链接单元，它允许 O(1) 插入/删除列表项。</p>
+<p>当排队到定时器队列时，定时器任务实例在其自身中保存链接单元。当任务完成或取消时，将使用保存在任务本身中的链接单元更新列表。</p>
+<h5 id="使用-DelayQueue-驱动时钟">使用 DelayQueue 驱动时钟</h5>
+<p>一个简单的实现可以使用一个线程，它每单位时间唤醒一次并进行 tick 推进，并检查桶中是否有任何任务。炼狱单位时间为 1ms（u=1ms）。如果请求在最低级别的轮盘上比较稀疏，这可能是浪费的。这通常是因为大多数请求在插入到最低级别的轮盘之前在上层轮盘找到合适的位置。如果一个线程只在有一个非空的桶要到期时才唤醒，那就太好了。新的炼狱与旧实现类似，通过使用 <code>java.util.concurrent.DelayQueue</code> 来实现，但我们将<strong>非空任务桶</strong>而不是单个任务排入队列。这种设计具有性能优势。<code>DelayQueue</code> 中的项目数量受桶数量的限制，非空桶的数量通常远小于任务的数量，因此 DelayQueue 内部优先级队列的 offer/poll 操作次数会明显减少。</p>
+<h5 id="小结一下-2">小结一下</h5>
+<p>Kafka 用了多层次时间轮来实现，并且是按需创建时间轮，采用任务的绝对时间来判断延期，并且对于每个非空槽都会维护一个过期时间，利用 DelayQueue 来对每个非空槽的过期时间排序，来进行时间的推进，防止空推进的存在。</p>
+<h2 id="总结">总结</h2>
+<p>首先介绍了 Timer、DelayQueue 和 ScheduledThreadPool，它们都是基于优先队列实现的，O(logN) 的时间复杂度在任务数多的情况下频繁的入队出队对性能来说有损耗，而且 Java 的延迟任务都存放在 JVM 内存队列中，任务过多会导致 OOM，<strong>因此适合于任务数不多的情况</strong>。</p>
+<p>Timer 是单线程的会有阻塞的风险，并且对异常没有做处理，一个任务出错 Timer 就挂了。而 ScheduledThreadPool 相比于 Timer 首先可以多线程来执行任务，并且线程池对异常做了处理，使得任务之间不会有影响。并且 Timer 和 ScheduledThreadPool 可以周期性执行任务。 而 DelayQueue 就是个具有优先级的阻塞队列。</p>
+<p><strong>对比而言时间轮更适合任务数很大的延时场景，它的任务插入和删除时间复杂度都为O(1)</strong>。对于延迟超过时间轮所能表示的范围有两种处理方式，一是通过增加一个字段-轮数，Netty 就是这样实现的。二是多层次时间轮，Kakfa 是这样实现的。但是注意 Netty 的单线程任务阻塞影响其它任务的情况，而且相比而言 Netty 的实现会有空推进的问题，而 Kafka 采用 DelayQueue 以非空槽为单位，利用空间换时间的思想解决了空推进的问题。</p>
+<p>基于 Redis 的实现可以利用 Redis 集群等部署，以及 Redis 高性能低内存等特点，使用在任务数很大延时场景。但 Redis 毕竟是基于内存的，虽然有数据持久化方案，<strong>但还是有数据丢失的可能性</strong>。</p>
+<p>而 RabbitMQ 的实现方案，由于 RabbitMQ 本身的消息可靠发送、消息可靠投递、死信队列等特性，可以保障消息至少被消费一次以及未被正确处理的消息不会被丢弃，让消息的可靠性有了保障。</p>
+<hr>
+<p>参考链接：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c216a235f6a2">一口气说出 6种 延时队列的实现方案</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/266156267">你真的知道怎么实现一个延迟队列吗 ？</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzA4NTg1MjM0Mg==&amp;mid=2657261425&amp;idx=1&amp;sn=d840079ea35875a8c8e02d9b3e44cf95&amp;scene=21#wechat_redirect">Redis 为什么用跳表而不用平衡树？</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/eae22e9ee9d8">RedissonDelayedQueue源码解读</a></li>
+<li><a target="_blank" rel="noopener" href="https://biteeniu.github.io/rabbitmq/rabbitmq_delay_queue/">RabbitMQ实现延迟队列</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.javadoop.com/post/HashedWheelTimer">HashedWheelTimer 使用及源码分析</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.confluent.io/blog/apache-kafka-purgatory-hierarchical-timing-wheels/">Apache Kafka, Purgatory, and Hierarchical Timing Wheels</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.honeypps.com/mq/kafka-analysis-of-timing-wheel/">Kafka解惑之时间轮（TimingWheel）</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/DelayQueue/" rel="tag"># DelayQueue</a>
+              <a href="/tags/RDelayedQueue/" rel="tag"># RDelayedQueue</a>
+              <a href="/tags/PriorityQueue/" rel="tag"># PriorityQueue</a>
+              <a href="/tags/Binary-Heap/" rel="tag"># Binary Heap</a>
+              <a href="/tags/Timer-Wheel/" rel="tag"># Timer Wheel</a>
+              <a href="/tags/SkipList/" rel="tag"># SkipList</a>
+              <a href="/tags/Redission/" rel="tag"># Redission</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/persistence/%E5%8F%8C%E5%90%91%E5%85%B3%E8%81%94%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" rel="prev" title="双向关联最佳实践">
+                  <i class="fa fa-chevron-left"></i> 双向关联最佳实践
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/persistence/db/MySQL-%E9%94%81%E5%92%8C%E4%BA%8B%E7%89%A9%E6%A8%A1%E5%9E%8B/" rel="next" title="MySQL 锁和事物模型">
+                  MySQL 锁和事物模型 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"264986340d0b0206fe8349a6c392e902"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="JPA 查询允许您获取实体或 DTO 投影。但是，有时需要一个组合的结果集。 实体模型 假设我们有下面两个实体：  这两个实体没有通过 @ManyToOne 进行关联。但是，两个实体共享一个 locale 属性，我们可以使用它来在两者之间形成连接。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为什么需要使用 ResultTransformer 自定义结果集映射">
+<meta property="og:url" content="https://www.zeral.cn/persistence/%E4%BD%BF%E7%94%A8-ResultTransformer-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%93%E6%9E%9C%E9%9B%86%E6%98%A0%E5%B0%84/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="JPA 查询允许您获取实体或 DTO 投影。但是，有时需要一个组合的结果集。 实体模型 假设我们有下面两个实体：  这两个实体没有通过 @ManyToOne 进行关联。但是，两个实体共享一个 locale 属性，我们可以使用它来在两者之间形成连接。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/jpa/personcountry.png">
+<meta property="article:published_time" content="2018-11-16T15:34:52.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.240Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Hibernate">
+<meta property="article:tag" content="ResultTransformer">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/jpa/personcountry.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/persistence/%E4%BD%BF%E7%94%A8-ResultTransformer-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%93%E6%9E%9C%E9%9B%86%E6%98%A0%E5%B0%84/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/persistence/%E4%BD%BF%E7%94%A8-ResultTransformer-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%93%E6%9E%9C%E9%9B%86%E6%98%A0%E5%B0%84/","path":"persistence/使用-ResultTransformer-自定义结果集映射/","title":"为什么需要使用 ResultTransformer 自定义结果集映射"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>为什么需要使用 ResultTransformer 自定义结果集映射 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BD%93%E6%A8%A1%E5%9E%8B-2"><span class="nav-number">1.</span> <span class="nav-text">实体模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-DTO-%E6%8A%95%E5%BD%B1%E4%B8%AD%E8%BF%94%E5%9B%9E%E5%AE%9E%E4%BD%93"><span class="nav-number">2.</span> <span class="nav-text">在 DTO 投影中返回实体</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ResultTransformer"><span class="nav-number">3.</span> <span class="nav-text">ResultTransformer</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/persistence/%E4%BD%BF%E7%94%A8-ResultTransformer-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%93%E6%9E%9C%E9%9B%86%E6%98%A0%E5%B0%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          为什么需要使用 ResultTransformer 自定义结果集映射
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-11-16 23:34:52" itemprop="dateCreated datePublished" datetime="2018-11-16T23:34:52+08:00">2018-11-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JPA/" itemprop="url" rel="index"><span itemprop="name">JPA</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>JPA 查询允许您获取实体或 <a target="_blank" rel="noopener" href="https://zeral.top/%E4%BD%BF%E7%94%A8-JPA-%E5%92%8C-Hibernate-%E5%B0%86%E7%BB%93%E6%9E%9C%E6%98%A0%E5%B0%84-DTO-%E7%9A%84%E6%9C%80%E5%A5%BD%E6%96%B9%E5%BC%8F/">DTO 投影</a>。但是，有时需要一个组合的结果集。</p>
+<h2 id="实体模型-2">实体模型</h2>
+<p>假设我们有下面两个实体：</p>
+<p><img data-src="../../images/jpa/personcountry.png" alt="Person Country"><br>
+这两个实体没有通过 <code>@ManyToOne</code> 进行关联。但是，两个实体共享一个 locale 属性，我们可以使用它来在两者之间形成连接。</p>
+<span id="more"></span>
+<h2 id="在-DTO-投影中返回实体">在 DTO 投影中返回实体</h2>
+<p>考虑我们将做下面的 DTO 的映射：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PersonAndCountryDTO</span>&#123;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Person person;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String country;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">PersonAndCountryDTO</span><span class="params">(</span></span><br><span class="line"><span class="params">        Person person, </span></span><br><span class="line"><span class="params">        String country)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.person = person;</span><br><span class="line">        <span class="built_in">this</span>.country = country;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> Person <span class="title function_">getPerson</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> person;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getCountry</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> country;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用 JPQL 查询大概长这样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">List&lt;PersonAndCountryDTO&gt; personAndAddressDTOs = entityManager.createQuery(</span><br><span class="line">    <span class="string">&quot;select new &quot;</span> +</span><br><span class="line">    <span class="string">&quot;   com.vladmihalcea.book.hpjp.hibernate.query.dto.PersonAndCountryDTO(&quot;</span> +</span><br><span class="line">    <span class="string">&quot;       p, &quot;</span> +</span><br><span class="line">    <span class="string">&quot;       c.name&quot;</span> +</span><br><span class="line">    <span class="string">&quot;   ) &quot;</span> +</span><br><span class="line">    <span class="string">&quot;from Person p &quot;</span> +</span><br><span class="line">    <span class="string">&quot;join Country c on p.locale = c.locale &quot;</span> +</span><br><span class="line">    <span class="string">&quot;order by p.id&quot;</span>, PersonAndCountryDTO.class)</span><br><span class="line">.getResultList();</span><br></pre></td></tr></table></figure>
+<p>hibernate 生成的 sql 如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> p.id <span class="keyword">AS</span> col_0_0_,</span><br><span class="line">       c.name <span class="keyword">AS</span> col_1_0_</span><br><span class="line"><span class="keyword">FROM</span>   Person p</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span></span><br><span class="line">       Country c </span><br><span class="line"><span class="keyword">ON</span></span><br><span class="line">       ( p.locale <span class="operator">=</span> c.locale )</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span></span><br><span class="line">       p.id</span><br><span class="line"> </span><br><span class="line"><span class="keyword">SELECT</span> p.id <span class="keyword">AS</span> id1_1_0_,</span><br><span class="line">       p.locale <span class="keyword">AS</span> locale2_1_0_,</span><br><span class="line">       p.name <span class="keyword">AS</span> name3_1_0_</span><br><span class="line"><span class="keyword">FROM</span>   Person p</span><br><span class="line"><span class="keyword">WHERE</span>  p.id <span class="operator">=</span> <span class="number">3</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">SELECT</span> p.id <span class="keyword">AS</span> id1_1_0_,</span><br><span class="line">       p.locale <span class="keyword">AS</span> locale2_1_0_,</span><br><span class="line">       p.name <span class="keyword">AS</span> name3_1_0_</span><br><span class="line"><span class="keyword">FROM</span>   Person p</span><br><span class="line"><span class="keyword">WHERE</span>  p.id <span class="operator">=</span> <span class="number">4</span></span><br></pre></td></tr></table></figure>
+<p>Hibernate 5.2 实现的 DTO 投影无法在不执行辅助查询的情况下实现 <code>ResultSet</code> 中的 DTO 投影。但是，这对性能非常不利，因为它可能导致 N + 1 查询问题。</p>
+<pre><code>Hibernate 6.0 新的 SQM 解析器可能会解决这个问题，
+</code></pre>
+<h2 id="ResultTransformer">ResultTransformer</h2>
+<p>但是，您不仅限于使用 JPA。 Hibernate 提供了许多在标准中没有直接定义的增强功能。其中一个增强功能是 <code>ResultTransformer</code> 机制，它允许您以任何方式自定义<code>ResultSet</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">List&lt;PersonAndCountryDTO&gt; personAndAddressDTOs = entityManager</span><br><span class="line">.createQuery(</span><br><span class="line">    <span class="string">&quot;select p, c.name &quot;</span> +</span><br><span class="line">    <span class="string">&quot;from Person p &quot;</span> +</span><br><span class="line">    <span class="string">&quot;join Country c on p.locale = c.locale &quot;</span> +</span><br><span class="line">    <span class="string">&quot;order by p.id&quot;</span>)</span><br><span class="line">.unwrap( org.hibernate.query.Query.class )</span><br><span class="line">.setResultTransformer( </span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">ResultTransformer</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> Object <span class="title function_">transformTuple</span><span class="params">(</span></span><br><span class="line"><span class="params">            Object[] tuple, </span></span><br><span class="line"><span class="params">            String[] aliases)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PersonAndCountryDTO</span>(</span><br><span class="line">                (Person) tuple[<span class="number">0</span>],</span><br><span class="line">                (String) tuple[<span class="number">1</span>]</span><br><span class="line">            );</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> List <span class="title function_">transformList</span><span class="params">(List collection)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> collection;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; </span><br><span class="line">)</span><br><span class="line">.getResultList();</span><br></pre></td></tr></table></figure>
+<p>此查询需要思考两件事：</p>
+<ol>
+<li><code>unwrap</code> 方法用于将 JPA <code>javax.persistence.Query</code> 转换为特定于 Hibernate 的 <code>org.hibernate.query.Query</code>，以便我们可以访问 <code>setResultTransformer</code> 方法。</li>
+<li><code>ResultTransformer</code> 附带一个未遵循函数接口语法的旧定义。因此，在这个例子中我们不能使用 lambda。Hibernate 6.0 旨在克服这个问题，因此不推荐使用Hibernate ORM 5.2 <code>ResultTransformer</code>。尽管如此，还是会提供一种替代方案。</li>
+</ol>
+<p>运行上述 Hibernate ResultTransformer 查询时，Hibernate 会生成以下输出：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> p.id <span class="keyword">AS</span> col_0_0_,</span><br><span class="line">       c.name <span class="keyword">AS</span> col_1_0_,</span><br><span class="line">       p.id <span class="keyword">AS</span> id1_1_,</span><br><span class="line">       p.locale <span class="keyword">AS</span> locale2_1_,</span><br><span class="line">       p.name <span class="keyword">AS</span> name3_1_</span><br><span class="line"><span class="keyword">FROM</span>   Person p</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span></span><br><span class="line">       Country c </span><br><span class="line"><span class="keyword">ON</span></span><br><span class="line">       ( p.locale <span class="operator">=</span> c.locale )</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span></span><br><span class="line">       p.id</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Hibernate/" rel="tag"># Hibernate</a>
+              <a href="/tags/ResultTransformer/" rel="tag"># ResultTransformer</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/persistence/JPA-%E4%B8%8E-Hibernate-%E5%91%BD%E5%90%8D%E7%AD%96%E7%95%A5/" rel="prev" title="JPA 与 Hibernate 命名策略">
+                  <i class="fa fa-chevron-left"></i> JPA 与 Hibernate 命名策略
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/persistence/Hibernate-%E7%BB%A7%E6%89%BF%E6%98%A0%E5%B0%84/" rel="next" title="Hibernate 继承映射">
+                  Hibernate 继承映射 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"3ecc12cee801cc1bac17a38c437bff9e"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

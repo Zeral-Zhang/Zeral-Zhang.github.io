@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="Nacos 简介 Nacos 可以帮助我们发现、配置和管理微服务。Nacos 提供了一组简单易用的特性集，帮助我们快速实现动态服务发现、服务配置、服务元数据及流量管理。 Nacos 的关键特性包括:   服务发现和服务健康监测 Nacos 支持基于 DNS 和基于  RPC 的服务发现。服务提供者使用 原生SDK、OpenAPI 或一个独立的 Agent 注册 Service 后，服务消费者可以使">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nacos 入门">
+<meta property="og:url" content="https://www.zeral.cn/middleware/Nacos-%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Nacos 简介 Nacos 可以帮助我们发现、配置和管理微服务。Nacos 提供了一组简单易用的特性集，帮助我们快速实现动态服务发现、服务配置、服务元数据及流量管理。 Nacos 的关键特性包括:   服务发现和服务健康监测 Nacos 支持基于 DNS 和基于  RPC 的服务发现。服务提供者使用 原生SDK、OpenAPI 或一个独立的 Agent 注册 Service 后，服务消费者可以使">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/nacos/nacos_data_model.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/nacos/nacos-architecture.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/nacos/class-diagram.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/nacos/nacos-config-starter-sequence.svg">
+<meta property="article:published_time" content="2022-01-17T05:25:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.363Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Nacos">
+<meta property="article:tag" content="Service Discovery">
+<meta property="article:tag" content="Service Config">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/middleware/nacos/nacos_data_model.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/middleware/Nacos-%E5%85%A5%E9%97%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/middleware/Nacos-%E5%85%A5%E9%97%A8/","path":"middleware/Nacos-入门/","title":"Nacos 入门"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Nacos 入门 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Nacos 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Nacos 术语</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4-Namespace"><span class="nav-number">2.1.</span> <span class="nav-text">命名空间 - Namespace</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E9%9B%86-Data"><span class="nav-number">2.2.</span> <span class="nav-text">配置集 - Data</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E9%9B%86-ID-Data-ID"><span class="nav-number">2.3.</span> <span class="nav-text">配置集 ID - Data ID</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%88%86%E7%BB%84-Group"><span class="nav-number">2.4.</span> <span class="nav-text">配置分组 - Group</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">Nacos 架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%B1%BB%E8%AF%95%E5%9B%BE"><span class="nav-number">3.1.</span> <span class="nav-text">客户端类试图</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">Spring-Cloud 集成</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E9%85%8D%E7%BD%AE"><span class="nav-number">4.1.</span> <span class="nav-text">动态配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E4%B8%8A%E4%B8%8B%E6%96%87%E5%B1%82%E7%BA%A7"><span class="nav-number">4.1.1.</span> <span class="nav-text">应用上下文层级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A6%86%E7%9B%96%E8%BF%9C%E7%A8%8B%E5%B1%9E%E6%80%A7%E5%80%BC"><span class="nav-number">4.1.2.</span> <span class="nav-text">覆盖远程属性值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Environment-%E5%8F%98%E6%9B%B4"><span class="nav-number">4.1.3.</span> <span class="nav-text">Environment 变更</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#EnvironmentChangeEvent"><span class="nav-number">4.1.3.1.</span> <span class="nav-text">EnvironmentChangeEvent</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Refresh-Scope"><span class="nav-number">4.1.3.2.</span> <span class="nav-text">Refresh Scope</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86"><span class="nav-number">4.1.4.</span> <span class="nav-text">配置管理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E4%B8%8E%E5%81%A5%E5%BA%B7%E6%A3%80%E6%9F%A5"><span class="nav-number">4.2.</span> <span class="nav-text">服务发现与健康检查</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0"><span class="nav-number">4.2.1.</span> <span class="nav-text">服务发现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#EnableDiscoveryClient-%E6%B3%A8%E8%A7%A3"><span class="nav-number">4.2.1.1.</span> <span class="nav-text">@EnableDiscoveryClient 注解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="nav-number">4.2.1.2.</span> <span class="nav-text">负载均衡</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C"><span class="nav-number">4.2.2.</span> <span class="nav-text">服务注册</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C-Actuator-Endpoint"><span class="nav-number">4.2.2.1.</span> <span class="nav-text">服务注册 Actuator Endpoint</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Nacos-%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Nacos 入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-01-17 13:25:00" itemprop="dateCreated datePublished" datetime="2022-01-17T13:25:00+08:00">2022-01-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>Nacos 简介</h1>
+<p>Nacos 可以帮助我们发现、配置和管理微服务。Nacos 提供了一组简单易用的特性集，帮助我们快速实现动态服务发现、服务配置、服务元数据及流量管理。</p>
+<p>Nacos 的关键特性包括:</p>
+<ul>
+<li>
+<p><strong>服务发现和服务健康监测</strong></p>
+<p>Nacos 支持基于 DNS 和基于  RPC 的服务发现。服务提供者使用 <a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/sdk.html">原生SDK</a>、<a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/open-api.html">OpenAPI</a> 或一个独立的 Agent 注册 Service 后，服务消费者可以使用 DNS 或 <a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/open-api.html">HTTP&amp;API</a> 查找和发现服务。</p>
+<p>Nacos 提供对服务的实时的健康检查，阻止向不健康的主机或服务实例发送请求。Nacos 支持传输层 (PING 或 TCP) 和应用层 (如 HTTP、MySQL、用户自定义）的健康检查。 对于复杂的云环境和网络拓扑环境中（如 VPC、边缘网络等）服务的健康检查，Nacos 提供了 agent 上报模式和服务端主动检测 2 种健康检查模式。Nacos 还提供了统一的健康检查仪表盘，帮助您根据健康状态管理服务的可用性及流量。</p>
+<blockquote>
+<p>基于 DNS 的服务发现和查找在 V2.0.0 中使用 CoreDNS，但是暂未成熟、稳定；</p>
+<p>独立的 Agent 是以 Sidecar 边车模式通过 <a target="_blank" rel="noopener" href="https://github.com/alibaba/spring-cloud-alibaba/tree/master/spring-cloud-alibaba-starters/spring-cloud-starter-alibaba-sidecar">spring-cloud-starter-alibaba-sidecar</a> 来提供的。</p>
+</blockquote>
+</li>
+</ul>
+<span id="more"></span>
+<ul>
+<li>
+<p><strong>动态配置服务</strong></p>
+<p>动态配置服务可以让您以中心化、外部化和动态化的方式管理所有环境的应用配置和服务配置。</p>
+<p>动态配置消除了配置变更时重新部署应用和服务的需要，让配置管理变得更加高效和敏捷。</p>
+<p>配置中心化管理让实现无状态服务变得更简单，让服务按需弹性扩展变得更容易。</p>
+<p>Nacos 提供了一个简洁易用的UI 帮助您管理所有的服务和应用的配置。Nacos 还提供包括配置版本跟踪、金丝雀发布、一键回滚配置以及客户端配置更新状态跟踪在内的一系列开箱即用的配置管理特性，帮助您更安全地在生产环境中管理配置变更和降低配置变更带来的风险。</p>
+</li>
+<li>
+<p><strong>服务及其元数据管理</strong></p>
+<p>Nacos 能让您从微服务平台建设的视角管理数据中心的所有服务及元数据，包括管理服务的描述、生命周期、服务的静态依赖分析、服务的健康状态、服务的流量管理、路由及安全策略、服务的 SLA 以及最首要的 metrics 统计数据。</p>
+</li>
+</ul>
+<h1>Nacos 术语</h1>
+<p>Nacos 引入了一些基本的概念，系统性的了解一下这些概念可以帮助您更好的理解和正确的使用 Nacos 产品。</p>
+<h2 id="命名空间-Namespace">命名空间 - Namespace</h2>
+<p>用于进行租户粒度的配置隔离。不同的命名空间下，可以存在相同的 Group 或 Data ID 的配置。Namespace 的常用场景之一是不同环境的配置的区分隔离，例如开发测试环境和生产环境的资源（如配置、服务）隔离等。</p>
+<blockquote>
+<p>bootstrap 中的 namespace 属性为命名空间的 ID，而非名称，默认 public 的 namespace 属性为空。</p>
+</blockquote>
+<h2 id="配置集-Data">配置集 - Data</h2>
+<p>一组相关或者不相关的配置项的集合称为配置集。在系统中，一个配置文件通常就是一个配置集，包含了系统各个方面的配置。例如，一个配置集可能包含了数据源、线程池、日志级别等配置项。</p>
+<h2 id="配置集-ID-Data-ID">配置集 ID - Data ID</h2>
+<p>Nacos 中的某个配置集的 ID。配置集 ID 是组织划分配置的维度之一。Data ID 通常用于组织划分系统的配置集。一个系统或者应用可以包含多个配置集，每个配置集都可以被一个有意义的名称标识。Data ID 通常采用类 Java 包（如 com.taobao.tc.refund.log.level）的命名规则保证全局唯一性。此命名规则非强制。</p>
+<h2 id="配置分组-Group">配置分组 - Group</h2>
+<p>Nacos 中的一组配置集，是组织配置的维度之一。通过一个有意义的字符串（如 Buy 或 Trade ）对配置集进行分组，从而区分 Data ID 相同的配置集。当您在 Nacos 上创建一个配置时，如果未填写配置分组的名称，则配置分组的名称默认采用 <code>DEFAULT_GROUP</code> 。配置分组的常见场景：不同的应用或组件使用了相同的配置类型，如 database_url 配置和 MQ_topic 配置。</p>
+<p>它们的关系如下图所示：</p>
+<p><img data-src="../../images/middleware/nacos/nacos_data_model.png" alt="nacos_data_model"></p>
+<h1>Nacos 架构</h1>
+<p><img data-src="../../images/middleware/nacos/nacos-architecture.png" alt="nacos_arch"></p>
+<p>Provider 和 Consumer 通过客户端 Client 或者边车 Sidecar 使用 HTTP/RPC/DNS 等方式与 Server 进行交互，Server 包含可选的配置服务（Config Service）和命名服务（Naming Service），Nacos 本身支持多数据中心，天然分布式，使用一致性协议 Raft 来保证一致性，同时提供了 Console 和 UI 进行监控和管理交互。</p>
+<h2 id="客户端类试图">客户端类试图</h2>
+<p><img data-src="../../images/middleware/nacos/class-diagram.png" alt="nacos_sdk_class_relation"></p>
+<p>Factory 工厂用来创建相应的配置服务或命名服务。</p>
+<p>配置服务类使用 ClientWorker 与服务端进行沟通，在传输层使用 RPC 代理进行通讯，Java 客户端使用的是 gRPC 实现。</p>
+<p>命名服务类同样适用 RPC 与服务端进行沟通，命名服务不需要时常监听变更，所以少了 Worker 作业类的监听、同步和缓存等。</p>
+<h1>Spring-Cloud 集成</h1>
+<p>Nacos 提供了开箱即用的 spring boot autoconfig starter 帮助我们快速集成动态配置或服务发现及健康检查功能。</p>
+<h2 id="动态配置">动态配置</h2>
+<p>Spring Cloud Nacos Config 是通过 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-cloud-commons/docs/current/reference/html/#spring-cloud-context-application-context-services">Spring Cloud Context</a> 的引导上下文 (Bootstrap Context) 来集成动态配置功能。</p>
+<p>引导上下文从外部配置源加载配置属性并解密本地依赖的外部配置文件中的属性，它是整个应用程序的父上下文，在启动和 Environment 后处理期间可用，直到准备好应用上下文 (Application Context)。</p>
+<p>这两个上下文共享环境 <code>Environment</code> ，它是任何 Spring 应用程序的外部属性的来源。<strong>默认情况下，引导加载到的外部属性有更高的优先级，它们不能被本地配置覆盖。</strong></p>
+<blockquote>
+<p>可以参考官方 <a target="_blank" rel="noopener" href="https://github.com/alibaba/spring-cloud-alibaba/blob/master/spring-cloud-alibaba-examples/nacos-example/nacos-config-example/readme-zh.md">DEMO 及文档</a> 快速了解集成及使用</p>
+</blockquote>
+<h3 id="应用上下文层级">应用上下文层级</h3>
+<p>如果我们是从 <code>SpringApplication</code> 或 <code>SpringApplicationBuilder</code> 来启动构建应用程序上下文，则 Bootstrap 上下文会作为父级添加到该上下文中。Spring 的一个特性是子上下文从其父上下文继承属性源和配置文件，因此与在没有 Spring Cloud Config 的情况下构建相同的上下文相比，“main”应用程序上下文包含额外的属性源。这些额外的属性包含：</p>
+<ul>
+<li>
+<p>“引导 - bootstrap”：如果在 Bootstrap 上下文中找到任何 <code>PropertySourceLocator</code> 并且它们具有非空属性，则以高优先级显示可选的 <code>CompositePropertySource</code>，<code>CompositePropertySource</code> 以链表形式组合多个属性源，头部的元素会优先被使用。</p>
+<p>Nacos 正是实现了 <code>PropertySourceLocator</code> 并从 Server 加载并构建组合的多个属性源 <code>CompositePropertySource</code>，Nacos 会按如下顺序及规则加载属性源：</p>
+<ul>
+<li>加载共享配置：通过 <code>spring.cloud.nacos.config.shared-configs[0]=xxx</code> 配置项加载多个共享配置</li>
+<li>加载扩展配置：通过 <code>spring.cloud.nacos.config.extension-configs[0]=xxx</code> 配置项加载多个扩展配置</li>
+<li>加载应用程序配置</li>
+</ul>
+<p>在 Nacos 中，应用程序配置的 Data ID 的完整格式如下：</p>
+<p><code>$&#123;prefix&#125;-$&#123;spring.profile.active&#125;.$&#123;file-extension&#125;</code></p>
+<ol>
+<li>prefix 默认为 <code>spring.application.name</code> 的值，也可以通过配置项 <code>spring.cloud.nacos.config.prefix</code> 来配置。</li>
+<li><code>spring.profile.active</code> 即为当前激活的<strong>一个或多个</strong>环境 profile。</li>
+<li><code>file-exetension</code> 为配置内容的数据格式，可以通过配置项 <code>spring.cloud.nacos.config.file-extension</code> 来配置。spring 配置使用 properties 或 yml 类型。</li>
+</ol>
+<p>Nacos 按如下顺序加载应用程序配置：</p>
+<ul>
+<li>只加载以 <code>$&#123;prefix&#125;</code> 为 Data ID 的配置文件，<code>file-extension</code> 配置项还是要和服务端的配置格式一致</li>
+<li>包含后缀的  <code>$&#123;prefix&#125;.$&#123;file-extension&#125;</code></li>
+<li>当前激活环境的多个 profile 的完整格式 Data ID</li>
+</ul>
+<p><strong>后加载的配置会被置于链表的头部，所以配置的优先顺序和加载顺序相反</strong></p>
+</li>
+<li>
+<p>”应用程序配置：[classpath:bootstrap.yml]”（以及相关文件，如果 Spring 配置文件处于激活状态）：如果有 <code>bootstrap.yml</code>（或 <code>.properties</code>），则这些属性用于配置 Bootstrap 上下文。然后在设置其父级时将它们添加到子级上下文中。它们的优先级低于 <code>application.yml</code>（或 <code>.properties</code>）以及作为创建 Spring Boot 应用程序过程的正常部分添加到子级的任何其他属性源。</p>
+</li>
+</ul>
+<h3 id="覆盖远程属性值">覆盖远程属性值</h3>
+<p>通过引导上下文添加到应用程序的属性源通常是“远程的”（例如，来自 Nacos Config Server）。默认情况下，它们不能在本地被覆盖。如果你想让应用程序使用自己的系统属性或配置文件覆盖远程属性，<strong>远程属性源</strong>必须通过设置 <code>spring.cloud.config.allowOverride=true</code> 来授予它权限（在本地设置它不起作用）。一旦设置了该标志，两个更细粒度的设置将控制远程属性相对于系统属性和应用程序本地配置是否可被覆盖：</p>
+<ul>
+<li><code>spring.cloud.config.overrideNone=true</code>: 任何本地属性源可以覆盖远程设置。</li>
+<li><code>spring.cloud.config.overrideSystemProperties=false</code>: 只有系统属性、命令行参数和环境变量（而不是本地配置文件）可以覆盖远程设置。</li>
+</ul>
+<blockquote>
+<p>如果要完全禁用远程配置服务而使用本地配置，可以通过 <code>spring.cloud.nacos.config.enabled=false</code> 来设置。</p>
+</blockquote>
+<h3 id="Environment-变更">Environment 变更</h3>
+<p><img data-src="../../images/middleware/nacos/nacos-config-starter-sequence.svg" alt="nacos-config-starter-sequence"></p>
+<p>Nacos 通过 ClientWorker 的 Schedule 执行器线程轮询 Server 来监测配置变更，并将变更通知到 <code>ConfiService</code> 中添加的监听器；Nacos Config Starter 的 <code>NacosContextRefresher</code> 该类默认为所有获取数据成功的 Nacos 的配置项添加监听器，在监听到服务端配置发生变化时会发送 <code>RefreshEvent</code> 事件给 Spring 并实时触发 <code>ContextRefresher</code> 的 refresh 方法 。</p>
+<p>Spring 的 <code>refresh</code> 方法主要做两件事：</p>
+<ul>
+<li>刷新环境 <code>Environment</code>，将环境中属性源 <code>PropertySource</code> 相对应的属性 bean 从旧的换成新的，并发布 <code>EnvironmentChangeEvent</code> 事件告知变更的属性源的键列表。</li>
+<li>触发 <code>RefreshScope</code> 的 <code>refreshAll</code> 操作，针对 RefreshScope 来说就是清空了他所代理管理的缓存 bean，待再次调用时重新创建，创建过程就会注入新的属性源。</li>
+</ul>
+<h4 id="EnvironmentChangeEvent">EnvironmentChangeEvent</h4>
+<p>应用程序可以监听 <code>EnvironmentChangeEvent</code> 并以几种标准方式对更改做出反应（例如用户可以以普通方式注册 <code>ApplicationListener</code> 为 <code>@Beans</code> 来实现监听）。当观察到 <code>EnvironmentChangeEvent</code> 时，该事件具有已更改的键列表，应用程序可以使用这些：</p>
+<ul>
+<li>在上下文中重新绑定任何 <code>@ConfigurationProperties</code> bean 的值</li>
+<li>为 <code>logging.level.*</code> 中的任何属性设置日志级别</li>
+</ul>
+<p><code>EnvironmentChangeEvent</code> 涵盖了一部分刷新用例，只要您可以实际对 <code>Environment</code> 进行更改并发布事件即可。请注意，这些 API 是公共的，并且是核心 Spring 的一部分）。您可以通过访问 <code>/configprops</code> Endpoint（一个普通的 Spring Boot Actuator 功能）来验证更改是否绑定到 <code>@ConfigurationProperties</code> bean。例如，<code>DataSource</code> 可以在运行时更改其 <code>maxPoolSize</code>（Spring Boot 创建的默认 <code>DataSource</code> 是 <code>@ConfigurationProperties</code> bean）并动态增加容量。</p>
+<blockquote>
+<p>Nacos 也同样支持 Actuator 的 Endpoint 并提供了专门的 <code>/nacosconfig</code> Endpoint 来暴露配置信息。</p>
+</blockquote>
+<p>重新绑定 <code>@ConfigurationProperties</code> 不涵盖另一部分用例，在这些用例中，您需要对刷新进行更多控制，并且需要对整个 <code>ApplicationContext</code> 进行原子更改。为了解决这些问题，我们可以使用 <code>@RefreshScope</code>。</p>
+<h4 id="Refresh-Scope">Refresh Scope</h4>
+<p>当配置发生更改时，标记为 <code>@RefreshScope</code> 的 Spring <code>@Bean</code> 会被特殊处理。此功能解决了仅在初始化时才注入配置的有状态 bean 的问题。例如，如果在通过 <code>Environment</code> 更改数据库 URL 时 <code>DataSource</code> 具有打开的连接，您可能希望这些连接的持有者能够完成他们正在做的事情。然后，下一次从池中获取连接时，它会获得一个使用新 URL 的连接 。</p>
+<p>有时，甚至可能强制在某些只能初始化一次的 bean 上应用 <code>@RefreshScope</code> 注释。如果 bean 是“不可变的”，则必须使用 <code>@RefreshScope</code> 注解 bean 或在属性键 <code>spring.cloud.refresh.extra-refreshable</code> 下指定类名。</p>
+<p>刷新作用域的 bean 是在使用时（即调用方法时）初始化的惰性代理，作用域充当初始化值的缓存。要强制 bean 在下一个方法调用时重新初始化，您必须使其缓存条目无效。</p>
+<p><code>RefreshScope</code> 是上下文中的一个 bean，并且有一个公共的 <code>refreshAll()</code> 方法通过清除目标缓存来刷新范围内的所有 bean。<code>/refresh</code> 端点公开了这个功能（通过 HTTP 或 JMX）。要按名称刷新单个 bean，还有一个 <code>refresh(String)</code> 方法。</p>
+<h3 id="配置管理">配置管理</h3>
+<p>Nacos 不但提供了 Actuator Endpoint 的 Rest 接口来暴露和管理配置项，还提供了可视化的 Web UI 来进行编辑、存储、分发、变更管理、历史版本管理、变更审计等。</p>
+<h2 id="服务发现与健康检查">服务发现与健康检查</h2>
+<blockquote>
+<p>可以参考官方 <a target="_blank" rel="noopener" href="https://github.com/alibaba/spring-cloud-alibaba/blob/master/spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/readme-zh.md">DEMO 及文档</a>快速了解集成及使用</p>
+</blockquote>
+<h3 id="服务发现">服务发现</h3>
+<h4 id="EnableDiscoveryClient-注解"><code>@EnableDiscoveryClient</code> 注解</h4>
+<p>Spring Cloud Commons 提供了 <code>@EnableDiscoveryClient</code> 注解。这会寻找带有 <code>META-INF/spring.factories</code> 的 <code>DiscoveryClient</code> 和 <code>ReactiveDiscoveryClient</code> 接口的实现。服务发现的客户端实现在  <code>spring.factories</code> 的键 <code>org.springframework.cloud.client.discovery.EnableDiscoveryClient</code> 下中添加一个自己的配置类。<code>DiscoveryClient</code> 实现的示例包括  <a target="_blank" rel="noopener" href="https://cloud.spring.io/spring-cloud-netflix/">Spring Cloud Netflix Eureka</a>, <a target="_blank" rel="noopener" href="https://cloud.spring.io/spring-cloud-consul/">Spring Cloud Consul Discovery</a> 和 <a target="_blank" rel="noopener" href="https://cloud.spring.io/spring-cloud-zookeeper/">Spring Cloud Zookeeper Discovery</a>。</p>
+<blockquote>
+<p>Nacos 并没有使用该种 SPI 的形式直接提供服务发现客户端实现，而是使用在 <code>spring.factories</code> 下提供 Spring Boot 的自动配置实现来自动注入 <code>DiscoveryClient</code> 的实现 <code>NacosDiscoveryClient</code>。</p>
+</blockquote>
+<p>Spring Cloud 默认提供阻塞和响应式服务发现客户端。您可以通过设置 <code>spring.cloud.discovery.blocking.enabled=false</code> 或 <code>spring.cloud.discovery.reactive.enabled=false</code> 轻松禁用阻塞和/或响应式客户端。要完全禁用服务发现，您只需设置 <code>spring.cloud.discovery.enabled=false</code>。</p>
+<blockquote>
+<p>Nacos 同样支持这两种类型的客户端配置，也可以直接使用 Nacos 的 <code>spring.cloud.nacos.discovery.enabled=false</code> 来禁用服务发现。</p>
+</blockquote>
+<p>默认情况下，<code>DiscoveryClient</code> 的实现会自动将本地 Spring Boot 服务器注册到远程发现服务器。可以通过在 <code>@EnableDiscoveryClient</code> 中设置 <code>autoRegister=false</code> 来禁用此行为。</p>
+<blockquote>
+<p><code>@EnableDiscoveryClient</code> 不再需要。如果类路径上发现 <code>DiscoveryClient</code> 的实现，Spring Boot 应用程序就会自动向服务发现服务器注册。</p>
+</blockquote>
+<h4 id="负载均衡">负载均衡</h4>
+<p><code>NacosServerList</code> 实现了 <code>com.netflix.loadbalancer.ServerList</code> 接口，并在 <code>@ConditionOnMissingBean</code> 的条件下进行自动注入，</p>
+<p>Nacos Discovery Starter 默认集成了 <code>Ribbon</code> ，所以对于使用了 <code>Ribbon</code> 做负载均衡的组件，可以直接使用 Nacos 的服务发现。</p>
+<p>除了 Ribbon，Spring Cloud 也提供了自己的 Load-balancer 实现，我们可以轻松的将 <code>RestTemplate</code>、<code>FeignClient</code>、<code>WebClient</code> 配置为自动使用负载均衡器的客户端。</p>
+<h3 id="服务注册">服务注册</h3>
+<p>Spring Cloud Nacos Discovery 遵循了 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-cloud-commons/docs/current/reference/html/#spring-cloud-commons-common-abstractions">Spring Cloud Common</a> 标准，实现了 <code>AutoServiceRegistration</code>、<code>ServiceRegistry</code>、<code>Registration</code> 这三个接口。</p>
+<p>Commons 提供了一个 <code>ServiceRegistry</code> 接口，该接口提供了 <code>register(Registration)</code> 和 <code>deregister(Registration)</code> 等方法，可以让你提供自定义的注册服务。<code>Registration</code> 是一个标记接口。</p>
+<blockquote>
+<p>Nacos 同样也使用该接口来注册服务，通过 Spring Boot 自动配置类提供 <code>ServiceRegistry</code> 的实现 <code>NacosServiceRegistry</code>。</p>
+</blockquote>
+<p>每个 <code>ServiceRegistry</code> 实现都有自己的 <code>Registry</code> 实现。</p>
+<ul>
+<li><code>ZookeeperRegistration</code> 与 <code>ZookeeperServiceRegistry</code> 一起使用</li>
+<li><code>EurekaRegistration</code> 与 <code>EurekaServiceRegistry</code> 一起使用</li>
+<li><code>ConsulRegistration</code> 与 <code>ConsulServiceRegistry</code> 一起使用</li>
+<li><code>NacosRegistration</code> 与 <code>NacosServiceRegistry</code> 一起使用</li>
+</ul>
+<p>在 Spring Cloud 应用的启动阶段，监听了 <code>WebServerInitializedEvent</code> 事件，当 Web 容器初始化完成后，即收到 <code>WebServerInitializedEvent</code> 事件后，会触发注册的动作，调用 <code>ServiceRegistry</code> 的 <code>register</code> 方法，将服务注册到 Nacos Server。</p>
+<blockquote>
+<p>如果需要有更加自定义的获取服务信息或管理服务，可以使用 <code>@Autowired</code> 注入一个 <code>NacosRegistration</code> 实例，通过其 <code>NacosDiscoveryProperties</code> 持有的 <code>NamingService</code> 字段内容直接调用 Nacos API。</p>
+</blockquote>
+<h4 id="服务注册-Actuator-Endpoint">服务注册 Actuator Endpoint</h4>
+<p>Spring Cloud Commons 提供了一个 <code>/service-registry</code> 执行期端点。这个端点依赖于 Spring Application Context 中的 <code>Registration</code> bean。使用 GET 调用 <code>/service-registry</code> 会返回 <code>Registration</code> 服务实例的注册状态。使用带有 JSON 正文的同一端点的 POST 会将当前注册的状态更改为新值。 JSON 正文必须包含具有合法值的 <code>status</code> 字段。请参阅您在更新状态时使用的 <code>ServiceRegistry</code> 实现的文档以及为状态返回的值。例如，Eureka 支持的状态是 <code>UP、DOWN、OUT_OF_SERVICE</code> 和 <code>UNKNOWN</code>。</p>
+<blockquote>
+<p>Nacos 也同样支持 Actuator 的 Endpoint 并提供了专门的 <code>/nacos_discovery</code> Endpoint 来获取本机已订阅的服务信息及配置信息。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Nacos/" rel="tag"># Nacos</a>
+              <a href="/tags/Service-Discovery/" rel="tag"># Service Discovery</a>
+              <a href="/tags/Service-Config/" rel="tag"># Service Config</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/methodology/%E6%AD%A3%E5%88%99%E9%80%9F%E6%9F%A5/" rel="prev" title="正则速查">
+                  <i class="fa fa-chevron-left"></i> 正则速查
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"bc869581e16588b0318504ab57898698"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

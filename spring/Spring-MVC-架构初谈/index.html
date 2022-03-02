@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="在学习 Spring MVC 之前，我们先快速回顾下 Spring，Spring 是 Java 企业软件开发的长期实际标准。它向我们中的许多人介绍了很多概念，例如依赖项注入，面向切面的编程（AOP）以及使用普通的 Java 对象（POJO）进行编程。 Spring 框架是由 Rod Johnson为《Expert One-on-One J2EE Design and Development》一书编">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring MVC 架构初谈">
+<meta property="og:url" content="https://www.zeral.cn/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="在学习 Spring MVC 之前，我们先快速回顾下 Spring，Spring 是 Java 企业软件开发的长期实际标准。它向我们中的许多人介绍了很多概念，例如依赖项注入，面向切面的编程（AOP）以及使用普通的 Java 对象（POJO）进行编程。 Spring 框架是由 Rod Johnson为《Expert One-on-One J2EE Design and Development》一书编">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/spring-mvc/spring-module.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/spring-mvc/spring-module-dependencies.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/spring-mvc/servlet-structure.png">
+<meta property="og:image" content="https://www.zeral.cn/images/spring-mvc/DispatcherServlet.png">
+<meta property="og:image" content="https://www.zeral.cn/images/spring-mvc/doDispatch.png">
+<meta property="article:published_time" content="2018-04-19T16:18:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.247Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="SpringMVC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/spring-mvc/spring-module.jpg">
+
+
+<link rel="canonical" href="https://www.zeral.cn/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/","path":"spring/Spring-MVC-架构初谈/","title":"Spring MVC 架构初谈"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Spring MVC 架构初谈 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Servlet"><span class="nav-number">1.</span> <span class="nav-text">Servlet</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GenricServlet"><span class="nav-number">1.1.</span> <span class="nav-text">GenricServlet</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HttpServlet"><span class="nav-number">1.2.</span> <span class="nav-text">HttpServlet</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-MVC-%E6%9E%B6%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">Spring MVC 架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HttpServletBean"><span class="nav-number">2.1.</span> <span class="nav-text">HttpServletBean</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FrameworkServlet"><span class="nav-number">2.2.</span> <span class="nav-text">FrameworkServlet</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DispatchServlet"><span class="nav-number">2.3.</span> <span class="nav-text">DispatchServlet</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E5%A4%84%E7%90%86"><span class="nav-number">2.3.1.</span> <span class="nav-text">请求处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Handler"><span class="nav-number">2.3.2.</span> <span class="nav-text">Handler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HandlerMapping"><span class="nav-number">2.3.3.</span> <span class="nav-text">HandlerMapping</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HandlerAdapter"><span class="nav-number">2.3.4.</span> <span class="nav-text">HandlerAdapter</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HandlerExceptionResolver"><span class="nav-number">2.3.5.</span> <span class="nav-text">HandlerExceptionResolver</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ViewResolver"><span class="nav-number">2.3.6.</span> <span class="nav-text">ViewResolver</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RequestToViewNameTranslator"><span class="nav-number">2.3.7.</span> <span class="nav-text">RequestToViewNameTranslator</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#LocaleResolver"><span class="nav-number">2.3.8.</span> <span class="nav-text">LocaleResolver</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ThemeResolver"><span class="nav-number">2.3.9.</span> <span class="nav-text">ThemeResolver</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MultiPartResolver"><span class="nav-number">2.3.10.</span> <span class="nav-text">MultiPartResolver</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/spring/Spring-MVC-%E6%9E%B6%E6%9E%84%E5%88%9D%E8%B0%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring MVC 架构初谈
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-04-20 00:18:00" itemprop="dateCreated datePublished" datetime="2018-04-20T00:18:00+08:00">2018-04-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>在学习 Spring MVC 之前，我们先快速回顾下 Spring，Spring 是 Java 企业软件开发的长期实际标准。它向我们中的许多人介绍了很多概念，例如依赖项注入，面向切面的编程（AOP）以及使用普通的 Java 对象（POJO）进行编程。</p>
+<p>Spring 框架是由 Rod Johnson为《Expert One-on-One J2EE Design and Development》一书编写的代码演变而来。编写这本书是为了解释 JEE 中的一些复杂性以及如何克服它们。尽管在新的 JEE 规范中（特别是从 JEE 6 开始）已经解决了 JEE 的许多复杂性和问题，但 Spring 框架仍然非常流行。</p>
+<span id="more"></span>
+<p>该框架由几个模块组成（参见下图），这些模块可以协同工作并相互构建。我们可以选择我们要使用的模块。</p>
+<p><img data-src="../../images/spring-mvc/spring-module.jpg" alt="Spring Module"></p>
+<p>大多数模块都依赖于 Spring Framework 中的某些其他模块。 核心模块是该规则的例外。下图概述了常用模块及其对其他模块的依赖性。</p>
+<p><img data-src="../../images/spring-mvc/spring-module-dependencies.jpg" alt="Spring Module Dependencies"></p>
+<p>Spring Web MVC 是基于 Servlet API 构建的原始 Web 框架，正式名称 “ Spring Web MVC” 来自上述模块中的（spring-webmvc），但通常称为 “ Spring MVC”。</p>
+<p>Spring MVC 本质上就是一个 Servlet，这里我们就不得不提一下 Servlet。</p>
+<h2 id="Servlet">Servlet</h2>
+<p><code>Servlet</code> 是 <code>Server + Applet</code> 的缩写，表示一个服务器应用。<code>Servlet</code> 其实是一套规范，按这套规范编写的代码就可以运行在 Java Servlet 容器中，比如最常见的 <code>Tomcat</code> 容器。</p>
+<p><code>Servlet</code> 的结构如图：</p>
+<p><img data-src="../../images/spring-mvc/servlet-structure.png" alt="Servlet Structure"></p>
+<h3 id="GenricServlet">GenricServlet</h3>
+<p><code>GenricServlet</code> 抽象类是与具体协议无关的，它是 Servlet 的默认实现，它主要做了三件事：</p>
+<ol>
+<li>实现了 <code>ServletConfig</code> 接口，我们可以直接调用 ServletConfig 里面的方法；</li>
+<li>提供了无参的 <code>init</code> 方法；</li>
+<li>提供了 <code>log</code> 方法。</li>
+</ol>
+<p>Servlet 容器初始化时会调用 Servlet 的 <code>init(ServletConfig)</code> 方法，该抽象类接受配置类，并调用自身空实现的无参 <code>init</code> 方法。</p>
+<h3 id="HttpServlet">HttpServlet</h3>
+<p><code>HttpServlet</code> 是用 HTTP 协议[^ HTTP 协议]实现的 Servlet 的基类，Spring MVC 的 <code>DispatcherServlet</code> 就是继承自该类。既然 HttpServlet 是跟协议相关的，当然主要关心的是如何处理请求了，所以 HttpServlet 主要重写了 <code>service</code> 方法。在 service 方法中首先将 <code>ServletRequest</code> 和 <code>ServletResponse</code> 转换为了 <code>HttpServletRequest</code>  和 <code>HttpServletResponse</code>，然后根据 Http 请求的类型不同将请求路由到了不同的处理方法。</p>
+<h2 id="Spring-MVC-架构">Spring MVC 架构</h2>
+<p>Spring MVC 中核心 Servlet 继承结构如下图所示。</p>
+<p><img data-src="../../images/spring-mvc/DispatcherServlet.png" alt="DispatcherServlet"></p>
+<p><code>GenericServlet、HttpServlet</code> 在前面已经介绍过。</p>
+<p><code>XXXAware</code> 接口在 Spring 表示对 XXX 的感知，通俗点解释就是：如果在某个类里面想要使用 Spring 的一些东西,就可以通过实现 <code>XXXAware</code> 接口告诉 Spring，Spring 看到后就会给你送过来，而接收的方式是通过实现接口唯一的方法 set-XXX。</p>
+<p><code>EnvironmentCapable</code>，顾名思义，就是具有 Environment 的能力，也就是可以提供 Environment，所以 EnvironmentCapable 唯一的方法是 <code>Environment getEnvironment()</code>，用于实现 EnvironmentCapable 接口的类，就是告诉 Spring 它可以提供 Environment，当 Spring 需要 Environment 的时候就会调用其 <code>getEnvironment</code> 方法跟它要，该类封装了 <code>ServletContext</code>、<code>ServletConfig</code>、<code>JndiProperty</code>、<code>系统环境变量</code>和<code>系统属性</code>。<code>HttpServletBean</code> 抽象类在 <code>init</code> 方法中将配置参数设置到该 servlet 的 Bean 属性中。</p>
+<h3 id="HttpServletBean">HttpServletBean</h3>
+<p>HttpServletBean 主要参与了创建工作，并没有涉及请求的处理。</p>
+<p>该抽象类重写了无参 <code>init</code> 方法，在该实现中首先将 Servlet 中配置的参数使用 BeanWrapper 设置到 Dispatcherservlet 中的相关属性，然后调用模板方法 <code>initservletBean</code>，子类就通过这个方法初始化。</p>
+<h3 id="FrameworkServlet">FrameworkServlet</h3>
+<p><code>FrameworkServlet</code> 抽象类主要提供了与 Spring <code>ApplicationContext</code> 的集成，该类重写 <code>initservletBean</code> 并在其中初始化了 <code>WebApplicationContext</code>；</p>
+<p>该类重写了除 <code>doHead</code> 外各种请求的处理方法，并将处理都交给 <code>processRequest</code> 方法具体处理，在该处理中初始化了 <code>LocaleContextHolder</code> 和 <code>RequestContextHolder</code> 持有对象，以便我们可以轻松获取区域信息和请求信息，然后调用 <code>doService</code> 方法交给子类真正处理，在请求处理完时发布 <code>ServletRequestHandledEvent</code> 事件，不管请求是成功还是失败；</p>
+<p>在 ApplicationContext 初始完毕或刷新时会调用 <code>onRefresh</code> 方法，该方法由子类实现。</p>
+<blockquote>
+<p>在 FrameServlet 初始化 WebApplicationContext 时，会将 ServletContext 设置其中，监听 ContextRefreshedEvent 事件调用 OnRefresh 方法刷新 web 上下文。</p>
+</blockquote>
+<h3 id="DispatchServlet">DispatchServlet</h3>
+<p><code>Dispatcherservlet</code> 是 Spring MVC 最核心的类，整个处理过程的顶层设计都在这里面，它是 <code>FrameworkServlet</code> 的默认实现。</p>
+<p>其实现的 <code>OnRefresh</code> 方法主要初始化了 Servlet 需要用到的策略对象，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 调用 initStrategies 作为实现。</span></span><br><span class="line"><span class="comment"> * 分开写的好处在于职责分离，以便子类可以选择性的覆盖和重用。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onRefresh</span><span class="params">(ApplicationContext context)</span> &#123;</span><br><span class="line">   initStrategies(context);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 初始化这个 servlet 使用的策略对象。</span></span><br><span class="line"><span class="comment"> * 可以在子类中被覆盖，以便进一步初始化策略对象。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">initStrategies</span><span class="params">(ApplicationContext context)</span> &#123;</span><br><span class="line">   initMultipartResolver(context);</span><br><span class="line">   initLocaleResolver(context);</span><br><span class="line">   initThemeResolver(context);</span><br><span class="line">   initHandlerMappings(context);</span><br><span class="line">   initHandlerAdapters(context);</span><br><span class="line">   initHandlerExceptionResolvers(context);</span><br><span class="line">   initRequestToViewNameTranslator(context);</span><br><span class="line">   initViewResolvers(context);</span><br><span class="line">   initFlashMapManager(context);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在各自的初始化方法中，都会先从 ApplicationContext 寻找相应 BeanName 的 Bean 实现类，找不到时会从 <code>DispatcherServlet</code> 相对路径的 <code>DispatcherServlet.properties</code> 配置文件中找到默认定义的实现类完全限定名称并加载。</p>
+<h4 id="请求处理">请求处理</h4>
+<p>通过之前的分析我们知道，Dispatcherservlet 里面执行处理的人口方法应该是 <code>doService</code>, 不过 doService 并没有直接进行处理，而是交给了 <code>doDispatch</code> 进行具体的处理，在 doDispatch 处理前 doService 做了一些事情：</p>
+<ul>
+<li>首先判断是不是 <code>include</code> 请求，如果是则对 request 的 Attribute 做个快照备份，等 dispatch 处理完之后（如果不是异步调用且未完成）进行还原；</li>
+<li>在做完快照后又对 request 设置了一些属性：<code>webApplicationContext</code>，<code>localResolver</code>，<code>themeResolver</code>，<code>themeSource</code> 等</li>
+</ul>
+<p><code>doDispatch</code> 方法也非常简洁，从顶层设计了整个请求处理的过程。doDispatch 中最核心的代码只要4句，它们的任务分别是：</p>
+<ol>
+<li>根据 <code>request</code> 从 <code>HandlerMapping</code> 中找到 <code>Handler</code>；</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">HandlerExecutionChain</span> <span class="variable">mappedHandler</span> <span class="operator">=</span> getHandler(processedRequest);</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>根据 <code>Handler</code> 找到对应的 <code>HandlerAdapter</code>；</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">HandlerAdapter</span> <span class="variable">ha</span> <span class="operator">=</span> getHandlerAdapter(mappedHandler.getHandler());</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>用 <code>HandlerAdapter</code> 处理 <code>Handler</code>；</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ModelAndView</span> <span class="variable">mv</span> <span class="operator">=</span> ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>调用 <code>processDispatchResult</code> 方法处理上面处理之后的结果（包含找到 View 并渲染输出给用户）</li>
+</ol>
+<p>对应的代码如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);</span><br></pre></td></tr></table></figure>
+<p>doDispatch 请求的流程如下：</p>
+<p><img data-src="../../images/spring-mvc/doDispatch.png" alt="doDispatch"></p>
+<p>这里需要解释三个概念：HandlerMapping、 Handler 和 HandlerAdapter。这三个概念的准确理解对于 Spring MVC 的学习非常重要。如果对这三个概念理解得不够透彻，将会严重影响对 Spring MVC 的理解：</p>
+<h4 id="Handler">Handler</h4>
+<p>也就是处理器，它直接对应着 MVC 中的 C 也就是 Controller 层，它的具体表现形式有很多，可以是类,也可以是方法，如果你能想到别的表现形式也可以使用，它的类型是 Object。例如标注了<code>@RequestMapping</code> 的所有方法都可以看成一个 Handler。只要可以实际处理请求就可以是 Handler。</p>
+<h4 id="HandlerMapping">HandlerMapping</h4>
+<p>是用来查找 Handler 的，在 Spring MVC 中会处理很多请求，每个请求都需要一个 Handler 来处理，具体接收到一个请求后使用哪个 Handler 来处理呢？这就是 HandlerMapping 要做的事情。</p>
+<p>标注了 <code>RequestMapping</code> 的方法，<code>GetMapping、PostMapping、PutMapping、DeleteMapping</code> 是 <code>RequestMapping</code> 的复合注解，就会使用 <code>RequestMappingHandlerMapping</code> 从扫描到的注释方法的地址中查找满足条件的 Handler。</p>
+<p>这里的请求也可能是 websocket 请求，所以就会有 <code>WebSocketHandlerMapping</code>。</p>
+<h4 id="HandlerAdapter">HandlerAdapter</h4>
+<p>从名字上就可以看出它是一个 Adapter，也就是适配器。因为 Spring MVC 中的 Handler 可以是任意的形式，只要能处理请求就 OK，但是 Servlet 需要的处理方法的结构却是固定的，都是以 request 和 response 为参数的方法（如 doService方法）。怎么让固定的 Servlet 处理方法调用灵活的 Handler 来进行处理呢？这就是 HandlerAdapter 要做的事情。</p>
+<p>标注了 <code>RequestMapping</code> 的 <code>HandlerMethod</code> 就会使用 <code>RequestMappingHandlerAdapter</code> 来处理 Handler。</p>
+<p><code>RequestMappingHandlerAdapter</code> 内部使用 <code>HandlerMethodArgumentResolver</code> 集合处理传入参数，<code>HandlerMethodReturnValueHandler</code> 处理返回结果，<code>HandlerMethodReturnValueHandler</code> 会根据返回资源的类型找到合适的响应体，比如媒体文件会使用渐进式下载形式返回，对象会找到合适的 mediaType 类型，并使用 <code>MessageConvter</code> 处理并返回。我们的 JSON 形式返回就是在这里处理的。</p>
+<p>我们也可以调用 <code>setCustomArgumentResolvers</code> 来自定义参数解析，比如解析字符串到日期类，<code>setCustomReturnValueHandlers</code> 来自定义返回值处理。</p>
+<hr>
+<p>其它组件如下：</p>
+<h4 id="HandlerExceptionResolver">HandlerExceptionResolver</h4>
+<p>別的组件都是在正常情况下用来干活的，不过干活的过程中难免会出现问题，出问题后怎么办呢？这就需要有一个专门的角色对异常情况进行处理，在 Spring MVC 中就是 <code>HandlerExceptionresolver</code>。具体来说，此组件的作用是根据异常设置 <code>ModelAndView</code>，之后再交给 <code>render</code> 方法进行渲染。 render 只负责将 ModelAndView 渲染成页面，具体 ModelAndView 是怎么来 render 的并不关心。这也是 Spring MVC 设计优秀的一个表现一一分工明确互不干涉。通过前面 doDispatch 的分析可以知道 HandlerExceptionResolver 只是用于解析对请求做处理的过程中产生的异常，而渲染环节产生的异常不归它管，现在我们就知道原因了：它是在 render 之前工作的，先解析出  ModelAndView 之后 render 才去渲染，当然它就不能处理 render 过程中的异常了。</p>
+<h4 id="ViewResolver">ViewResolver</h4>
+<p>ViewResolver 用来将 String 类型的视图名（有的地方也叫逻辑视图，都指同一个东西）和 <code>Locale</code> 解析为 <code>View</code> 类型的视图。</p>
+<p>View 是用来渲染页面的，通俗点说就是要将程序返回的参数填入模板里，生成html（也可能是其他类型）文件。这里有两个关键的问题：</p>
+<ul>
+<li>使用哪个模板？</li>
+<li>用什么技术（或者规则）填入参数？</li>
+</ul>
+<p>这其实就是 ViewResolver 主要要做的工作, ViewResolver 需要找到渲染所用的模板和所用的技术（也就是视图的类型）进行渲染，具体的渲染过程则交给不同的视图自己完成。最常使用的 <code>UrlBasedViewResolver</code> 都是针对单一类型试图进行解析，只需要找到使用的模版就可以了。比如，<code>InternalResourceViewResolver</code> 只针对 jsp 类型的视图，<code>FreeMarkerViewResolver</code> 只针对 FreeMarker 视图。</p>
+<blockquote>
+<p>使用 ResponseBody 注解以 JSON 形式返回会在 Adapter 的 handle 中处理，并不会使用 ViewResolver。</p>
+</blockquote>
+<h4 id="RequestToViewNameTranslator">RequestToViewNameTranslator</h4>
+<p><code>ViewResolver</code> 是根据 <code>ViewName</code> 査找 <code>View</code>，但有的 Handler 处理完后并没有设置 View 也没有设置 ViewName，这时就需要从 <code>request</code> 获取 <code>ViewName</code> 了，而如何从 request 获取 ViewName 就是 RequestToViewTranslator 要做的事情。</p>
+<h4 id="LocaleResolver">LocaleResolver</h4>
+<p>解析视图需要两个参数：一个是视图名，另一个是 <code>Locale</code>。视图名是处理器返回的（或者使用 RequestTo NameTranslator 解析的默认视图名），Locale 是从哪里来的呢？这就是 LocaleResolver 要做的事情。<br>
+LocaleResolver 用于从 request 解析出 Locale。 Locale 是用来做 il8n（国际化）的基础。</p>
+<h4 id="ThemeResolver">ThemeResolver</h4>
+<p>解析主题使用，也就是配置不同的样式文件切换不同的主题。</p>
+<h4 id="MultiPartResolver">MultiPartResolver</h4>
+<p>用于处理上传请求，处理方法是将普通的 <code>request</code> 包装成 <code>MultipartHttpServletRequest</code>，后者可以直接调用 <code>getFile</code> 方法获取到 <code>File</code>，如果上传多个文件，还可以调用 <code>getFileMap</code> 得到 <code>Filename → File</code> 结构的 Map，这样就使得上传请求的处理变得非常简单。</p>
+<p>[^ HTTP 协议]: HTTP 协议是应用层协议，在 TCP/IP 协议接收到数据之后到达应用层。该协议中的报文结构非常重要。分为请求报文（request message）和响应报文（response message）。这两种类型都包括三部分：首行，头部和主体。请求报文的首行是请求行，包括请求类型、URL 和 HTTP 版本三项内容，响应请求的首行是状态行，包括 HTTP 版本、状态码和简短原因三项内容。™</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/SpringMVC/" rel="tag"># SpringMVC</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/middleware/logstash-%E5%AD%A6%E4%B9%A0/" rel="prev" title="logstash 学习">
+                  <i class="fa fa-chevron-left"></i> logstash 学习
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/devops/nginx-root-%E5%92%8C-alias/" rel="next" title="NGINX root 和 alias">
+                  NGINX root 和 alias <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"11e3105589de8872c15f42362da19ae2"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

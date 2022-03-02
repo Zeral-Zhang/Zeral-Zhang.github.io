@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="了解网络模型的目的 在网络初期，大多数系统都使用专有软件和协议，这些软件和协议仅允许与同一制造商或可以访问这些协议的制造商的其他设备进行通信。 当时，这已不是什么大问题，因为组织会一直从同一制造商那里购买设备，并且没有在组织外部进行通信的真正方法。 但是，随着时间的流逝，这种情况已经改变，现在需要与其他组织拥有的系统进行通信。 其他组织不太可能拥有同一制造商的设备，因此这些设备无法相互通信。 为了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络模型与网络协议入门">
+<meta property="og:url" content="https://www.zeral.cn/network/%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B%E4%B8%8E%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="了解网络模型的目的 在网络初期，大多数系统都使用专有软件和协议，这些软件和协议仅允许与同一制造商或可以访问这些协议的制造商的其他设备进行通信。 当时，这已不是什么大问题，因为组织会一直从同一制造商那里购买设备，并且没有在组织外部进行通信的真正方法。 但是，随着时间的流逝，这种情况已经改变，现在需要与其他组织拥有的系统进行通信。 其他组织不太可能拥有同一制造商的设备，因此这些设备无法相互通信。 为了">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/network/osi.png">
+<meta property="og:image" content="https://www.zeral.cn/images/network/osi-encapsulation.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/network/netstat-a.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/network/three-way-handshake.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/network/four-way-handshake.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/network/tcp-ip.png">
+<meta property="article:published_time" content="2017-11-25T13:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.226Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="OSI">
+<meta property="article:tag" content="TCP&#x2F;IP">
+<meta property="article:tag" content="HTTP">
+<meta property="article:tag" content="RPC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/network/osi.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/network/%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B%E4%B8%8E%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E5%85%A5%E9%97%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/network/%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B%E4%B8%8E%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E5%85%A5%E9%97%A8/","path":"network/网络模型与网络协议入门/","title":"网络模型与网络协议入门"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>网络模型与网络协议入门 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">了解网络模型的目的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">OSI 模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC-7-%E5%B1%82-%E5%BA%94%E7%94%A8%E5%B1%82"><span class="nav-number">2.1.</span> <span class="nav-text">第 7 层 应用层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC-6-%E5%B1%82-%E8%A1%A8%E7%A4%BA%E5%B1%82"><span class="nav-number">2.2.</span> <span class="nav-text">第 6 层 表示层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC-5-%E5%B1%82-%E4%BC%9A%E8%AF%9D%E5%B1%82"><span class="nav-number">2.3.</span> <span class="nav-text">第 5 层 会话层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC-4-%E5%B1%82-%E4%BC%A0%E8%BE%93%E5%B1%82"><span class="nav-number">2.4.</span> <span class="nav-text">第 4 层 传输层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E7%AB%AF%E5%8F%A3"><span class="nav-number">2.4.1.</span> <span class="nav-text">逻辑端口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP"><span class="nav-number">2.4.2.</span> <span class="nav-text">TCP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP"><span class="nav-number">2.4.3.</span> <span class="nav-text">UDP</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC-3-%E5%B1%82-%E7%BD%91%E7%BB%9C%E5%B1%82"><span class="nav-number">2.5.</span> <span class="nav-text">第 3 层 网络层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC-2-%E5%B1%82-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82"><span class="nav-number">2.6.</span> <span class="nav-text">第 2 层 数据链路层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC-1-%E5%B1%82-%E7%89%A9%E7%90%86%E5%B1%82"><span class="nav-number">2.7.</span> <span class="nav-text">第 1 层 物理层</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">TCP &#x2F; IP 模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%B1%82"><span class="nav-number">3.1.</span> <span class="nav-text">应用层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.1.</span> <span class="nav-text">用户协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Telnet"><span class="nav-number">3.1.1.1.</span> <span class="nav-text">Telnet</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#FTP"><span class="nav-number">3.1.1.2.</span> <span class="nav-text">FTP</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E9%82%AE%E4%BB%B6%E4%BC%A0%E8%BE%93%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.1.3.</span> <span class="nav-text">简单邮件传输协议</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%AF%E6%92%91%E6%9C%8D%E5%8A%A1"><span class="nav-number">3.1.2.</span> <span class="nav-text">支撑服务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E6%9C%BA%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">3.1.2.1.</span> <span class="nav-text">主机初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9C%E7%A8%8B%E7%AE%A1%E7%90%86"><span class="nav-number">3.1.2.2.</span> <span class="nav-text">远程管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%9F%E5%90%8D%E7%B3%BB%E7%BB%9F"><span class="nav-number">3.1.2.3.</span> <span class="nav-text">域名系统</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%A0%E8%BE%93%E5%B1%82"><span class="nav-number">3.2.</span> <span class="nav-text">传输层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E9%99%85%E5%B1%82"><span class="nav-number">3.3.</span> <span class="nav-text">网际层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%8E%A5%E5%8F%A3%E5%B1%82"><span class="nav-number">3.4.</span> <span class="nav-text">网络接口层</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/network/%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B%E4%B8%8E%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          网络模型与网络协议入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2017-11-25 21:00:00" itemprop="dateCreated datePublished" datetime="2017-11-25T21:00:00+08:00">2017-11-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>了解网络模型的目的</h1>
+<p>在网络初期，大多数系统都使用专有软件和协议，这些软件和协议仅允许与同一制造商或可以访问这些协议的制造商的其他设备进行通信。 当时，这已不是什么大问题，因为组织会一直从同一制造商那里购买设备，并且没有在组织外部进行通信的真正方法。 但是，随着时间的流逝，这种情况已经改变，现在需要与其他组织拥有的系统进行通信。</p>
+<p>其他组织不太可能拥有同一制造商的设备，因此这些设备无法相互通信。 为了解决这个问题，有人要求创建一个标准模型，并公开提供给所有人使用。 成为标准的两个模型如下：</p>
+<ul>
+<li><strong>国际标准化组织（ISO）的开放系统互连（OSI）模型</strong></li>
+<li><strong>TCP / IP 模型</strong></li>
+</ul>
+<span id="more"></span>
+<h1>OSI 模型</h1>
+<p>OSI 模型是一个包括七个单独层的网络模型，如下图所示。 这些层中的每一层都与与其相邻的层以及接收设备上的等效层进行通信：</p>
+<p><img data-src="../../images/network/osi.png" alt="OSI 模型"></p>
+<p>顶部三层（应用，表示和会话）称为上层。 底层的四层（传输，网络，数据链路，物理）称为低层。</p>
+<p>数据通过发送设备上的 OSI 模型时，将经历一个称为封装的过程。 封装只是从上一层获取数据，向其添加标头（有时是尾部），然后将其传递到重复该过程的下一层。 头层（和尾部）和向下传递到下一层的数据被始发层称为协议数据单元； 在接收层上，它被称为服务数据单元。 下图显示了处理过程中的封装，并在右侧列出了数据单元名称。</p>
+<p><img data-src="../../images/network/osi-encapsulation.jpg" alt="OSI Encapusulation"></p>
+<h2 id="第-7-层-应用层">第 7 层 应用层</h2>
+<p>需要提及的一点，应用程序不驻留在 OSI 模型的应用程序层上。 实际上，它们位于 OSI 模型之上。 应用层充当应用程序和网络模型之间的接口。 任何支持网络通信的应用程序都将使用网络应用程序编程接口（API）进行开发。 该 API 包含告诉应用程序如何与应用层通信的代码。</p>
+<p>应用程序将支持许多应用层协议，而不是应用程序位于应用层。 其中一些常用协议包括以下内容：</p>
+<ul>
+<li>
+<p>简单邮件传输协议（SMTP）</p>
+</li>
+<li>
+<p>邮局协议（POP）</p>
+</li>
+<li>
+<p>Internet 邮件访问协议（IMAP）</p>
+</li>
+<li>
+<p>超文本传输协议（HTTP）</p>
+</li>
+<li>
+<p>域名系统（DNS）</p>
+</li>
+<li>
+<p>安全外壳（SSH）</p>
+</li>
+<li>
+<p>文本传输协议（FTP）</p>
+</li>
+</ul>
+<h2 id="第-6-层-表示层">第 6 层 表示层</h2>
+<p>表示层从应用程序层获取传递给它的数据，并将其转换为通用格式或语法。一些正在转换的数据将非常复杂，必须将其转换为平面文件，以准备流式传输到接收者。 该序列化的数据流被接收方的设备接收并反序列化并重建为其原始格式。进行此转换的原因是不同系统或应用程序的本机格式可能会有所不同。 通过将数据转换为通用格式，任何接收到数据的设备都可以理解它，并且可以扩展为接收应用程序可以理解的格式。</p>
+<p>除了转换数据之外，表示层还提供数据压缩和加密/解密。 该层上使用的一些通用标准包括：</p>
+<ul>
+<li>JPEG</li>
+<li>ASCII</li>
+<li>TIFF</li>
+<li>GIF</li>
+</ul>
+<h2 id="第-5-层-会话层">第 5 层 会话层</h2>
+<p>会话层负责管理设备之间的会话。 会话管理包括建立会话，同步设备之间的通信以及终止会话。</p>
+<p>设备在这一层上使将要进行的通信类型达成一致，包括以下内容：</p>
+<ul>
+<li>单工 Simplex</li>
+<li>半双工 Half-duplex</li>
+<li>全双工 Full-duplex</li>
+</ul>
+<p>该层支持的协议包括以下内容：</p>
+<ul>
+<li>RPC</li>
+<li>SQL</li>
+<li>NetBIOS</li>
+<li>Point-to-Point Tunneling Protocol (PPTP)</li>
+</ul>
+<h2 id="第-4-层-传输层">第 4 层 传输层</h2>
+<p>传输层负责主机到主机的通信并在两个设备之间创建逻辑连接。 它包括启动设备之间的连接，设备之间的流控制，相同顺序的传递以及多重通信。</p>
+<p>传输层上的两个主要协议如下：</p>
+<ul>
+<li>传输控制协议 Transmission Control Protocol (TCP)</li>
+<li>用户数据报协议 User Datagram Protocol (UDP)</li>
+</ul>
+<p>这两个协议有一些共同点：</p>
+<p>首先，两个协议都包含一个校验和。 此校验和是错误检测的一种方式。 当处理数据以进行发送时，发送设备将执行计算，该计算会基于正在发送的数据生成一个值。 接收设备执行相同的计算。 如果值匹配，则数据正确。</p>
+<p>他们的另一个共同特点是能够进行多路通信。 这只是一台机器可以与另一台机器同时进行多个对话的一种复杂的说法。</p>
+<p>另一个通用特性是使用逻辑端口号。</p>
+<h3 id="逻辑端口">逻辑端口</h3>
+<p>在我们谈论交换机和路由器的端口时，我们讨论的是物理端口。</p>
+<p>逻辑端口是软件中定义的端口。 逻辑端口的目的是允许接收设备识别数据要发送给哪个应用程序或服务。</p>
+<p>TCP 和 UDP 标头均包含源端口号和目标端口号。当接收方设备接收到数据时，将检查目标端口号，然后设备会将数据传递给相关的应用程序或服务。</p>
+<p>有 65,536 个逻辑端口号可用（编号为 0-65,535）。这些号码由**互联网号码分配局（IANA）**分配，并细分为多个范围：</p>
+<ul>
+<li>知名端口（0 - 1,023）：这些是分配给常用网络服务的端口</li>
+<li>注册端口（1,024 - 49,151）：这些端口号是应开发人员的要求由 IANA 分配给应用程序或服务的</li>
+<li>动态或临时端口（49,152 - 65,535）：这些端口不是 IANA 分配的，通常由客户端计算机用作源端口</li>
+</ul>
+<p>下表提供了一些常见端口及其端口号的详细信息：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">端口号</th>
+<th style="text-align:left">服务/协议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">21</td>
+<td style="text-align:left">FTP</td>
+</tr>
+<tr>
+<td style="text-align:left">22</td>
+<td style="text-align:left">SSH</td>
+</tr>
+<tr>
+<td style="text-align:left">23</td>
+<td style="text-align:left">Telnet</td>
+</tr>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">SMTP</td>
+</tr>
+<tr>
+<td style="text-align:left">53</td>
+<td style="text-align:left">DNS</td>
+</tr>
+<tr>
+<td style="text-align:left">67, 68</td>
+<td style="text-align:left">动态主机配置协议（DHCP）</td>
+</tr>
+<tr>
+<td style="text-align:left">80</td>
+<td style="text-align:left">HTTP</td>
+</tr>
+<tr>
+<td style="text-align:left">88</td>
+<td style="text-align:left">Kerberos</td>
+</tr>
+<tr>
+<td style="text-align:left">110</td>
+<td style="text-align:left">邮局协议 v3（POP3）</td>
+</tr>
+<tr>
+<td style="text-align:left">123</td>
+<td style="text-align:left">网络时间协议（NTP）</td>
+</tr>
+<tr>
+<td style="text-align:left">137-139</td>
+<td style="text-align:left">NetBIOS</td>
+</tr>
+<tr>
+<td style="text-align:left">143</td>
+<td style="text-align:left">IMAP</td>
+</tr>
+<tr>
+<td style="text-align:left">161</td>
+<td style="text-align:left">简单网络管理协议（SNMP）</td>
+</tr>
+<tr>
+<td style="text-align:left">389</td>
+<td style="text-align:left">轻型目录访问协议（LDAP）</td>
+</tr>
+<tr>
+<td style="text-align:left">443</td>
+<td style="text-align:left">安全超文本传输协议（HTTPS）</td>
+</tr>
+<tr>
+<td style="text-align:left">3389</td>
+<td style="text-align:left">远程桌面协议（RDP）</td>
+</tr>
+</tbody>
+</table>
+<p>活动 1：在此活动中，你将确定 PC 所打开的端口以及目标设备所连接的端口：</p>
+<ol>
+<li>打开命令行</li>
+<li>运行 <code>netstat -a</code> 命令（-a 开关显示已连接的端口和侦听端口。由于 UDP 端口不建立连接，因此必须使用此开关查看它们。</li>
+</ol>
+<p>你应该会收到与以下屏幕截图类似的输出：</p>
+<p><img data-src="../../images/network/netstat-a.jpg" alt="netstat-a"></p>
+<p><code>“Local Address”</code> 列详细说明了您的 IP 地址并指出了已打开的本地端口。</p>
+<ol start="3">
+<li><code>“Foreign Address”</code> 列详细说明了主机是通过名称还是 IP 地址连接的，并告诉我们目标设备上的端口</li>
+<li>请注意，端口以数字或如果是知名端口，则以服务名称的形式详细列出。</li>
+</ol>
+<h3 id="TCP">TCP</h3>
+<p>TCP 被称为面向连接的协议。 这意味着在设备之间传输任何数据之前，需要先建立连接。 通过这样做，<strong>双方互相确定对方有能力接收和发送数据</strong>。 为了形成此连接，TCP 执行称为三向握手的过程，如下图所示。 过程如下：</p>
+<ol>
+<li><code>SYN</code>：发送设备将同步请求发送到目标计算机。 该同步包括序列号。 出于说明目的，假设序列号为 101。</li>
+<li><code>SYN / ACK</code>：接收设备对 SYN 请求的确认进行响应。 该确认基本上是对接收者接下来期望的序列号的确认。 在这种情况下，它是 102。它还将自己的同步请求发送到始发设备。 在此示例中，我们将使用 201。 在此阶段，设备已同意用于通信的参数。</li>
+<li><code>ACK</code>：始发设备确认来自接收者设备的同步请求。 同样，这是设备期望接收的下一个序列号。 在这个例子中，这个数字是 202。</li>
+</ol>
+<p><img data-src="../../images/network/three-way-handshake.jpg" alt="三次握手"></p>
+<p>握手完成后，数据可以在两个设备之间流动。 <strong>TCP 通过使用序号和确认的过程来保证数据的传递。</strong> 传输的数据分为多个段，每个段都包含一个序列号。 这使收件人可以在收据上重建数据。 另外，它允许接收者识别是否已接收到所有数据。 接收到数据后，接收方设备会将确认发送回接收方。 这种确认基本上是一种告诉始发设备接收者接下来希望接收哪个序列号的方法。 收到确认后，始发设备将下一批数据发送过去。</p>
+<p>作为同步过程的一部分，这两个设备将在回送确认之前就将发送多少段达成一致。 通过减少发送的确认数量，这有助于减少网络开销。 这是一个称为滑动窗口的过程，非常灵活。 举例来说，假设他们同意在发送确认作为响应之前可以发送三个段。 如果接收方设备未收到所有三个段，因此未发送确认，则发送设备将在一段时间后意识到尚未收到确认，并将重新发送数据。 如果多次发生，则两个设备将同意使用一个较小的窗口来尝试减少数据丢失和重新发送的要求。</p>
+<p>TCP 还包括称为流控制的功能。 此过程旨在减少拥塞。 如果接收方设备在努力跟上接收到的数据量，则可以向发送方发送“未就绪”消息。 清除网卡上的缓冲区后，设备将发送“就绪”消息，并且通信将恢复。</p>
+<p>当设备希望停止通信时，它们将遵循四次握手过程，如下图所示：</p>
+<ol>
+<li>计算机 A 不再需要向计算机 B 发送任何数据，因此它发送 FIN 数据包。</li>
+<li>计算机 B 接收 FIN 请求并作为响应发送回 ACK。</li>
+<li>一旦计算机 B 没有更多数据则发送自己的 FIN 数据包到计算机 A。</li>
+<li>计算机 A 接收 FIN 请求并作为响应发送回 ACK。</li>
+</ol>
+<p>该过程主要目的为：<code>双方互相确定对方不再需要发送数据。</code></p>
+<p><img data-src="../../images/network/four-way-handshake.jpg" alt="四次握手"></p>
+<ol start="5">
+<li>一旦完成四次握手，设备将关闭端口。</li>
+</ol>
+<p>通过使用序列号，流控制和确认，TCP 的使用可确保向目标的传递（当然，只要连接基础结构正常工作）。 但是，这种保证是有代价的。 TCP 报头在发送的每个段中增加了额外的 20-60 字节数据，而确认则增加了带宽消耗，这除了等待确认之外，还导致数据传输速度变慢。 因此，当必须完全传输数据（例如文件共享或数据库事务）时，将使用 TCP。</p>
+<h3 id="UDP">UDP</h3>
+<p>TCP 是面向连接的协议，而 UDP 是无连接协议。 这意味着在发送数据之前不会进行三次握手。 发送设备从字面上讲是通过有线方式发送数据，并希望目标设备能够接收到它。 它通常被称为尽力而为协议； 数据是否到达那里都没有关系，因为你有时候并不需要接收所有数据，可以容忍数据部分丢失。</p>
+<p>这是一个更快的协议，因为它具有较小的标头（仅 8 个字节），并且没有添加到确认信息到带宽中。</p>
+<p>UDP 也用于多播和广播传输。 在如此多的设备上发送数据之前，不可能进行三向握手。</p>
+<p>在某些情况下，协议会同时使用 TCP 和 UDP，这取决于当时的功能。 DNS 和 DHCP 是这方面的两个完美示例。</p>
+<p>总而言之，当数据传输至关重要且时间不受限制时，则应使用 TCP。 如果数据传输不重要和/或时间很紧迫，则应使用 UDP。</p>
+<h2 id="第-3-层-网络层">第 3 层 网络层</h2>
+<p>OSI 模型的网络层负责通过使用 IP 地址对设备进行逻辑寻址。 它还负责为要传输的数据选择路由，即如何从计算机 A 到计算机 B。</p>
+<p>路由器[^ router]以及方便的第 3 层交换机[^ switches]在该层工作。</p>
+<p>就网络层上的协议而言，最常见的如下：</p>
+<ul>
+<li>IP</li>
+<li>互联网数据包交换（IPX）</li>
+</ul>
+<p>IP 是两者中最常见的，并且是所有网络的核心。 IPX 不在这里陈述，因为重点是 IP 寻址。 在此层，协议数据单元称为数据包，其标头将包括源和目标 IP 地址。</p>
+<h2 id="第-2-层-数据链路层">第 2 层 数据链路层</h2>
+<p>数据链路层仅在你自己的子网内相关，尽管在一定程度上确实如此，但我们仍然需要它来在子网外传输数据。 数据链路层在子网上的节点之间创建逻辑连接。 如果数据以同一子网中的设备为目的地，则链接将指向该设备； 如果数据以子网外的设备为目的地，则该链接将指向默认网关。 第 2 层上的协议数据单元是帧。</p>
+<p>数据链接层的职责包括将数据放置到物理介质上，错误通知和流控制。 通过使用添加到数据的预告片中包括的校验和来执行错误通知。 除预告片外，还添加了标头，其中包括源和目标 MAC 地址。 第二层交换机[^ switches]在这里工作。</p>
+<p>该层分为两个子层：</p>
+<ul>
+<li><strong>逻辑链路控制（LLC）</strong>：LLC 的任务是充当与网络层的接口，并标识所使用的网络层协议（例如 IP 或 IPX），并将该信息存储在帧头中。 发生这种情况是为了在另一端收到数据时，设备知道将其发送到哪个网络层协议。</li>
+<li><strong>媒体访问控制（MAC）</strong>：MAC 子层负责控制如何将数据放置到某些媒体上，或者我们如何控制数据对媒体的访问。 MAC 子层可以被多种协议占用； 例如，802.3 和 802.11 驻留在此层上。</li>
+</ul>
+<h2 id="第-1-层-物理层">第 1 层 物理层</h2>
+<p>数据以位的形式在该层上进行物理传输。 根据媒体类型和所使用的网卡，发送数据的方法会有所不同。 重要的是，两端都使用相同的方法。 这些信号可以采用电压变化的形式，也可以采用透射光的模式。</p>
+<p>在这一层上，没有协议，但是电缆和网卡需要遵守一些标准和准则。 这些标准包括以下内容：</p>
+<ul>
+<li>电压等级 Voltages</li>
+<li>速度 Speeds</li>
+<li>布线 Wiring</li>
+</ul>
+<h1>TCP / IP 模型</h1>
+<p>在学习 TCP / IP 模型时，你会注意到该模型与 OSI 模型有很多相似之处。 它们都采用分层方法，每一层与目标设备上的相邻层以及它们各自的层通信。 像 OSI 模型一样，TCP / IP 模型是开放或非专有的标准，这意味着任何制造商都可以使用它。</p>
+<p><img data-src="../../images/network/tcp-ip.png" alt="Tcp/Ip"></p>
+<p>如上图所示，与 OSI 模型的七个层相比，TCP / IP 模型只有四个层。 这些层如下：</p>
+<ul>
+<li>应用层</li>
+<li>传输层</li>
+<li>网际层</li>
+<li>网络接口层</li>
+</ul>
+<blockquote>
+<p>作为一般经验法则，如果它们是按编号引用的层，例如，第1层，第2层等，而不是第一层，第二层等，则它们通常是指 OSI 模型。 TCP / IP 模型倾向于依靠单词而不是数字。</p>
+</blockquote>
+<p>封装和解封装也在 TCP / IP 模型中起作用。 随着数据在模型中上下移动，标头和尾部将添加到数据中。 TCP / IP模型有时称为 Internet 协议（IP）套件，因为它是用于跨 Internet 通信的协议的集合。 这些协议一起形成协议栈。 协议栈是协议的集合，这些协议一起工作以执行特定的总体功能。</p>
+<h2 id="应用层">应用层</h2>
+<p>类似于 OSI 模型中的名称，TCP / IP 模型的应用层充当应用程序自身和网络堆栈之间的接口，而不是应用程序实际所在的位置。 同样，这是通过使用 API 和编程库实现的。 该层执行 OSI 模型中应用层和表示层的功能，包括数据的格式化，压缩和加密。</p>
+<p>在应用层上有许多协议正在使用，这些协议可以分为两个区域：</p>
+<ul>
+<li>用户协议 User protocols</li>
+<li>支撑协议 Support protocols</li>
+</ul>
+<h3 id="用户协议">用户协议</h3>
+<p>用户协议通常可以定义为用户与之交互的应用程序所使用的协议。 让我们看一些常见的用户协议：</p>
+<h4 id="Telnet">Telnet</h4>
+<p>Telnet 是一种从 CLI 远程控制设备的方法，Telnet 在端口 <code>23</code> 上工作，并提供了基于文本的低带宽与其他设备进行通信的方式。 为了使 telne t正常工作，您需要在要向其发送命令的设备上运行 telnet 服务器，并且您必须自己运行 telnet 客户端。</p>
+<p>我将告诉您不要使用它，除非作为最后的手段或建立更安全的连接（如 SSH）的手段。 Telnet 开箱即用，而 SSH 需要配置。 您可能想知道为什么我会这样说。 这很简单。 Telnet 以明文形式发送所有数据，包括您的用户名和密码。 因此，攻击者可以窃听此信息。默认情况下，大多数网络设备（例如路由器和交换机）都启用了 Telnet。 尽快将其禁用。</p>
+<h4 id="FTP">FTP</h4>
+<p>FTP 的作用恰如其名（超文本传输）。 它使您可以使用端口 <code>20</code> 和 <code>21</code> 将文件从一台设备传输到另一台设备。不要将这种协议误认为是组织的网络共享系统，因为后者更可能是服务器消息块（SMB）。</p>
+<p>要使用 FTP，我们需要在服务器上安装一个 FTP 服务器应用程序来托管我们要访问的文件，并且我们必须自己运行 FTP 客户端。 FTP 运行在 TCP 上，您可能还记得，它保证了数据的正确传递。</p>
+<h4 id="简单邮件传输协议">简单邮件传输协议</h4>
+<p>简单邮件传输协议（SMTP）通常提供两种功能。 它允许您从电子邮件客户端（例如 Outlook）向电子邮件服务器发送电子邮件。 它还允许您的电子邮件服务器将邮件从您的电子邮件服务器传输到另一个电子邮件服务器。 这两个功能都是通过端口 <code>25</code> 执行的。</p>
+<h3 id="支撑服务">支撑服务</h3>
+<p>支撑协议可以定义为系统本身使用的协议。</p>
+<h4 id="主机初始化">主机初始化</h4>
+<p>他提供了一种在没有安装自己的操作系统的情况下通过网络引导计算机的方法。 通过网络引导需要计算机具有支持**预引导执行环境（PXE）**的网卡。 尽管可能必须在系统的 BIOS 中启用它，但大多数现代系统都支持此功能。</p>
+<h4 id="远程管理">远程管理</h4>
+<p>此服务允许通过使用协议（例如在端口 <code>161</code> 上运行的<strong>简单网络管理协议（SNMP</strong>））来管理设备。SNMP 需要主机上的 SNMP 代理，该代理再与 SNMP 服务器通信。 这些通信包括属性及其值，例如可用磁盘空间，CPU 使用率等。 但是，这不是单向过程，服务器也可以将设置传达回设备以进行远程配置。</p>
+<h4 id="域名系统">域名系统</h4>
+<p>**域名系统（DNS）<strong>在这里它被归类为支撑服务，并将</strong>完全限定的域名（FQDN）**解析为 IP 地址。 一旦应用层履行了其职责，它将数据传递给传输层。</p>
+<h2 id="传输层">传输层</h2>
+<p>TCP / IP 模型的传输层执行与 OSI 模型中的对应层完全相同的角色。 即，它负责控制两个主机之间的通信。 回想一下，传输层提供了以下功能：</p>
+<ul>
+<li>使用校验和来确保数据完整性</li>
+<li>使用序列号确保数据以正确的顺序重建</li>
+<li>流量控制以确保所接收的数据不会最终堵塞收件人设备</li>
+<li>多路复用以允许主机与另一个主机建立多个连接</li>
+</ul>
+<h2 id="网际层">网际层</h2>
+<p>网际层映射到 OSI 的网络层。尽管名称不同，但这两个层执行相同的功能。它们都通过使用 IP 地址来提供逻辑寻址。 通过使用 IP 地址（和子网掩码），我们可以确定主机是发送设备的本地主机还是远程网络。 如果目标位于远程网络上，则在通过路由器，路由服务器或第 3 层交换机进行路径选择和数据转发过程中，还将使用 IP 地址。请注意，尽管 TCP / IP 模型未使用编号，但在这里我还是使用术语第3层，这纯粹是出于熟悉。</p>
+<p>该层上的三个主要协议如下：</p>
+<ul>
+<li>IP</li>
+<li>Internet 控制报文协议（ICMP）</li>
+<li>Internet 组管理协议  (IGMP)</li>
+</ul>
+<p>设备使用 ICMP 相互发送错误和控制消息。这些消息可以指出，主机不可访问，主机可访问但主机上的端口不可访问，网络不可访问等等。 这些控制消息是通过使用类型和子类型在 ICMP 数据中标识的。<code>ping</code> 和 <code>tracert</code> 命令使用了 ICMP。</p>
+<p>IGMP 用于创建设备的逻辑组。这些逻辑组将在多播传输期间和 IPv4 中使用。</p>
+<h2 id="网络接口层">网络接口层</h2>
+<p>TCP / IP 模型的网络层映射到 OSI 模型的数据链路层和物理层。因此，它将这两个 OSI 层的功能合并到这一 TCP / IP 层中。</p>
+<p>网际层主要负责主机网络外部的通信并路由此数据，而网络接口层则负责链路（基本上是同一子网内的任何事物）上的通信。因此，有时将网络接口层称为链路层。媒体访问控制是在 TCP / IP 模型的网络接口层上执行的，因此可以在此处找到 MAC 地址。此外，物理介质的属性（例如调制和编码）也在此处。 网络接口层中有许多协议和标准。 其中包括 IEEE 802.3 以太网，IEEE 802.11，点对点协议（PPP），地址解析协议（ARP）和帧中继。</p>
+<hr>
+<p>[^ router]: 在这个相互连接和全球通信的时代，我们必须开始研究网络之间的通信，而不仅仅是同一个子网中的设备之间的通信。 这种通信的一个关键组成部分是路由器。 这种无处不在的网络设备允许网络之间进行有效的通信，无论这些网络是我们组织内部的网络还是世界另一端的远程网络。<br>
+[^ switches]: 交换机是一种用于在本地网络中将流量从一台设备转发到另一台设备的设备。 通过将交换机引入我们的网络，我们提供了一种将网络划分为更小，更易于管理和更高效的区域的方法。第 2 层交换机仅支持使用基于 MAC 地址的转发数据，而第 3 层交换机在能够识别接口的 IP 地址方面也提供了额外的支持，并且还提供了使用 IP 地址进行流量路由的功能。 在 VLAN 之间路由流量时，这是必不可少的。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/OSI/" rel="tag"># OSI</a>
+              <a href="/tags/TCP-IP/" rel="tag"># TCP/IP</a>
+              <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+              <a href="/tags/RPC/" rel="tag"># RPC</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+            </div>
+            <div class="post-nav-item">
+                <a href="/java/Java8-Stream%E5%AD%A6%E4%B9%A0/" rel="next" title="Java8 Stream 学习">
+                  Java8 Stream 学习 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"42f12f5947d01a169b2478c37807707f"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

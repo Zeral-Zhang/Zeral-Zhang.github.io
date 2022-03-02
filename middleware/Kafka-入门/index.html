@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="Kafka 是为了解决 LinkedIn 数据管道问题应用而生的，它的设计目的是提供一个高性能的消息 系统，可以处理多种数据类型，并能够实时提供纯净且结构化的用户活动数据和系统度量指标。  数据为我们所做的每一件事都提供了动力。—— Jeff Weiner, LinkedIn CEO 一、基础环境搭建（可选） 手动安装 Kafka 依赖于 Zookeeper 的分布式节点选举功能，安装 Kaf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka 入门">
+<meta property="og:url" content="https://www.zeral.cn/middleware/Kafka-%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Kafka 是为了解决 LinkedIn 数据管道问题应用而生的，它的设计目的是提供一个高性能的消息 系统，可以处理多种数据类型，并能够实时提供纯净且结构化的用户活动数据和系统度量指标。  数据为我们所做的每一件事都提供了动力。—— Jeff Weiner, LinkedIn CEO 一、基础环境搭建（可选） 手动安装 Kafka 依赖于 Zookeeper 的分布式节点选举功能，安装 Kaf">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/kafka.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/kafka-producer-consumer.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/consumer-offset.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/partitioned_log.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/producer-write.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/Apache-Kafka-UML-Class-Diagram1.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/ecosystem.jpg">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/produce-message.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/data-copying.gif">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/zero-copying.gif">
+<meta property="article:published_time" content="2020-06-20T01:51:25.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.223Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Kafka">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/middleware/kafka/kafka.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/middleware/Kafka-%E5%85%A5%E9%97%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/middleware/Kafka-%E5%85%A5%E9%97%A8/","path":"middleware/Kafka-入门/","title":"Kafka 入门"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Kafka 入门 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">一、基础环境搭建（可选）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E5%AE%89%E8%A3%85"><span class="nav-number">1.1.</span> <span class="nav-text">手动安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Docker-%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">Docker 镜像使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81broker-%E5%92%8C-topic-%E9%83%A8%E5%88%86%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">二、broker 和 topic 部分配置参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Kafka-%E5%9F%BA%E7%A1%80%E6%9C%AF%E8%AF%AD%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">三、Kafka 基础术语：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81kafka-%E6%95%B4%E5%90%88-schema-registry"><span class="nav-number">4.</span> <span class="nav-text">四、kafka 整合 schema registry</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81kafka-%E7%94%9F%E4%BA%A7%E8%80%85%E2%80%94%E5%90%91-kafka-%E5%86%99%E5%85%A5%E6%95%B0%E6%8D%AE"><span class="nav-number">5.</span> <span class="nav-text">五、kafka 生产者—向 kafka 写入数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81kafka-%E6%B6%88%E8%B4%B9%E8%80%85%E2%80%94%E4%BB%8E-kafka-%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE"><span class="nav-number">6.</span> <span class="nav-text">六、kafka 消费者—从 kafka 读取数据</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="nav-number">6.1.</span> <span class="nav-text">消费者的配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#fetch-min-bytes"><span class="nav-number">6.1.1.</span> <span class="nav-text">fetch.min.bytes</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#max-partition-fetch-bytes"><span class="nav-number">6.1.2.</span> <span class="nav-text">max.partition.fetch.bytes</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#max-poll-records"><span class="nav-number">6.1.3.</span> <span class="nav-text">max.poll.records</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#heartbeat-interval-ms"><span class="nav-number">6.1.4.</span> <span class="nav-text">heartbeat.interval.ms</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#session-timeout-ms"><span class="nav-number">6.1.5.</span> <span class="nav-text">session.timeout.ms</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#max-poll-interval-ms"><span class="nav-number">6.1.6.</span> <span class="nav-text">max.poll.interval.ms</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3kafka%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">7.</span> <span class="nav-text">七、深入理解kafka运行机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="nav-number">8.</span> <span class="nav-text">八、常见问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9-Kafka%EF%BC%9F"><span class="nav-number">8.1.</span> <span class="nav-text">为什么选择 Kafka？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E7%94%9F%E4%BA%A7%E8%80%85"><span class="nav-number">8.1.1.</span> <span class="nav-text">多生产者</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E6%B6%88%E8%B4%B9%E8%80%85"><span class="nav-number">8.1.2.</span> <span class="nav-text">多消费者</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%96%87%E4%BB%B6%E7%9A%84%E4%BF%9D%E7%95%99"><span class="nav-number">8.1.3.</span> <span class="nav-text">基于文件的保留</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%E6%80%A7"><span class="nav-number">8.1.4.</span> <span class="nav-text">扩展性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%AB%98%E6%80%A7%E8%83%BD"><span class="nav-number">8.1.5.</span> <span class="nav-text">高性能</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka-%E9%80%82%E5%90%88%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%EF%BC%9F"><span class="nav-number">8.2.</span> <span class="nav-text">Kafka 适合什么样的使用场景？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E4%BB%A3%E7%90%86"><span class="nav-number">8.2.1.</span> <span class="nav-text">消息代理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E7%AB%99%E6%B4%BB%E5%8A%A8%E8%B7%9F%E8%B8%AA"><span class="nav-number">8.2.2.</span> <span class="nav-text">网站活动跟踪</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E6%A0%87%EF%BC%88Metrics%EF%BC%89"><span class="nav-number">8.2.3.</span> <span class="nav-text">指标（Metrics）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E8%81%9A%E5%90%88"><span class="nav-number">8.2.4.</span> <span class="nav-text">日志聚合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%81%E5%A4%84%E7%90%86"><span class="nav-number">8.2.5.</span> <span class="nav-text">流处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E6%BA%AF%E6%BA%90%EF%BC%88Event-Sourcing%EF%BC%89"><span class="nav-number">8.2.6.</span> <span class="nav-text">事件溯源（Event Sourcing）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%90%E4%BA%A4%E6%97%A5%E5%BF%97%EF%BC%88Commit-Log%EF%BC%89"><span class="nav-number">8.2.7.</span> <span class="nav-text">提交日志（Commit Log）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E9%A1%BA%E5%BA%8F%EF%BC%9F"><span class="nav-number">8.3.</span> <span class="nav-text">如何保证消息顺序？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85-4"><span class="nav-number">8.3.1.</span> <span class="nav-text">生产者</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E8%A2%AB%E6%B6%88%E8%B4%B9-Exactly-Once-2"><span class="nav-number">8.4.</span> <span class="nav-text">如何保证消息被消费 Exactly-Once</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85-5"><span class="nav-number">8.4.1.</span> <span class="nav-text">生产者</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B9%82%E7%AD%89%E7%94%9F%E4%BA%A7%E8%80%85"><span class="nav-number">8.4.1.1.</span> <span class="nav-text">幂等生产者</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E6%80%A7%E7%94%9F%E4%BA%A7%E8%80%85"><span class="nav-number">8.4.1.2.</span> <span class="nav-text">事务性生产者</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85-2"><span class="nav-number">8.4.2.</span> <span class="nav-text">消费者</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8B%E7%89%A9-3"><span class="nav-number">8.4.2.1.</span> <span class="nav-text">事物</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E6%8F%90%E4%BA%A4-2"><span class="nav-number">8.4.2.2.</span> <span class="nav-text">手动提交</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E4%BB%80%E4%B9%88%E4%BD%BF-Kafka-%E5%A6%82%E6%AD%A4%E4%B9%8B%E5%BF%AB-2"><span class="nav-number">8.5.</span> <span class="nav-text">是什么使 Kafka 如此之快</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%8E%E5%BB%B6%E8%BF%9F%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92-2"><span class="nav-number">8.5.1.</span> <span class="nav-text">低延迟消息传递</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%B9%E5%A4%84%E7%90%86%E6%95%B0%E6%8D%AE%E5%92%8C%E5%8E%8B%E7%BC%A9-2"><span class="nav-number">8.5.2.</span> <span class="nav-text">批处理数据和压缩</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%B1%95-2"><span class="nav-number">8.5.3.</span> <span class="nav-text">水平扩展</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81%E5%BC%80%E6%BA%90%E7%9B%91%E6%8E%A7%E5%B7%A5%E5%85%B7"><span class="nav-number">9.</span> <span class="nav-text">九、开源监控工具</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CMAK-Cluster-Manager-for-Apache-Kafka-previously-known-as-Kafka-Manager"><span class="nav-number">9.1.</span> <span class="nav-text">CMAK(Cluster Manager for Apache Kafka, previously known as Kafka Manager)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kafdrop"><span class="nav-number">9.2.</span> <span class="nav-text">kafdrop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka-Tool"><span class="nav-number">9.3.</span> <span class="nav-text">Kafka Tool</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Kafka-%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kafka 入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-06-20 09:51:25" itemprop="dateCreated datePublished" datetime="2020-06-20T09:51:25+08:00">2020-06-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><img data-src="../../images/middleware/kafka/kafka.png" alt="Kafka"></p>
+<blockquote>
+<p><code>Kafka</code> 是为了解决 <code>LinkedIn</code> 数据管道问题应用而生的，它的设计目的是提供一个高性能的消息<br>
+系统，可以处理多种数据类型，并能够实时提供纯净且结构化的用户活动数据和系统度量指标。</p>
+</blockquote>
+<p>数据为我们所做的每一件事都提供了动力。<em>—— Jeff Weiner, LinkedIn CEO</em></p>
+<h2 id="一、基础环境搭建（可选）">一、基础环境搭建（可选）</h2>
+<h3 id="手动安装">手动安装</h3>
+<p><code>Kafka</code> 依赖于 <code>Zookeeper</code> 的分布式节点选举功能，安装 <code>Kafka</code> 需安装 <code>Jdk</code>、<code>Zookeeper</code>、<code>Scala</code> 组件。(<a target="_blank" rel="noopener" href="https://www.confluent.io/blog/removing-zookeeper-dependency-in-kafka/">Kafka 正在逐渐削弱对 Zookeeper 的依赖，逐渐演变为自管理互相发现的模式</a>)</p>
+<span id="more"></span>
+<p>从 <code>Apache</code> 官网中心下载 <code>Zookeeper</code> 组件，然后安装 <code>Zookeeper</code> 环境：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># </span><span class="language-bash">创建zookeeper的数据目录data</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash">mdkir /usr/local/zookeeper/data</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">修改zookeeper配置文件zoo.cfg中的参数信息(指定数据目录、zookeeper暴露端口号)</span></span><br><span class="line">tickTime=2000</span><br><span class="line">dataDir=/usr/local/zookeeper/data</span><br><span class="line">clientPort=2181</span><br><span class="line"><span class="meta"># </span><span class="language-bash">启动zookeeper服务,其会加载zoo.cfg作为其配置文件</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash">/usr/local/zookeeper/bin/zkServer.sh starts</span></span><br></pre></td></tr></table></figure>
+<p>在安装好 <code>Java</code> 和 <code>Zookeeper</code> 之后就可以进行安装 <code>Kafka</code> 消息中间件，可以从 <code>Apache Kafka</code> 官网下载 <code>kafka</code> 消息中间件，然后进行配置安装。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># </span><span class="language-bash">创建<span class="built_in">log</span>目录用于临时存放kafka中间件日志信息</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash"><span class="built_in">mkdir</span> /tmp/kafka-logs</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">kafka broker启动时需要加载server.properties配置文件,指定kafka连接zookeeper地址</span></span><br><span class="line">zookeeper.connect=localhost:2181</span><br><span class="line"><span class="meta"># </span><span class="language-bash">启动kafka-server-start服务</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash"><span class="variable">$KAFKA_HOME</span>/bin/kafka-server-start.sh -daemon <span class="variable">$KAFKA_HOME</span>/config/server.properties</span></span><br></pre></td></tr></table></figure>
+<p>搭建好基础环境后对 <code>kafka</code> 消息中间件进行测试，创建新的 <code>topic</code> 并使用 <code>kafka-console-producer</code> 发送消息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># </span><span class="language-bash">使用kafka工具创建topic, 在参数中指定zookeeper的地址、replication-factor复制比例、及分区大小</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash"><span class="variable">$KAFKA_HOME</span>/bin/kafka-topics.sh --create --bootstrap-server localhost:9092</span></span><br><span class="line">\ --replication-factor 1 --partitions 1 --topic stream</span><br><span class="line"><span class="meta"># </span><span class="language-bash">查看当前broker中所有的topic列表</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash"><span class="variable">$KAFKA_HOME</span>/bin/kafka-topics.sh --list --bootstrap-server localhost:9092</span></span><br><span class="line">__consumer_offsets</span><br><span class="line">_schemas</span><br><span class="line">avro-stream stream </span><br><span class="line"><span class="meta"># </span><span class="language-bash">使用生产者客户端生产消息</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash"><span class="variable">$KAFKA_HOME</span>/bin/kafka-console-producer.sh</span> </span><br><span class="line">\ --broker-list localhost:9092 --topic stream </span><br><span class="line"><span class="meta">&gt;</span><span class="language-bash">this<span class="string">&#x27;s the first message</span></span> </span><br><span class="line"><span class="meta">&gt;</span><span class="language-bash"><span class="string">this&#x27;</span>s another message from kafka</span> </span><br><span class="line"><span class="meta"># </span><span class="language-bash">使用消费者客户端消费,目前暂时使用--bootstrap-server客户端无法接收到消息,--zookeeper可以正常接收</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash"><span class="variable">$KAFKA_HOME</span>/bin/kafka-console-consumer.sh</span> </span><br><span class="line">\ --bootstrap-server localhost:9092 </span><br><span class="line">\ --topic stream --from-beginning </span><br><span class="line">this&#x27;s the first message </span><br><span class="line">this&#x27;s another message from kafka</span><br></pre></td></tr></table></figure>
+<h3 id="Docker-镜像使用">Docker 镜像使用</h3>
+<p>Kafka 未提供官方的镜像，我们可以使用：<a target="_blank" rel="noopener" href="https://hub.docker.com/r/confluentinc/cp-kafka">confluentinc Kafka</a> 或 <a target="_blank" rel="noopener" href="https://hub.docker.com/r/wurstmeister/kafka">wurstmeister Kafka</a> 作为构建镜像使用：<br>
+使用时注意，如果不在同一主机中的客户端想要发送或者接收消息从该 Kafka 服务，需将该配置 <code>KAFKA_ADVERTISED_HOST_NAME </code> 或 <code>KAFKA_ADVERTISED_LISTENERS</code> 设为 Docker 主机对外的 IP 地址。具体解释见：<a target="_blank" rel="noopener" href="https://www.confluent.io/blog/kafka-listeners-explained/">kafka-listeners-explained</a>，简而言之：客户端使用消息代理返回的元信息进行消息发送和接收时的连接，这个元信息来源于该配置。</p>
+<h2 id="二、broker-和-topic-部分配置参数">二、<code>broker</code> 和 <code>topic</code> 部分配置参数</h2>
+<p><code>broker</code> 端常用配置信息：</p>
+<p>1.<code>broker.id</code>：每个 <code>broker</code> 都需要一个标识符，使用 <code>broker.id</code> 来表示，它的默认值为 0 。其可以被设置成任何其它任意整数。这个值在整个 <code>kafka</code> 集群中必须是唯一的。</p>
+<p>2.<code>port</code> 以及 <code>zookeeper.connect</code> 配置：<code>kafka</code> 默认是监听 <code>9092</code> 端口，修改 <code>port</code> 配置参数可以将其设置成任意其它可用的端口。若在端口号在 <code>1024</code> 以下，需要使用 <code>root</code> 权限启动 <code>kafka</code>。<code>zookeeper.connect</code> 是配置连接 <code>zookeeper</code> 的配置信息，默认连接 <code>zookeeper</code> 的 <code>2181</code> 端口。若为 <code>zookeeper</code> 集群，则使用<code>,</code>对 <code>zookeeper</code> 进行分割。</p>
+<p>3.<code>log.dirs</code> 以及 <code>auto.create.topics.enable</code> 配置：<code>kafka</code> 会将所有消息都保存磁盘上，存放这些日志片段的目录就是通过 <code>log.dirs</code> 指定的，它是一组用逗号分割的本地文件系统路径。若 <code>auto.create.topics.enable</code> 配置值为 <code>true</code>，处于以下三种情况时 <code>kafka</code> 会自动创建主题：当一个生产者开始往主题写入消息时、当一个消费者开始从主体读取消息时、当任意一个客户端向主体发送原<br>
+数据时。</p>
+<p>4.<code>num.recovert.threads.per.data.dir</code>：<code>kafka</code> 会使用可配置线程池来处理日志片段，默认情况下每个日志目录只使用一个线程，因为这些线程只是在服务器启动和关闭时会用到。在进行恢复时使用并行操作可能会省下数小时的时间，设置此参数需要注意，所配置的数字对应的是log.dirs指定的单个日志目录。</p>
+<p><code>topic</code> 常用配置参数：</p>
+<p>1.<code>number.partions</code>：该参数指定了新创建的主题将包含多少个分区，若启用了主题自动创建功能（该功能默认是启用的），主题分区的个数就是该参数指定的值（其默认值为 1 ）。可以增加主题分区的个数，但不能减少分区的个数。<code>Kafka</code> 集群通过分区对主题进行横向扩展，所以当有新的 <code>broker</code> 加入集群时，可以通过分区个数实现集群的负载均衡。</p>
+<p>2.<code>log.retention.ms</code>：<code>kafka</code> 通常根据时间来决定数据可以被保留多久，默认使用 <code>log.retention.hours</code> 参数来配置时间，默认值为  <code>168</code> 小时也就是一周。除此之外，还有其他两个参数 <code>log.retention.minutes</code> 和 <code>log.retention.ms</code>，这 3 个参数的作用是一样的，都是决定消息多久以后会被删除。</p>
+<p>3.<code>log.retention.bytes</code>：另一种方式是通过保留的消息字节数来判断消息是否过期，它的值通过参数 <code>log.retention.bytes</code> 来指定，作用在每一个分区上。也就是说，如果有一个包含 8 个分区的主题，并且 <code>log.retention.bytes</code> 被设置为1GB，那么这个主题最多可以保留8GB的数据。当主题分区个数增加时，整个主题可以保留的数据也随之增加。</p>
+<p>4.<code>log.segment.bytes</code>：当消息到达 <code>broker</code> 时，它们被追加到分区的当前日志片段上。当日志片段大小达到 <code>log.segment.bytes</code> 指定的上限时，当前日志片段就会被关闭，一个新的日志片段被打开，前一个日志片段等待过期（其默认过期时间为 10 天）。</p>
+<p>5.<code>log.segment.ms</code>：另一个可以控制日志片段关闭时间的是 <code>log.segment.ms</code>，它指定过了多长时间之后日志片段就被关闭，<code>log.segment.bytes</code> 和 <code>log.segment.ms</code> 这两个参数之间不存在互斥问题，日志片段会在大小或时间达到上限时被关闭，就看哪个条件先得到满足。</p>
+<p>6.<code>message.max.bytes</code>：<code>broker</code> 通过设置 <code>message.max.bytes</code> 参数来限制单个消息的大小，默认值是 <code>1MB</code>。若生产者尝试发送的消息超过这个大小，不仅消息不会被接收还会返回 <code>broker</code> 返回的错误消息。在消费者客户端设置的 <code>fetch.message.max.bytes</code> 必须与服务器设置的消息大小进行协调，如果这个值比 <code>message.max.bytes</code> 小，那么消费者就无法消费 比较大的消息。</p>
+<h2 id="三、Kafka-基础术语：">三、Kafka 基础术语：</h2>
+<p><code>kafka</code> 的数据单元称为消息 (Message)，与数据库里的一个&quot;数据行&quot;或者一条“记录”类似，为了提高效率消息被分批写入 <code>kafka</code>，批次就是一组消息（使用单独线程处理）。</p>
+<p><img data-src="../../images/middleware/kafka/kafka-producer-consumer.png" alt="kafka-producer-consumer"></p>
+<p><code>kafka</code> 的消息通过 <code>topic</code>（主题）进行分类，主题好比数据库中的表。<code>topic</code> 可以被分为若干分区，一个分区就是一个提交日志。消息以追加的方式写入分区，然后以先入先出的顺序读取。由于一个主题一般包含几个分区，因此无法在整个主题范围内保证消息的顺序，但可以保证在单个分区的顺序。</p>
+<p><strong><code>kafka</code> <code>broker</code> 是如何持久化数据的？<strong>总的来说，<code>kafka</code> 使用消息日志（<code>log</code>）来保存数据的，一个日志就是磁盘上一个只能追加（<code>append only</code>）消息的物理文件。因为只能追加写入，故避免了缓慢的</strong>随机 <code>I/O</code></strong> 操作，改为性能更好的顺序 <code>I/O</code> 操作，这也是实现<code>kafka</code> 高吞吐量特性的一个重要手段。为了避免日志写满磁盘空间，<code>kafka</code> 必然要定期地删除消息以回收磁盘。其通过 <code>log segment</code> 机制，在 <code>kafka</code> 底层一个日志又近一步细分成多个日志片段，消息被追加写到当前新的日志段中。<code>kafka</code> 在后台通过定时任务会定期检查老的日志段是否能够被删除，从而实现回收磁盘空间的目的。</p>
+<p><img data-src="../../images/middleware/kafka/consumer-offset.png" alt="consumer-offset"></p>
+<p><code>kafka</code> 中分区机制指的是将每个主题划分多个分区（<code>partition</code>），每个分区是一组有序的消息日志。也就是说如果向一个双分区的主题发送一条消息，这条消息要么在分区 0 中，要么在分区 1 中。</p>
+<p><img data-src="../../images/middleware/kafka/partitioned_log.png" alt="img"></p>
+<p><code>offset</code> 消费者位移：每个消费者在消费消息的过程中必然需要有个字段记录它当前消费到了分区的哪个位置上，这个字段就是消费者位移（<code>consumer offset</code>）。上面的位移表示的是分区内的消息位置，它是不变的，即一旦消息被成功写入到一个分区上，它的位移值就固定了。而消费者位移则会随着消息消费而发生变化，毕竟它是消费者消费进度的指示器。另外每个消费者都有着自己的消费者位移，因此一定要区分这两类位移的区别。</p>
+<p>kafka 消费者会往一个叫做 <code>_consumer_offset</code> 的特殊主题发送消息，消息里包含每个分区的偏移量。在发生 <code>rebalance</code> 之后，为了能够继续之前的工作，消费者需要读取每一个分区最后一次提交的偏移量，然后从偏移量指定的地方继续处理。当提交 <code>commit</code> 的偏移量小于客户端处理的最后一条消息的偏移量，消息会被<strong>重新处理导致重复</strong>。若提交的偏移量大于客户端处理的最后一个消息的偏移量，那么处于两个偏移量之间的<strong>消息将会丢失</strong>。</p>
+<h2 id="四、kafka-整合-schema-registry">四、kafka 整合 schema registry</h2>
+<p>使用 <code>apache avro</code> 实现在生产者与消费者中对消息内容进行序列化与反序列化，<code>Avro</code> 是一种与编程语言无关的序列化格式。<code>Doug Cutting</code> 创建了这个项目，目的是提供一种共享数据文件的方式。</p>
+<p><code>Avro</code> 数据通过与语言无关的 <code>schema</code> 来定义，<code>schema</code> 通过 <code>JSON</code> 来描述，数据被序列化为二进制或者 <code>JSON</code> 文件，不过一般会使用二进制文件。<code>Avro</code> 在读写文件时需要用到 <code>schema</code>，<code>schema</code> 一般会被内嵌在数据文件里。<code>Avro</code> 有一个很有意思的特性是，当负责写消息的应用程序使用了新的 <code>schema</code>，负责读消息的应用程序可以继续处理消息而无须做任何改动，这个特性使得它特别适合用在像 <code>kafka</code> 这样的消息系统上。</p>
+<p><code>confluent</code> 在其共有平台发布了 <code>confluent schema registry</code> 工具，作为注册表 <code>schema</code> 的实现。可以从 <a target="_blank" rel="noopener" href="https://www.confluent.io/download/">https://www.confluent.io/download/</a> 进行下载，之后在服务器上启动 <code>schema registry</code> 服务。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sam@elementoryos: ~/kafka_schema_registry/confluent-tools-kafka$ bin/schema-registry-start </span><br><span class="line">\ etc/schema-registry/schema-registry.properties</span><br><span class="line">[2019-11-12 00 :13:01,160] INFO Logging initialized @1547ms to org.eclipse.jetty.util.log.Slf4jLog (org.eclipse.jetty.util.log:193)</span><br></pre></td></tr></table></figure>
+<p>然后将需要进行序列化实体的 <code>schema</code> 注册到 <code>schema registry</code> 中，最终其会返回一个 <code>id</code> 表示注册成功。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sam@elementoryos: curl -X POST -H &quot;Content-Type:application/vnd.schemaregistry.v1+json&quot; --data</span><br><span class="line">\ &#x27;&#123;&quot;schema&quot;: &quot;&#123;\&quot;type\&quot;: \&quot;record\&quot;, \&quot;name\&quot;: \&quot;Customer\&quot;, \&quot;fields\&quot;: [&#123;\&quot;name\&quot;: \&quot;customerName\&quot;, \&quot;type\&quot;: \&quot;string\&quot;&#125;, &#123;\&quot;name\&quot;:\&quot;customerId\&quot;,\&quot;type\&quot;:\&quot;int\&quot;&#125;]&#125;&quot;&#125;&#x27;</span><br><span class="line">\ http://192.168.170.130:8081/subjects/avro-stream-value/versions</span><br><span class="line">&#123;&quot;id&quot;:21&#125;</span><br></pre></td></tr></table></figure>
+<p>注册完成后，就可以分别在生产者和消费者的代码示例中使用 <code>avro</code> 进行序列化对象。同时在生产者和消费者的 <code>properties</code> 指定属性 <code>kafkaProperties.put(&quot;schema.registry.url&quot;, &quot;http://192.168.170.130:8081&quot;)。</code></p>
+<h2 id="五、kafka-生产者—向-kafka-写入数据">五、kafka 生产者—向 kafka 写入数据</h2>
+<p>向 <code>kafka</code> 发送数据从创建 <code>ProducerRecord</code> 对象开始，其包含目标主题、要发送的内容，还可以指定键或分区。在发 <code>ProducerRecord</code> 对象时，生产者要把键和值对象序列化成字节数组，这样其就可以在网络上传输。</p>
+<p>接下来，将数据传给分区器。如果之前在 <code>ProducerRecord</code> 对象中指定了分区，那么分区器不会做任何事情，直接把指定的分区返回。若没有指定分区，那么分区器会根据 <code>ProducerRecord</code> 对象的键来选择一个分区。选好分区后，生产者就知道该往哪个主体和分区发送这条记录了。紧接着，这条记录会被添加到一个记录批次里，这个批次里的所有消息被发送到相同的主题和分区上。有一个单独的线程负责把<br>
+这些记录批次发送到相应的 <code>broker</code> 上。</p>
+<p>服务器在收到这些消息时会返回一个响应，如果消息成功写入 <code>kafka</code>，就返回一个 <code>RecordMetaData</code> 对象，它包含了主题和分区信息，以及记录在分区里的偏移量。如果写入失败，则会返回一个错误，生产者在收到错误之后会尝试重新发送消息，几次之后如果还是失败，就返回错误信息。</p>
+<p><img data-src="../../images/middleware/kafka/producer-write.png" alt="producer-write"></p>
+<h2 id="六、kafka-消费者—从-kafka-读取数据">六、kafka 消费者—从 kafka 读取数据</h2>
+<p><code>kakfa</code> 消费者从属于消费者群组，一个群组里的消费者订阅的是同一个主题，每个消费者接收主题一部分分区的消息。若消费者组中消费者的数量与主题分区的数量相等，则每一个消费者单独消费一个分区。当消费者组中消费者数量大于主题分区的数量，多余的消费者不会被分配到任何数据分区。引入消费者组的概念主要是为了提升消费者端的吞吐量。多个消费者实例同时消费，加速整个消费端的吞吐量（TPS）。消费者组里面的所有消费者实例不仅&quot;瓜分&quot;订阅主体的数据，而且更酷的是它们还能彼此协助。</p>
+<p><code>Rebalance</code> 概念：群组中的消费者共同读取主题的分区，一个新的消费者加入群组时，它读取的是原本由其他消费者读取的消息。当一个消费者被关闭或发生崩溃时，它就离开群组，原本由它读取的分区将由群组里的其它消费者来读取。分区的所有权从一个消费者转移到另一个消费者，这样的行为被称为再均衡，在 <code>rebalance</code> 时会产生 <code>stop the world</code> 的问题。</p>
+<p><code>kafka</code> 检测方式：消费者通过向被指派为群组协调器的 <code>broker</code>（不同的群组可以有不同的协调器）发送心跳来维持他们和群组的从属关系。只要消费者以正常的时间发送心跳，就被认为是活跃的，说明它还在读分区里的消息。<strong>如果消费者停止发送心跳的时间足够长（可能是批数据过大导致的消费太慢、网络问题、服务失败等），会话就会过期，群组协调器认为它已经死亡，就会触发一次再均衡。</strong></p>
+<p>分配分区的过程：当消费者要加入群组时，它会向群组协调器发送一个 <code>JoinGroup</code> 的请求。第一个加入群组的消费者将成为“群主”。群主从协调器那里获得群组的成员列表（列表中包含了所有最近发送过心跳的消费者，它们被认为是活跃的），并负责给每一个消费者分配分区。它使用了一个实现了 <code>PartitionAssign</code> 接口的类来决定哪些分区应该被分配给哪个消费者。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Map&lt;TopicPartition, OffsetAndMetadata&gt; currentOffsets = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;(); </span><br><span class="line"><span class="comment">// 当从kafka server中poll 200条记录,当处理了50条记录时,可以立即进行提交</span></span><br><span class="line">currentOffsets.put(<span class="keyword">new</span> <span class="title class_">TopicPartition</span>(record.topic(), record.partition()), <span class="keyword">new</span> <span class="title class_">OffsetAndMetadata</span>(record.offset() + <span class="number">1</span>, <span class="string">&quot;no metadata&quot;</span>)); </span><br><span class="line">consumer.commitAsync(currentOffsets, <span class="literal">null</span>);</span><br></pre></td></tr></table></figure>
+<p>提交特定的偏移量调用的是 <code>commitAsync</code>()，不过调用 <code>commitSync()</code> 也是完全可以的。当然，在提交特定偏移量时，仍然要处理可能发生的错误。</p>
+<p><code>kafka</code> 的再均衡监听器：消费者在退出和进行分区再均衡之前，会做一些清理工作。需要在消费者失去对一个分区的所有权之前提交最后一个已处理记录的偏移量。如果消费者准备了一个缓冲区用于处理偶发的事件，那么在失去分区所有权之前，需要处理在缓冲区累积下来的记录。你可能还需要关闭文件句柄、数据库连接等。</p>
+<p><code>ConsumerRebalanceListener</code> 有两个需要实现的方法：</p>
+<p>1 ）<code>public void onPartitionRevoked(Collection&lt;TopicPartition&gt; partitions)</code> 方法会在再均衡开始之前和消费者停止读取消息之后被调用。如果在这里提交偏移量，下一个接管分区的消费者就知道该从哪里开始读取了。</p>
+<p>2 ）<code>public void onPartitionsAssigned(Collection&lt;TopicPartition&gt; partitions)</code> 方法会在重新分配分区之后和消费者开始读取消息之前被调用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 在consumer订阅主体topic时设定回调类HandleRebalance </span></span><br><span class="line">consumer.subscribe(topics, <span class="keyword">new</span> <span class="title class_">HandleRebalance</span>());</span><br></pre></td></tr></table></figure>
+<p>从特定偏移量处开始处理记录：使用 <code>poll()</code> 方法从各个分区的最新偏移量处开始处理消息，有时候我们也需要从特定的偏移量处开始读取消息。<code>seekToBeginning(Collection&lt;TopicPartition&gt; tp)</code> 和 <code>seekToEnd(Collection&lt;TopicPartition&gt; tp)</code> 这两个方法。若循环运行在主线程中，可以在 <code>ShutdownHook</code> 里调用该方法，需记住 <code>consumer.wakeup()</code> 是消费者唯一一个可以从其他线程里安全调用的方法。调用 <code>consumer.wakeup()</code> 可以退出 <code>poll()</code> 并抛出 <code>WakeupException</code> 异常，或者如果调用 <code>consumer.wakeup()</code> 时线程没有等待轮询，那么异常将在下一轮 <code>poll()</code> 时抛出。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Runtime.getRuntime().addShutdownHook(<span class="keyword">new</span> <span class="title class_">Thread</span>() &#123;     </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;         </span><br><span class="line">      	consumer.wakeUp();     </span><br><span class="line">    &#125; </span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<h3 id="消费者的配置">消费者的配置</h3>
+<p>Kafka 的文档列出了所有与<a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/#consumerconfigs">消费者相关的配置说明</a>。大部分参数都有合理的默认值，一般不需要修改它们，不过有一些参数与消费者的性能和可用性有很大关系。接下来介绍这些重要的属性。</p>
+<h4 id="fetch-min-bytes"><a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/#consumerconfigs_fetch.min.bytes">fetch.min.bytes</a></h4>
+<p>服务器应为抓取请求返回的最小数据量。如果没有足够的数据可用，则请求将在回答请求之前等待积累足够多的数据。1 字节的默认设置意味着只要有一个字节的数据可用或抓取请求超时等待数据到达就会响应获取请求。将此设置为大于 1 的值将导致服务器等待大量数据积累，这可以稍微提高服务器吞吐量，但会增加一些延迟。默认：1 byte。</p>
+<h4 id="max-partition-fetch-bytes"><a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/#consumerconfigs_max.partition.fetch.bytes">max.partition.fetch.bytes</a></h4>
+<p>服务器从每个分区里返回给消费者的最大字节数。记录由消费者批量获取。如果抓取的第一个非空分区中的第一个记录批次大于此限制，则仍会返回该批次以确保消费者可以取得数据。代理接受的最大记录批次大小是通过 <code>message.max.bytes</code>（代理配置）或 <code>max.message.bytes</code>（主题配置）定义的。请参阅 <code>fetch.max.bytes</code> 以限制消费者请求大小。默认：1MB。</p>
+<h4 id="max-poll-records"><a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/#consumerconfigs_max.poll.records">max.poll.records</a></h4>
+<p>单次调用 <code>poll()</code> 时返回的最大记录数。请注意， <code>max.poll.records</code> 不会影响底层抓取行为。消费者将从每个抓取请求中缓存记录，并从每个轮询中逐渐地返回它们。默认：500 条。</p>
+<h4 id="heartbeat-interval-ms"><a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/#consumerconfigs_heartbeat.interval.ms">heartbeat.interval.ms</a></h4>
+<p>使用 Kafka 的组管理工具时，消费者协调器的心跳之间的预期时间。心跳用于确保消费者的会话保持活跃，并在新消费者加入或离开组时进行再平衡。</p>
+<p>该配置指定了消费者向消费者组协调器<strong>发送心跳信号</strong>的频率。因此，如果这是 3000 毫秒（默认），那么消费者将每 3 秒向消息代理发送一次心跳信号。</p>
+<p>在高负载的网络环境中，错过很少的心跳信号是正常的。所以建议在将消费者标记为死亡之前等待丢失 3 个心跳信号。这就是建议 <code>heartbeat.interval.ms</code> 为 <code>session.timeout.ms</code> 1/3 的原因。默认：3000 毫秒。</p>
+<h4 id="session-timeout-ms"><a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/#consumerconfigs_session.timeout.ms">session.timeout.ms</a></h4>
+<p>使用 Kafka 的组管理工具时用于<strong>检测客户端</strong>故障的超时。客户端定期发送心跳以向代理指示其活跃度。如果在此会话超时到期之前代理没有收到心跳，则代理将从组中删除此客户端并启动重新平衡。请注意，该值必须在由代理配置中配置的 <code>group.min.session.timeout.ms</code> 和 <code>group.max.session.timeout.ms</code> 的允许范围内。默认：45000 毫秒。</p>
+<h4 id="max-poll-interval-ms"><a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/#consumerconfigs_max.poll.interval.ms">max.poll.interval.ms</a></h4>
+<p>使用消费者组管理时调用 <code>poll()</code> 之间的最大延迟。这为消费者在获取更多记录之前可以空闲的时间设置了上限。如果在此超时到期之前没有调用 poll()，则认为消费者失败，组将重新平衡以将分区重新分配给另一个成员。对于使用达到此超时的非空 <code>group.instance.id</code> 的消费者，不会立即重新分配分区。相反，消费者将停止发送心跳，并且在 <code>session.timeout.ms</code> 到期后将重新分配分区。默认：5 分钟。</p>
+<blockquote>
+<p>在 KIP-62 之前，只有 <code>session.timeout.ms</code>（即 Kafka 0.10.0 及更早版本）。</p>
+<p>KIP-62，通过后台心跳线程将心跳与对 <code>poll()</code> 的调用分离，允许比心跳间隔更长的处理时间（即，两个连续的 <code>poll()</code> 之间的时间）。KIP-62 将轮询和心跳分离，允许在两次连续轮询之间发送心跳。现在您有两个线程在运行，<em>心跳线程</em>和<em>处理线程</em>，因此，KIP-62 为每个线程引入了超时。<code>session.timeout.ms</code> 用于心跳线程，而 <code>max.poll.interval.ms</code> 用于处理线程。</p>
+</blockquote>
+<h2 id="七、深入理解kafka运行机制">七、深入理解kafka运行机制</h2>
+<p><img data-src="../../images/middleware/kafka/Apache-Kafka-UML-Class-Diagram1.png" alt="Apache Kafka UML Class Diagram"></p>
+<p><code>kafka</code> 使用 <code>zookeeper</code> 来维护集群成员的信息，每个 <code>broker</code> 都有一个唯一标识符，这个标识符可以在配置文件中指定，也可以自动生成。在 <code>broker</code> 启动时，它通过创建临时节点把自己的 <code>id</code> 注册到 <code>zookeeper</code> 上。控制器 <code>controller</code> 机制：控制器负责分区首领的选举，集群里第一个启动的 <code>broker</code> 通过在 <code>zookeeper</code> 里创建一个临时节点 <code>controller</code> 让自己成为控制器。当其它的 <code>broker</code> 进行创建时，会收到一个&quot;节点已存在&quot;的异常，然后&quot;意识&quot;到控制器节点已存在，也就是说集群里已经有一个控制器了（结合 <code>zookeeper</code> 进行结点选举）。</p>
+<ol>
+<li><code>kafka</code> 中复制是如何进行实现的？</li>
+</ol>
+<p><code>kafka</code> 使用主题来组织数据，每个主题被分为若干个分区，每个分区有多个副本。那些副本被保存在 <code>broker</code> 上，每个 <code>broker</code> 可以保存成百上千个属于不同主题和分区的副本。副本分为两种类型：首领 (<code>master</code>) 副本，为保持一致性，<code>kafka</code> 中所有生产者请求和消费者请求都会经过这个副本。跟随者 (<code>follower</code>) 副本，其主要是从 <code>master</code> 复制消息并与 <code>master</code> 上内容保持一致，若 <code>master</code> 节点崩溃，参与节点选举并提升为新首领（<code>follower</code> 副本不参与读、写）。</p>
+<p>与 <code>master</code> 的同步实现：<code>follower</code> 为了与首领同步，向首领发送获取数据的请求，<code>master</code> 通过查看每个 <code>follower</code> 请求的最新偏移量，就可以知道每个跟随者复制的进度。如果跟随者在 <code>10s</code> 内没有请求任何消息，或者虽然在请求消息，但在 10s 内没有请求最新的数据，那么它就会被认为是不同步的。跟随者的正常不活跃时间或在成为不同步副本之前的时间是通过 <code>replica.lag.time.max.ms</code> 参数来配置的。</p>
+<ol start="2">
+<li><code>kafka</code> 是如何处理来自生产者和消费者的请求？</li>
+</ol>
+<p>生产请求和获取请求都必须发送给分区的首领副本，客户端使用元数据请求包含了客户端感兴趣的主题列表。服务器端的响应中指明了这些主题所包含的分区、每个分区都有哪些副本、以及哪个副本是 <code>master</code> 节点。客户端一般会缓存这些信息，并直接往目标 <code>broker</code> 上发送请求和获取请求（时间间隔通过 <code>metadata.max.age.ms</code> 来配置）。</p>
+<p>在生产者配置中存在 <code>acks</code> 这个配置参数——该参数指定了需要多少个 <code>broker</code> 确认才可以认为一个消息写入是成功的，<code>acks=all</code> 需要所有 <code>broker</code> 收到消息才会成功；<code>acks=0</code> 意味着生产者在把消息发出去之后，完全不需要等待 <code>broker</code> 的响应。</p>
+<p>客户端发送消费请求时向 <code>broker</code> 获取主题分区里具有特定偏移量的消息，客户端还可以指定为 <code>broker</code> 返回的数据分配足够的内存。否则， <code>broker</code> 返回的大量数据有可能耗尽客户端的内存。</p>
+<ol start="3">
+<li><code>kafka</code> 的存储细节，如文件格式和索引？</li>
+</ol>
+<p><code>kafka</code> 的基本存储单元是分区，分区无法在多个 <code>broker</code> 间进行再细分，也无法在同一个 <code>broker</code> 的多个磁盘上进行再细分。在配置 <code>kafka</code> 时候，管理员指定了一个用于存储分区的目录清单——也就是 <code>log.dirs</code> 参数的值，该参数一般会包含每个挂载点的目录。</p>
+<p>文件管理部分，<code>kafka</code> 管理员为每个主题配置了数据保留期限，规定数据被删除之前可以保留多长时间，或者清理数据之前可以保留的数据量大小。通常分区被分成若干个片段，默认情况下，每个片段包含 <code>1GB</code> 或一周的数据，以较小的那个为准。在 <code>broker</code> 往分区写入数据时，如果达到片段上限，就关闭当前文件，并打开一个新文件。当前正在写入数据非片段叫作活跃片段，活动片段永远不会被删除。</p>
+<p>消息和偏移量保存在文件里，其格式除了键、值和偏移量外，消息里还包含了消息大小、校验和、消息格式版本号、压缩算法（Zstd、Snappy、GZip 或 LZ4）和时间戳。时间戳可以是生产者发送消息的时间，也可以是消息到达 <code>broker</code> 的时间，可以配置。为了能快速从任意可用偏移量位置开始读取消息，<code>kafka</code> 为每个分区维护了一个索引，索引把偏移量映射到片段文件和偏移量在文件里的位置。</p>
+<p>清理工作原理：若 <code>kafka</code> 启动时启用了清理功能（通过配置 <code>log.cleaner.enabled</code> 参数），每个 <code>broker</code> 会启动一个清理管理器线程或多个清理线程，它们负责执行清理任务，清理掉键重复的只保留一条，或清理 <code>value</code> 为空的消息等。这个线程会选择污浊率（污浊消息占分区总大小的比例）较高的分区进行清理。</p>
+<p>为了清理分区，清理线程会读取分区的污浊部分，并在内存里创建一个 <code>map</code>。<code>map</code> 里的每个元素包含了消息键的散列值和消息的偏移量，键的散列值是 16B，加上偏移量总共是 24B。如果要清理一个 1GB 的日志偏移量，并假设每个消息大小为 1KB，那么这个片段就包含一百万个消息，而我们只需要 24MB 的 map 就可以清理这个片段（若有重复的键，可以重用散列项，从而使用更少的内存）。</p>
+<ol start="4">
+<li><code>zookeeper</code> 都存储了哪些信息，为什么需要 <code>zookeeper</code>？</li>
+</ol>
+<p>Kafka 使用 ZooKeeper 存储自身的元数据 (metadata)，Zookeeper 是 Apache 开发的顶级软件，充当中心化服务，用于维护命名和配置数据，并在分布式系统中提供灵活和健壮的同步。Zookeeper 跟踪 Kafka 集群节点的状态，它还跟踪 Kafka 主题、分区等。</p>
+<p>Zookeeper 本身允许多个客户端同时执行读写操作，并充当系统内的共享配置服务。Zookeeper atomic broadcast (ZAB) 分布式一致协议是整个系统的大脑，使得 Zookeeper 可以作为一个原子广播系统，进行有序的更新，数据分布在集群的多个节点中，通过 ZAB 协议来保证不同节点数据的一致性，并提供高可用性，即使有一个主节点崩溃，也会立即选举新的节点。</p>
+<p>它的作用主要有：</p>
+<ul>
+<li>
+<p>控制器选举</p>
+<p>控制器是 Kafka 生态系统中最重要的中介实体之一，它有责任维护所有分区之间的领导者 - 跟随者关系。如果某个节点由于某种原因关闭，则控制器有责任告诉所有副本去竞选分区领导者，以便在即将发生故障的节点上履行分区领导者的职责。因此，每当一个节点关闭时，都可以选择一个新的控制器，并且还可以确保在任何给定时间只有一个控制器，并且所有跟随节点都同意这一点。</p>
+</li>
+<li>
+<p>主题、分区、消费者的状态及配置元数据维护</p>
+<p>有关所有主题的配置，包括现有主题列表、每个主题的分区数量、所有副本的位置、所有主题的配置覆盖列表以及哪个节点是首选领导者等。具体存放的数据可以查看：<a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/Kafka+data+structures+in+Zookeeper">Kafka data structures in Zookeeper</a></p>
+</li>
+<li>
+<p>访问控制列表 ACL</p>
+<p>所有主题的访问控制列表或 ACL 也在 Zookeeper 中维护。</p>
+</li>
+<li>
+<p>集群成员</p>
+<p>Zookeeper 还维护在任何给定时刻运行的所有代理的列表，它们是集群的一部分。</p>
+</li>
+</ul>
+<h2 id="八、常见问题">八、常见问题</h2>
+<h3 id="为什么选择-Kafka？">为什么选择 Kafka？</h3>
+<img data-src="../../images/middleware/kafka/ecosystem.jpg" alt="img312" style="zoom: 67%;" />
+<p>有很多发布/订阅的消息系统，为什么我们要选择 Kafka？</p>
+<h4 id="多生产者">多生产者</h4>
+<p>Kafka 能够无缝地处理多个生产者，而不用管客户端是否使用多个主题或同一主题。 这使得系统非常适合从许多前端系统聚合数据并使其保持一致。例如，一个通过许多微服务为用户提供内容的网站可以拥有一个页面视图主题，所有服务都可以使用通用格式写入该页面视图，然后，消费者应用程序可以为站点上的所有应用程序接收单个页面视图，而无需从每个应用程序多个主题协调消费。</p>
+<h4 id="多消费者">多消费者</h4>
+<p>除了多生产者之外，Kafka 还专为多个消费者设计，以读取任何单一的消息流而不会互相干扰。这与许多消息系统相反，这些消息系统一旦消息由其中一个客户端消费，其它客户端将不可消费。Kafka 可以通过多个消费者选择作为消费组的一部分运行并共享流，确保整个组仅处理给定消息一次来实现同样的目的。</p>
+<h4 id="基于文件的保留">基于文件的保留</h4>
+<p>Kafka 不仅可以处理多个消费者，而且持久（<strong>Durable</strong>）的消息保留意味着消费者并不总是需要实时工作。 消息已提交给磁盘，并将按可配置的保留规则保留数据。可以在每个主题的基础上选择这些选项，允许根据消费者需求进行不同的消息流，以具有不同的保留量。持久（Durable）的保留意味着如果消费者落后，由于处理缓慢或处理中出问题，则没有丢失数据的危险。这也意味着可以在消费者身上进行维护，在短时间内离线应用程序，不用担心备份生产者或丢失的消息。消费者可以停止，并且消息将保留在 Kafka。 这允许它们重新启动并拾取它们离开时的消息进行处理，而无需担心数据丢失。</p>
+<h4 id="扩展性">扩展性</h4>
+<p>Kafka 的灵活可伸缩性使其易于处理任何数量的数据。 用户可以以单个代理作为概念证明，扩展到三个代理的小型开发集群，随着时间的推移和数据的增长而增加一组或甚至数百个代理，并逐渐走向真实的生产环境。 集群在线时可以执行扩展，不会影响整个系统的可用性。 这也意味着多个代理集群可以接管单个代理的故障，并继续服务客户。需要容忍更多同时故障的集群可以配置更高的复制因子。</p>
+<h4 id="高性能">高性能</h4>
+<p>所有这些功能都汇集在一起，使 Apache Kafka 成为发布/订阅消息系统，在高负载下具有出色的性能。生产者，消费者和代理都可以水平扩展，以便轻松处理非常大的信息流，在提供高可用的同时也保证了低延迟的消息传递。</p>
+<h3 id="Kafka-适合什么样的使用场景？">Kafka 适合什么样的使用场景？</h3>
+<h4 id="消息代理">消息代理</h4>
+<p>Kafka 可以很好地替代传统消息代理。消息代理的使用有多种原因（将消费处理与数据生产者分离，缓冲未处理的消息等）。与大多数消息系统相比，Kafka 具有更好的吞吐量，内置的分区，复制和容错能力，这使其成为大规模消息处理应用程序的理想解决方案。</p>
+<p>根据我们的经验，消息传递的使用通常吞吐量较低，但是可能需要较低的端到端延迟，并且通常取决于 Kafka 提供的强大的持久性保证。</p>
+<p>在这个领域，Kafka 可以与传统的消息传递系统（例如 <a target="_blank" rel="noopener" href="http://activemq.apache.org/">ActiveMQ</a> 或 <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/">RabbitMQ</a>）相提并论。</p>
+<h4 id="网站活动跟踪">网站活动跟踪</h4>
+<p>Kafka 最初的用例是能够将用户活动跟踪管道重建为一组实时的发布-订阅供给。这意味着将网站活动（页面浏览量，搜索或用户可能采取的其他操作）发布到中心主题，每种活动类型只有一个主题。这些供给可用于一系列用例的订阅，包括实时处理，实时监控，以及加载到 Hadoop 或脱机数据仓库系统中以进行脱机处理和报告。</p>
+<p>活动跟踪通常量很大，因为每个用户页面视图都会生成许多活动消息。</p>
+<h4 id="指标（Metrics）">指标（Metrics）</h4>
+<p>Kafka 通常用于操作监控数据。这涉及汇总来自分布式应用程序的统计信息，以生成集中的操作数据提要。</p>
+<h4 id="日志聚合">日志聚合</h4>
+<p>许多人使用 Kafka 替代日志聚合解决方案。日志聚合通常从服务器收集物理日志文件，并将它们放在中央位置（也许是文件服务器或  HDFS）以进行处理。Kafka 提取了文件的详细信息，并将日志或事件数据作为消息流进行了更清晰的抽象。这允许较低延迟的处理，并更容易支持多个数据源和分布式数据消费。与以日志为中心的系统（例如 Scribe 或 Flume）相比，Kafka 具有同样出色的性能，由于复制而提供的更强的持久性保证以及更低的端到端延迟。</p>
+<h4 id="流处理">流处理</h4>
+<p>Kafka 的很多用户使用多个阶段组成的处理管道处理数据，从 Kafka 主题中消费原始输入数据，然后将其聚合，增强或以其他方式转换为新主题，以供进一步消费或后续处理。例如，用于推荐新闻文章的处理管道可能会从 RSS 供给中检索文章内容，并将其发布到“文章”主题中。进一步的处理可能会使该内容规范化或删除重复数据，并将清洗后的文章内容发布到新主题中；最后的处理阶段可能会尝试向用户推荐此内容。这样的处理管道基于各个主题创建实时数据流的图形。从 0.10.0.0 开始，Apache Kafka 中提供了一个轻量但功能强大的流处理库，称为 <a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/streams">Kafka Streams</a>，可以执行上述数据处理。除了 Kafka Streams，替代的开源流处理工具包括 <a target="_blank" rel="noopener" href="https://storm.apache.org/">Apache Storm</a> 和 <a target="_blank" rel="noopener" href="http://samza.apache.org/">Apache Samza</a>。</p>
+<h4 id="事件溯源（Event-Sourcing）">事件溯源（Event Sourcing）</h4>
+<p><a target="_blank" rel="noopener" href="http://martinfowler.com/eaaDev/EventSourcing.html">事件溯源</a>是应用程序设计的一种样式，其中状态更改以时间顺序的记录序列记录下来。 Kafka 对非常大的存储日志数据的支持使其成为使用这种样式构建的应用程序的绝佳后端。</p>
+<h4 id="提交日志（Commit-Log）">提交日志（Commit Log）</h4>
+<p>Kafka 可以用作分布式系统的一种外部提交日志。该日志有助于在节点之间复制数据，并充当故障节点恢复其数据的重新同步机制。Kafka 中的<a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation.html#compaction">日志压缩</a>功能有助于支持此用法。在这种用法中，Kafka 类似于 <a target="_blank" rel="noopener" href="https://bookkeeper.apache.org/">Apache BookKeeper</a> 项目。</p>
+<h3 id="如何保证消息顺序？">如何保证消息顺序？</h3>
+<p>Kafka 可以保证同一个分区里的消息是有序的。也就是说，如果生产者按照一定的顺序发送消息，broker 就会按照这个顺序把它们写入分区，消费者也会按照同样的顺序读取它们。</p>
+<p><strong>使用单个分区能最大程度保证消息的顺序，或者消息使用相同的 key。还需注意下面的配置。</strong></p>
+<h4 id="生产者-4">生产者</h4>
+<p><code>retries</code> ：生产者从服务器收到错误时的重试次数</p>
+<p><code>max.in.flight.requests.per.connection</code> ：生产者在收到服务器响应之前可以发送多少个批次消息。值越高，占用越多内存，吞吐量提升。</p>
+<p>消息是否写入成功也是非常关键的，如果把 <code>retries</code> 设为非零整数，同时把 <code>max.in.flight.requests.per.connection</code> 设为比 1 大的数，那么第一批消息写入失败，而第二批写入成功，broker 重试第一个批次。此时第一个批次写入成功，那么两个批次的顺序就反了。</p>
+<p>为了保证写入的顺序，不建议把 <code>retries</code> 设为 0，可以把 <code>max.in.flight.requests.per.connection</code> 设为 <strong>1</strong> ，这样在生产者尝试发送第一批消息时，就不会有其他的消息发送给 broker。不过这样的会严重影响生产者的吞吐量，所以只有在对消息的顺序有严格要求的情况下。</p>
+<h3 id="如何保证消息被消费-Exactly-Once-2">如何保证消息被消费 Exactly-Once</h3>
+<p>由于各种故障，消息传递系统无法保证生产者和使用者应用程序之间的消息传递。根据客户端应用程序与此类系统交互的方式，可能会出现以下消息语义：</p>
+<ul>
+<li>如果消息传递系统永远不会复制消息，但可能会漏掉偶尔的消息，则我们称 <em><strong>最多一次 (at-most-once)</strong></em></li>
+<li>如果它永远不会丢失一条消息，但可能会重复一条消息，则我们称 <em><strong>至少一次 (at-least-once)</strong></em>**</li>
+<li>如果发送的所有消息时总是不重复，且保证消息只发送一次，那将是 <em><strong>恰好一次 (exactly-once)</strong></em> ，得保证生产者发送给服务器的消息只成功一次，消费者也只消费一次。Kafka 代理和客户端应用引入事物可确保进行一次准确的交付。</li>
+</ul>
+<h4 id="生产者-5">生产者</h4>
+<p><img data-src="../../images/middleware/kafka/produce-message.png" alt="img"></p>
+<p>从 Kafka 0.11 开始，<code>KafkaProducer</code> 支持另外两种模式：<strong>幂等生产者</strong>和<strong>事务性生产者</strong>。 幂等生产者将 <code>Kafka</code> 的传递语义从至少一次传递增强到恰好一次传递。 特别是生产者重试将不再引入重复。 事务生产者允许应用程序以原子方式将消息发送到多个分区（和主题！）。</p>
+<h5 id="幂等生产者">幂等生产者</h5>
+<p>由于生产者出错重试会导致消息重复，所以为了生产者成功提交的消息恰好一次，可以使用幂等操作来保证。如果发生导致生产者重试的错误，则相同的消息（仍由生产者多次发送）将仅写入到代理上的 Kafka 日志一次。对于单个分区，幂等生产者发送消除了由于生产者或代理错误而产生重复消息的可能性。要启用此功能并为每个分区获取 Exactly-Once 的语义（即没有重复，没有数据丢失和有序的语义），<strong>请将生产者配置为 <code>enable.idempotence = true</code></strong> 。</p>
+<p><code>enable.idempotence</code> ：当设置为 “true” 时，生产者将确保每个消息的仅有一个副本被写入流中。如果为 “false”，则生产者由于代理失败等原因而重试，可能会将重试消息的副本写入流中。 请注意，启用幂等性要求 <code>max.in.flight.requests.per.connection</code> 小于或等于 5，重试大于 0， <code>ack</code> 必须为 “<strong>all</strong>”。 **如果用户未明确设置这些值，<code>retries</code> 配置将默认为 <code>Integer.MAX_VALUE</code> 并且 <code>acks</code> 配置将默认为 <code>all</code> **。 如果设置了不兼容的值，则将引发 <code>ConfigException</code>。</p>
+<p><code>acks</code> ：该参数指定了必须要有多少个分区副本收到消息，生产者才会认为消息写入是成功的。这个参数对消息丢失的可能性有影响。</p>
+<ul>
+<li><code>acks=0</code> 不需要确认</li>
+<li><code>acks=1</code> 需要集群首领确认。首领确认纪录后失败，如果跟随者还没复制，则记录可能丢失。</li>
+<li><code>acks=all</code> 集群首领及其追随者都确认后，才会收到成功响应。安全性更高，吞吐率下降。</li>
+</ul>
+<h5 id="事务性生产者">事务性生产者</h5>
+<p><strong>幂等生产者只能保证单个主题的写入提供保证</strong>，如果想将一组消息跨多个主题原子提交，则可以让生产者通过设定事物 Id ( <code>transactional.id</code> )，然后开启事物。</p>
+<p>如果设置了 <code>transactional.id</code> ，<strong>则幂等性与幂等性所依赖的生产者配置一起自动启用</strong>。 此外，事物中包含的主题应配置为持久性。 特别是， <code>replication.factor</code> 至少应为 3 ，这些 <code>min.insync.replicas</code> 应设置为 2。 最后，为了从端到端实现事务性保证，消费者必须配置为<strong>仅读取已提交的消息</strong>。</p>
+<h4 id="消费者-2">消费者</h4>
+<h5 id="事物-3">事物</h5>
+<p><code>isolation.level</code> ：控制如何读取事务写入的消息。如果设置为 <code>read_committed</code> ，<code>consumer.poll()</code> 将仅返回已提交的事务性消息。如果设置为 <code>read_uncommitted</code> （ <strong>默认</strong> ），<code>consumer.poll()</code> 将返回所有消息，甚至是已中止的事务性消息。非事务性消息在两种方式下都返回。</p>
+<h5 id="手动提交-2">手动提交</h5>
+<p><code>enable.auto.commit</code> ：该属性决定是否自动提交偏移量，默认为 true。为了避免数据出现重复和丢失，可以通过手动提交的方式自行提交偏移量。</p>
+<h3 id="是什么使-Kafka-如此之快-2">是什么使 Kafka 如此之快</h3>
+<h4 id="低延迟消息传递-2">低延迟消息传递</h4>
+<p>Kafka 通过顺序 IO 操作日志避免了长时间的磁盘寻道；</p>
+<p>零拷贝原则，避免了内核上下文和应用上下文的文件读取和发送，直接在系统内核上下文中进行文件读取和发送，避免了上下文切换的时间消耗和内存占用。</p>
+<p>传统数据复制方法</p>
+<p><img data-src="../../images/middleware/kafka/data-copying.gif" alt="Traditional data copying approach"></p>
+<p>这里涉及的步骤有：</p>
+<ol>
+<li>read() 调用引发了一次从用户模式到内核模式的上下文切换。在内部，发出 sys_read()（或等效内容）以从文件中读取数据。直接内存存取（direct memory access，DMA）引擎执行了第一次拷贝，它从磁盘中读取文件内容，然后将它们存储到一个内核地址空间缓存区中。</li>
+<li>所需的数据被从读取缓冲区拷贝到用户缓冲区，read() 调用返回。该调用的返回引发了内核模式到用户模式的上下文切换（又一次上下文切换）。现在数据被储存在用户地址空间缓冲区。</li>
+<li>send() 套接字调用引发了从用户模式到内核模式的上下文切换。数据被第三次拷贝，并被再次放置在内核地址空间缓冲区。但是这一次放置的缓冲区不同，该缓冲区与目标套接字相关联。</li>
+<li>send() 系统调用返回，结果导致了第四次的上下文切换。DMA 引擎将数据从内核缓冲区传到协议引擎，第四次拷贝独立地、异步地发生 。</li>
+</ol>
+<p>零拷贝使用 <code>java.nio.channels.FileChannel.transferTo()</code></p>
+<p><img data-src="../../images/middleware/kafka/zero-copying.gif" alt="Data copy with transferTo"></p>
+<h4 id="批处理数据和压缩-2">批处理数据和压缩</h4>
+<p>通过批量读写来优化吞吐量，并将同一批次的消息高效压缩在一起传输，在日志中也同样保持压缩，仅由使用者解压缩。支持的压缩算法：<code>Zstd</code>、<code>Snappy</code>、<code>GZip</code> 或 <code>LZ4</code>。</p>
+<h4 id="水平扩展-2">水平扩展</h4>
+<p>首先让我们了解什么是垂直扩展。可以说，对于传统的数据库服务器，当负载增加时，一种解决方法是添加更多资源，例如：CPU，RAM，SSD 等。这称为垂直扩展。它具有以下几个缺点：</p>
+<ul>
+<li>每个硬件都有局限性，不能无限地向上扩展。</li>
+<li>如果机器出现故障怎么办？通常需要停机。</li>
+</ul>
+<p><strong>水平扩展</strong>通过添加更多机器来解决相同的问题。 Kafka 能够为单个主题提供数千个分区，并将其分布在数千台计算机中，这意味着 Kafka 可以处理巨大的负载。</p>
+<h2 id="九、开源监控工具">九、开源监控工具</h2>
+<h3 id="CMAK-Cluster-Manager-for-Apache-Kafka-previously-known-as-Kafka-Manager"><a target="_blank" rel="noopener" href="https://github.com/yahoo/CMAK">CMAK</a>(Cluster Manager for Apache Kafka, previously known as Kafka Manager)</h3>
+<p>分类：<em>WEB UI 服务</em></p>
+<p>特性：可管理集群、监控集群状态（主题、消费者、偏移量、消息代理、复制副本、分区副本）、<strong>运行首选副本选举</strong>、创建/删除/修改主题及分区、<strong>分区主题重新分配</strong>、<strong>JMX 监控</strong>…</p>
+<h3 id="kafdrop"><a target="_blank" rel="noopener" href="https://github.com/obsidiandynamics/kafdrop">kafdrop</a></h3>
+<p>分类：<em>WEB UI 服务</em></p>
+<p>特性：查看 Kafka 代理（主题和分区分配以及控制器状态）、查看主题（分区数，复制状态和自定义配置）、<strong>查看消息（JSON，纯文本和 Avro 编码）</strong>、查看消费者分组（每个分区的消费偏移量，合并和每个分区的滞后）、创建新主题、查看 ACLs…</p>
+<h3 id="Kafka-Tool"><a target="_blank" rel="noopener" href="https://www.kafkatool.com/index.html">Kafka Tool</a></h3>
+<p>分类：<em>GUI 应用</em></p>
+<p>特性：快速查看所有 Kafka 集群，包括其代理，主题和消费者、<strong>查看分区中消息的内容并支持添加新消息</strong>、查看消费者的偏移量、支持 JSON 和 XML 等格式显示消息、添加和删除主题以及其他管理功能、<strong>将单个消息从您的分区保存到本地硬盘驱动器</strong>、Kafka Tool 可在Windows，Linux 和 Mac OS 上运行</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Kafka/" rel="tag"># Kafka</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/persistence/db/MySQL-Explain/" rel="prev" title="MySQL Explain 执行计划解释">
+                  <i class="fa fa-chevron-left"></i> MySQL Explain 执行计划解释
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/middleware/Elasticsearch-%E5%85%A5%E9%97%A8/" rel="next" title="Elasticsearch 入门">
+                  Elasticsearch 入门 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"2aaeb78eb2f1c7c6fe2fb103a1fc65cd"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

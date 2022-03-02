@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="概述 fork&#x2F;join 框架在 Java 7 中呈现。它提供了一些工具，通过尝试使用所有可用的处理器内核来帮助加速并行处理 - 这是通过分而治之的方法实现的——分治算法。 Java 8 的并行流背后使用的基础架构就是该框架。 在实践中，这意味着框架首先“fork(分叉)”，递归地将任务分解为较小的独立子任务，直到它们足够简单以便异步执行，也就是任务分发。 之后，“join(并入)”部分开始，其中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fork&#x2F;Join 框架入门">
+<meta property="og:url" content="https://www.zeral.cn/concurrency/ForkJoin-%E6%A1%86%E6%9E%B6%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="概述 fork&#x2F;join 框架在 Java 7 中呈现。它提供了一些工具，通过尝试使用所有可用的处理器内核来帮助加速并行处理 - 这是通过分而治之的方法实现的——分治算法。 Java 8 的并行流背后使用的基础架构就是该框架。 在实践中，这意味着框架首先“fork(分叉)”，递归地将任务分解为较小的独立子任务，直到它们足够简单以便异步执行，也就是任务分发。 之后，“join(并入)”部分开始，其中">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/stream/fork-join-task.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/stream/fork-join.jpg">
+<meta property="article:published_time" content="2018-11-25T13:07:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.348Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Parallel Stream">
+<meta property="article:tag" content="ForkJoinPool">
+<meta property="article:tag" content="Fork&#x2F;Join">
+<meta property="article:tag" content="Work stealing">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/stream/fork-join-task.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/concurrency/ForkJoin-%E6%A1%86%E6%9E%B6%E5%85%A5%E9%97%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/concurrency/ForkJoin-%E6%A1%86%E6%9E%B6%E5%85%A5%E9%97%A8/","path":"concurrency/ForkJoin-框架入门/","title":"Fork/Join 框架入门"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Fork/Join 框架入门 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ForkJoinPool"><span class="nav-number">2.</span> <span class="nav-text">ForkJoinPool</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E7%AA%83%E5%8F%96%E7%AE%97%E6%B3%95-Work-stealing"><span class="nav-number">2.1.</span> <span class="nav-text">工作窃取算法 (Work stealing)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ForkJoinPool-%E5%AE%9E%E4%BE%8B%E5%8C%96"><span class="nav-number">2.2.</span> <span class="nav-text">ForkJoinPool 实例化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E5%BF%83%E4%BD%BF%E7%94%A8-commonPool"><span class="nav-number">2.3.</span> <span class="nav-text">小心使用 commonPool</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ForkJoinTask-V"><span class="nav-number">3.</span> <span class="nav-text">ForkJoinTask</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RecursiveAction-%E2%80%93-%E4%BE%8B%E5%AD%90"><span class="nav-number">3.1.</span> <span class="nav-text">RecursiveAction – 例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RecursiveTask-V"><span class="nav-number">3.2.</span> <span class="nav-text">RecursiveTask</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%86%E4%BB%BB%E5%8A%A1%E6%8F%90%E4%BA%A4%E5%88%B0-ForkJoinPool"><span class="nav-number">4.</span> <span class="nav-text">将任务提交到 ForkJoinPool</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">5.</span> <span class="nav-text">结论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/concurrency/ForkJoin-%E6%A1%86%E6%9E%B6%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Fork/Join 框架入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-11-25 21:07:00" itemprop="dateCreated datePublished" datetime="2018-11-25T21:07:00+08:00">2018-11-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="概述">概述</h2>
+<p>fork/join 框架在 Java 7 中呈现。它提供了一些工具，通过尝试使用所有可用的处理器内核来帮助加速并行处理 - 这是通过分而治之的方法实现的——分治算法。</p>
+<p><strong>Java 8 的并行流背后使用的基础架构就是该框架。</strong></p>
+<p>在实践中，这意味着框架首先“fork(分叉)”，递归地将任务分解为较小的独立子任务，直到它们足够简单以便异步执行，也就是任务分发。</p>
+<p>之后，“join(并入)”部分开始，其中所有子任务的结果递归地连接成单个结果，或者在返回 void 的任务的情况下，程序只是等待直到执行每个子任务，也就是任务细分执行，并等待返回。</p>
+<p>为了提供有效的并行执行，fork/join 框架使用一个名为 <code>ForkJoinPool</code> 的线程池，它管理 <code>ForkJoinWorkerThread</code> 类型的工作线程。</p>
+<span id="more"></span>
+<h2 id="ForkJoinPool">ForkJoinPool</h2>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ForkJoinPool.html">ForkJoinPool</a> 是框架的核心。它是 <code>ExecutorService</code> 的一个实现，它管理工作线程并为我们提供工具来获取有关线程池状态和性能的信息。</p>
+<p>工作线程当时只能执行一个任务，但 ForkJoinPool 不会为每个子任务创建单独的线程。相反，池中的每个线程都有自己的双端队列（或deque），用于存储任务。</p>
+<p>这种架构对于在<strong>工作窃取算法</strong>的帮助下平衡线程的工作负载至关重要。</p>
+<h3 id="工作窃取算法-Work-stealing">工作窃取算法 (Work stealing)</h3>
+<p><strong>简单地说 - 空闲线程试图从繁忙线程的双端队列中“窃取”工作。</strong></p>
+<p>默认情况下，工作线程首先优先处理来自它们自己的队列（LIFO 或 FIFO，取决于模式）的任务。其次线程从另一个忙线程的双端队列尾部或全局入口队列中获取任务。</p>
+<p>这种方法最大限度地减少了线程竞争任务的可能性。它还减少了线程必须寻找工作的次数，因为它首先在最大可用工作块上工作。</p>
+<h3 id="ForkJoinPool-实例化">ForkJoinPool 实例化</h3>
+<p>在 Java 8 中，访问 ForkJoinPool 实例的最方便方法是使用其静态方法 <code>commonPool()</code>。顾名思义，这将提供对公共池的引用，公共池是. 每个 ForkJoinTask 的默认线程池。</p>
+<p>根据 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html">Oracle 文档</a>，使用预定义的公共池可以减少资源消耗，因为这会阻止为每个任务创建单独的线程池。</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ForkJoinPool</span> <span class="variable">commonPool</span> <span class="operator">=</span> ForkJoinPool.commonPool();</span><br></pre></td></tr></table></figure>
+<p>通过创建 ForkJoinPool 并将其分配给工具类 (PoolUtil) 的公共静态字段，可以在 Java 7 中实现相同的行为：</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">ForkJoinPool</span> <span class="variable">forkJoinPool</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ForkJoinPool</span>();</span><br></pre></td></tr></table></figure>
+<p>然后，可以很容易的访问：</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ForkJoinPool</span> <span class="variable">forkJoinPool</span> <span class="operator">=</span> PoolUtil.forkJoinPool;</span><br></pre></td></tr></table></figure>
+<p>使用 ForkJoinPool 的构造函数，可以创建具有特定级别的并行性，线程工厂和异常处理程序的自定义线程池。<strong>默认空构造</strong>使用当前可用的处理器核心 - <code>Runtime.getRuntime().availableProcessors()</code>。</p>
+<h3 id="小心使用-commonPool">小心使用 commonPool</h3>
+<p>很多时候，我们使用提供一些基于并行处理的功能的内置结构或框架。在大多数情况下，我们可以指定我们自己的线程池，它将在并行处理期间使用，但有时，我们不想指定我们自己的线程池，而只是使用当前库的默认值。每个库都有自己的方法来定义默认线程池。例如，Spring 框架在大多数情况下使用线程池，为每个任务创建一个新线程。</p>
+<p><code>ForkJoinPool#commonPool()</code> 是一个静态线程池。JDK 中主要使用 commonPool 的两个主要功能为：<code>CompletableFuture</code> 和 <code>Parallel Streams</code>。这两个功能之间有一个小区别：使用 <code>CompletableFuture</code>，您可以指定自己的线程池并且不使用来自 <code>commonPool</code> 的线程，而在 <code>Parallel Streams</code> 的情况下则不能。</p>
+<p>在决定是否使用 <code>commonPool</code> 的决策过程中要记住的关键是我们传递到线程池的任务的目的。一般来说，有两种类型的任务：计算和阻塞。</p>
+<p>在计算任务的情况下，我们创建了一个绝对避免任何阻塞的任务，例如 I/O 操作（数据库调用、同步、线程睡眠等…）。您的任务在哪个线程上运行无关紧要，您可以让 CPU 保持忙碌并且不等待任何资源。这时候我们可以随意使用 commonPool 来执行工作。</p>
+<p>但是，如果您打算使用 commonPool 来执行阻塞任务，那么您需要考虑一些后果。 如果您有三个以上的可用 CPU，那么您的 commonPool 会自动调整为两个线程，并且您可以通过将线程保持在阻塞状态来非常轻松地阻止同时使用 commonPool 的系统的任何其他部分的执行。<strong>根据经验，我们可以为阻塞任务创建自己的线程池，并使系统的其余部分保持分离和可预测</strong>。</p>
+<p><strong>根本原因的有关 commonPool 的隐藏陷阱：即 commonPool 在计算时会使用多少线程。该值由 JVM 基于可用内核的数量自动计算。</strong></p>
+<p>我们使用下面的代码进行测试：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CommonPoolTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;CPU Core: &quot;</span> + Runtime.getRuntime().availableProcessors());</span><br><span class="line">        System.out.println(<span class="string">&quot;CommonPool Parallelism: &quot;</span> + ForkJoinPool.commonPool().getParallelism());</span><br><span class="line">        System.out.println(<span class="string">&quot;CommonPool Common Parallelism: &quot;</span> + ForkJoinPool.getCommonPoolParallelism());</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">start</span> <span class="operator">=</span> System.nanoTime();</span><br><span class="line">        List&lt;CompletableFuture&lt;Void&gt;&gt; futures = IntStream.range(<span class="number">0</span>, <span class="number">100</span>)</span><br><span class="line">                .mapToObj(i -&gt; CompletableFuture.runAsync(CommonPoolTest::blockingOperation))</span><br><span class="line">                .collect(Collectors.toUnmodifiableList());</span><br><span class="line"></span><br><span class="line">        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::<span class="keyword">new</span>)).join();</span><br><span class="line">        System.out.println(<span class="string">&quot;Processed in &quot;</span> + Duration.ofNanos(System.nanoTime() - start).toSeconds() + <span class="string">&quot; sec&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">blockingOperation</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>您可以注意到我们上面有一个非常简单的阻塞调用实现。执行 100 次 1 秒阻塞调用的迭代。让我们看看结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --cpus 4 -v $&#123;PWD&#125;:/app --workdir /app adoptopenjdk/openjdk11 java CommonPoolTest.java</span><br><span class="line">CPU Core: 4</span><br><span class="line">CommonPool Parallelism: 3</span><br><span class="line">CommonPool Common Parallelism: 3</span><br><span class="line">Processed in 34 sec</span><br></pre></td></tr></table></figure>
+<p>我们为这次运行分配了 4 个 CPU，并在 34 秒内完成了这个程序。我们可以看到 JVM 自动发现它是在一个Docker 容器中执行的，并限制了 4 个CPU和 3 个专用线程来执行。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --cpus 2 -v $&#123;PWD&#125;:/app --workdir /app adoptopenjdk/openjdk11 java CommonPoolTest.java</span><br><span class="line">CPU Core: 2</span><br><span class="line">CommonPool Parallelism: 1</span><br><span class="line">CommonPool Common Parallelism: 1</span><br><span class="line">Processed in 1 sec</span><br></pre></td></tr></table></figure>
+<p>在第二个例子中，我们只使用了 2 个 CPU，我们可以注意到 JVM 自动将并行度限制为 1。但是为什么只用了 1 秒？1 秒内到底发生了什么？！</p>
+<p>您可以在 <code>commonPool</code> 中实现三种模式。</p>
+<ul>
+<li><em><strong>parallelism &gt; 2</strong></em> — JDK 为 <code>commonPool</code> 创建 (CPUs - 1) 个线程</li>
+<li><em><strong>parallelism = 1</strong></em> — JDK 为每个提交的任务创建一个新线程</li>
+<li><em><strong>parallelism = 0</strong></em> — 提交的任务在调用者自身的线程上执行</li>
+</ul>
+<p>parallelism 默认为 -1，则执行如下判断，也就是当前 CPUs - 1，单核 CPU 则为 1。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (parallelism &lt; <span class="number">0</span> &amp;&amp; <span class="comment">// default 1 less than #cores</span></span><br><span class="line">    (parallelism = Runtime.getRuntime().availableProcessors() - <span class="number">1</span>) &lt;= <span class="number">0</span>)</span><br><span class="line">    parallelism = <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p>如果要覆盖 JDK 的符合人机工程学的行为，还可以指定三个系统属性：</p>
+<ul>
+<li><strong>java.util.concurrent.ForkJoinPool.common.parallelism</strong></li>
+<li><strong>java.util.concurrent.ForkJoinPool.common.threadFactory</strong></li>
+<li><strong>java.util.concurrent.ForkJoinPool.common.exceptionHandler</strong></li>
+</ul>
+<h2 id="ForkJoinTask-V">ForkJoinTask<V></h2>
+<p><img data-src="../../images/java/stream/fork-join-task.png" alt="ForkJoinTask"></p>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ForkJoinTask.html">ForkJoinTask</a> 是 ForkJoinPool 中执行的任务的基本类型。在实践中，一般使用下列两个子类中的一个：</p>
+<ul>
+<li>void 任务的 <code>RecursiveAction</code></li>
+<li>返回值的任务的 <code>RecursiveTask &lt;V&gt;</code>。</li>
+</ul>
+<p>它们都有一个抽象方法 <code>compute()</code>，该方法定义了将任务拆分成子任务的逻辑，以及无法再拆分或不方便拆分时，生成单个子任务结果的逻辑。该方法的实现类似于下面的伪代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (任务足够小或不可分) &#123;</span><br><span class="line">    顺序计算该任务</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    将任务分成两个子任务</span><br><span class="line">    递归调用本方法，拆分每个子任务，等待所有子任务完成</span><br><span class="line">    合并每个子任务的结果</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>没有确切的标准决定一个任务是否应该再拆分。递归的任务拆分过程如图所示：</p>
+<p><img data-src="../../images/java/stream/fork-join.jpg" alt="fork join"></p>
+<h3 id="RecursiveAction-–-例子">RecursiveAction – 例子</h3>
+<p>为了演示框架的分支行为， 我们以将 String 递归地划分为指定长度的子串为例，使用 <code>createSubtask()</code> 方法创建基于这些子串的 CustomRecursiveTask 实例，在<strong>workload.length() 大于指定的长度阈值时，该 String 将被分割。</strong></p>
+<p>因此，该方法返回 List <CustomRecursiveAction>。 使用 invokeAll() 方法将该集合提交给 ForkJoinPool 来执行：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomRecursiveAction</span> <span class="keyword">extends</span> <span class="title class_">RecursiveAction</span> &#123;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> <span class="type">String</span> <span class="variable">workload</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">THRESHOLD</span> <span class="operator">=</span> <span class="number">4</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> </span><br><span class="line">      Logger.getAnonymousLogger();</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">CustomRecursiveAction</span><span class="params">(String workload)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.workload = workload;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">compute</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (workload.length() &gt; THRESHOLD) &#123;</span><br><span class="line">            ForkJoinTask.invokeAll(createSubtasks());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">           processing(workload);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> List&lt;CustomRecursiveAction&gt; <span class="title function_">createSubtasks</span><span class="params">()</span> &#123;</span><br><span class="line">        List&lt;CustomRecursiveAction&gt; subtasks = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"> </span><br><span class="line">        <span class="type">String</span> <span class="variable">partOne</span> <span class="operator">=</span> workload.substring(<span class="number">0</span>, workload.length() / <span class="number">2</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">partTwo</span> <span class="operator">=</span> workload.substring(workload.length() / <span class="number">2</span>, workload.length());</span><br><span class="line"> </span><br><span class="line">        subtasks.add(<span class="keyword">new</span> <span class="title class_">CustomRecursiveAction</span>(partOne));</span><br><span class="line">        subtasks.add(<span class="keyword">new</span> <span class="title class_">CustomRecursiveAction</span>(partTwo));</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">return</span> subtasks;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processing</span><span class="params">(String work)</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> work.toUpperCase();</span><br><span class="line">        logger.info(<span class="string">&quot;This result - (&quot;</span> + result + <span class="string">&quot;) - was processed by &quot;</span></span><br><span class="line">          + Thread.currentThread().getName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此模式可用于开发自己的 RecursiveAction 类。要执行此操作，请创建一个表示工作总量的对象，选择合适的阈值，定义分割工作的方法，并定义执行工作的方法。</p>
+<h3 id="RecursiveTask-V">RecursiveTask<V></h3>
+<p>对于返回值的任务，此处的逻辑类似，除了每个子任务的结果在一个结果中合并：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomRecursiveTask</span> <span class="keyword">extends</span> <span class="title class_">RecursiveTask</span>&lt;Integer&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span>[] arr;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">THRESHOLD</span> <span class="operator">=</span> <span class="number">20</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">CustomRecursiveTask</span><span class="params">(<span class="type">int</span>[] arr)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.arr = arr;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> Integer <span class="title function_">compute</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (arr.length &gt; THRESHOLD) &#123;</span><br><span class="line">            <span class="keyword">return</span> ForkJoinTask.invokeAll(createSubtasks())</span><br><span class="line">              .stream()</span><br><span class="line">              .mapToInt(ForkJoinTask::join)</span><br><span class="line">              .sum();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> processing(arr);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> Collection&lt;CustomRecursiveTask&gt; <span class="title function_">createSubtasks</span><span class="params">()</span> &#123;</span><br><span class="line">        List&lt;CustomRecursiveTask&gt; dividedTasks = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">        dividedTasks.add(<span class="keyword">new</span> <span class="title class_">CustomRecursiveTask</span>(</span><br><span class="line">          Arrays.copyOfRange(arr, <span class="number">0</span>, arr.length / <span class="number">2</span>)));</span><br><span class="line">        dividedTasks.add(<span class="keyword">new</span> <span class="title class_">CustomRecursiveTask</span>(</span><br><span class="line">          Arrays.copyOfRange(arr, arr.length / <span class="number">2</span>, arr.length)));</span><br><span class="line">        <span class="keyword">return</span> dividedTasks;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">private</span> Integer <span class="title function_">processing</span><span class="params">(<span class="type">int</span>[] arr)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> Arrays.stream(arr)</span><br><span class="line">          .filter(a -&gt; a &gt; <span class="number">10</span> &amp;&amp; a &lt; <span class="number">27</span>)</span><br><span class="line">          .map(a -&gt; a * <span class="number">10</span>)</span><br><span class="line">          .sum();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在此示例中，工作由存储在 CustomRecursiveTask 类的 arr 数组字段表示。createSubtask() 方法递归地将任务划分为较小的工作，直到每个部分小于阈值。然后，invokeAll() 方法将子任务提交给线程池 ForkJoinPool 并返回 Future 列表。</p>
+<p>要触发执行，为每个子任务调用 join() 方法。</p>
+<p>在这个例子中，这是使用 Java 8 的 Stream API  的 sum() 方法用于将子结果组合到最终结果中。</p>
+<h2 id="将任务提交到-ForkJoinPool">将任务提交到 ForkJoinPool</h2>
+<p>要将任务提交到线程池，只有很少的方法可以使用。 <code>submit()</code> 或 <code>execute()</code> 方法（它们的用例是相同的）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">forkJoinPool.execute(customRecursiveTask);</span><br><span class="line"><span class="type">int</span> <span class="variable">result</span> <span class="operator">=</span> customRecursiveTask.join();</span><br></pre></td></tr></table></figure>
+<p><code>invoke()</code> 方法分叉任务并等待结果，不需要任何手动加入：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="variable">result</span> <span class="operator">=</span> forkJoinPool.invoke(customRecursiveTask);</span><br></pre></td></tr></table></figure>
+<p><code>invokeAll()</code> 方法是将 ForkJoinTasks 集合提交给 ForkJoinPool 的最方便的方法。 它将任务作为参数（两个任务，var args 或集合），forks 它们按照生成它们的顺序返回 Future 对象的集合。</p>
+<p>或者，您可以使用单独的 <code>fork()</code> 和 <code>join()</code> 方法。 fork() 方法将任务提交给池，但它不会触发它的执行。 join() 方法用于执行。在 RecursiveAction 的情况下，join() 只返回 null；对于 RecursiveTask <V>，它返回任务执行的结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">customRecursiveTaskFirst.fork();</span><br><span class="line">result = customRecursiveTaskLast.join();</span><br></pre></td></tr></table></figure>
+<p>在我们的 RecursiveTask <V> 示例中，我们使用 invokeAll() 方法向池提交一系列子任务。使用 fork() 和 join() 可以完成相同的工作，但这会对结果的排序产生影响。</p>
+<p>为避免混淆，使用 invokeAll() 方法向 ForkJoinPool 提交多个任务通常是个好主意。</p>
+<h2 id="结论">结论</h2>
+<p>使用 fork/join 框架可以加速处理大型任务，但要实现这一结果，应遵循一些指导原则：</p>
+<ul>
+<li><strong>使用尽可能少的线程池</strong> - 在大多数情况下，最好的决定是为每个应用程序或系统使用一个线程池</li>
+<li><strong>请使用默认的公共线程池</strong> - 如果不需要特定调整</li>
+<li><strong>使用合理的阈值</strong>将 ForkJoingTask 拆分为子任务</li>
+<li><strong>避免在 ForkJoingTasks 中出现任何阻塞</strong></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Parallel-Stream/" rel="tag"># Parallel Stream</a>
+              <a href="/tags/ForkJoinPool/" rel="tag"># ForkJoinPool</a>
+              <a href="/tags/Fork-Join/" rel="tag"># Fork/Join</a>
+              <a href="/tags/Work-stealing/" rel="tag"># Work stealing</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/java/Java8-Stream%E4%BD%BF%E7%94%A8/" rel="prev" title="Java8 Stream 使用">
+                  <i class="fa fa-chevron-left"></i> Java8 Stream 使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/persistence/%E8%A7%A3%E5%86%B3-Hibernate-N+1-%E9%97%AE%E9%A2%98/" rel="next" title="解决 Hibernate N+1 问题">
+                  解决 Hibernate N+1 问题 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"25616aacc2c47e1b6367465eb08f7f6e"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

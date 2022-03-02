@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="1. 引言 Java 对象需要占用多少内存，这是一个经常被提及的问题。在缺少 sizeof 运算符的情况下，人们不禁想知道代码对其占用空间的影响。在本文中，我们将尝试窥视 Java 对象内部并查看其背后的内容。 2. 探讨更深入的设计与实现方面的问题 Deeper Design and Implementation Questions (DDIQ)，在某些章节中，您可能会看到其中包含有关设计&#x2F;实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java Object 由内及外">
+<meta property="og:url" content="https://www.zeral.cn/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="1. 引言 Java 对象需要占用多少内存，这是一个经常被提及的问题。在缺少 sizeof 运算符的情况下，人们不禁想知道代码对其占用空间的影响。在本文中，我们将尝试窥视 Java 对象内部并查看其背后的内容。 2. 探讨更深入的设计与实现方面的问题 Deeper Design and Implementation Questions (DDIQ)，在某些章节中，您可能会看到其中包含有关设计&#x2F;实现">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/object-memory-layout.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/lock.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/lock-upgrade.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/light-weight-lock-before-cas.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/jvm/light-weight-after-cas.png">
+<meta property="article:published_time" content="2020-06-28T06:40:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.216Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="JVM">
+<meta property="article:tag" content="Mark Word">
+<meta property="article:tag" content="Class Word">
+<meta property="article:tag" content="Klass">
+<meta property="article:tag" content="GC 分代">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/jvm/object-memory-layout.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/","path":"java/jvm/Java-Object-由内及外/","title":"Java Object 由内及外"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Java Object 由内及外 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">1. 引言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%8E%A2%E8%AE%A8%E6%9B%B4%E6%B7%B1%E5%85%A5%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E6%96%B9%E9%9D%A2%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">2. 探讨更深入的设计与实现方面的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%96%B9%E6%B3%95%E8%AE%BA%E8%80%83%E8%99%91"><span class="nav-number">3.</span> <span class="nav-text">3. 方法论考虑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E5%B7%A5%E5%85%B7"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-JDKs"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 JDKs</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%8F%8A%E5%85%B6%E8%A1%A8%E7%A4%BA"><span class="nav-number">4.</span> <span class="nav-text">4. 数据类型及其表示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-Mark-Word%EF%BC%88%E6%A0%87%E8%AE%B0%E4%BF%A1%E6%81%AF%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">5. Mark Word（标记信息）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%AD%98%E5%82%A8%E7%94%A8%E4%BA%8E-GC-%E7%9A%84%E8%BD%AC%E5%8F%91%E6%95%B0%E6%8D%AE"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 存储用于 GC 的转发数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E5%AD%98%E5%82%A8-GC-%E5%88%86%E4%BB%A3%E5%B9%B4%E9%BE%84"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 存储 GC 分代年龄</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E8%BA%AB%E4%BB%BD%E6%A0%87%E8%AF%86%E4%BF%A1%E6%81%AF"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 身份标识信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-%E9%94%81%E4%BF%A1%E6%81%AF"><span class="nav-number">5.4.</span> <span class="nav-text">5.4 锁信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-5-%E8%A7%82%E5%AF%9F%EF%BC%9A%E8%BA%AB%E4%BB%BD-Hashcode-%E7%A6%81%E7%94%A8%E5%81%8F%E5%90%91%E9%94%81"><span class="nav-number">5.5.</span> <span class="nav-text">5.5 观察：身份 Hashcode 禁用偏向锁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-Class-Word"><span class="nav-number">6.</span> <span class="nav-text">6. Class Word</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E6%A3%80%E6%9F%A5"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 运行时类型检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-%E7%A1%AE%E5%AE%9A%E5%AF%B9%E8%B1%A1%E5%A4%A7%E5%B0%8F"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 确定对象大小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-%E6%89%BE%E5%87%BA%E8%99%9A%E6%96%B9%E6%B3%95-%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8%E7%9A%84%E7%9B%AE%E6%A0%87"><span class="nav-number">6.3.</span> <span class="nav-text">6.3 找出虚方法&#x2F;接口调用的目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-%E8%A7%82%E5%AF%9F%EF%BC%9A%E5%8E%8B%E7%BC%A9%E5%BC%95%E7%94%A8%E5%BD%B1%E5%93%8D%E5%AF%B9%E8%B1%A1%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="nav-number">6.4.</span> <span class="nav-text">6.4 观察：压缩引用影响对象头文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E5%AF%B9%E8%B1%A1%E5%A4%B4%EF%BC%9A%E6%95%B0%E7%BB%84%E9%95%BF%E5%BA%A6"><span class="nav-number">7.</span> <span class="nav-text">7. 对象头：数组长度</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java Object 由内及外
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-06-28 14:40:00" itemprop="dateCreated datePublished" datetime="2020-06-28T14:40:00+08:00">2020-06-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="1-引言">1. 引言</h2>
+<p>Java 对象需要占用多少内存，这是一个经常被提及的问题。在缺少 <code>sizeof</code> 运算符的情况下，人们不禁想知道代码对其占用空间的影响。在本文中，我们将尝试窥视 Java 对象内部并查看其背后的内容。</p>
+<h2 id="2-探讨更深入的设计与实现方面的问题">2. 探讨更深入的设计与实现方面的问题</h2>
+<p>Deeper Design and Implementation Questions (DDIQ)，在某些章节中，您可能会看到其中包含有关设计/实现问题的更多讨论。这些并不能保证回答所有问题，但他们确实尝试回答最常见的问题。答案基于个人的理解，因此可能是不准确，不完整或两者兼而有之。</p>
+<span id="more"></span>
+<h2 id="3-方法论考虑">3. 方法论考虑</h2>
+<p>这篇文章针对 <code>Hotspot JVM</code>，OpenJDK 及其衍生版本的默认 JVM。如果你不知道运行的是哪种 JVM，则很可能就是 <code>Hotspot</code>。</p>
+<h3 id="3-1-工具">3.1 工具</h3>
+<p>为了正确地做到这一点，我们需要工具。当我们分析工具时，重要的是要了解工具可以做什么和不能做什么。</p>
+<ol>
+<li>
+<p><strong>堆转储</strong>。转储 Java 堆并检查它可能很诱人。这似乎取决于以下信念：堆转储是运行时堆的低级表示。不幸的是，事实并非如此：它是从实际的 Java 堆重构而来的幻视。如果查看 <a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk6/jdk6/jdk/raw-file/tip/src/share/demo/jvmti/hprof/manual.html">HPROF 数据格式</a>，您将看到它实际上是多么高级：它没有谈论字段偏移，也没有直接告诉标头任何东西，唯一的安慰就是那里的对象大小，<a target="_blank" rel="noopener" href="https://bugs.openjdk.java.net/browse/JDK-8005604">这也是一个谎言</a>。堆转储非常适合检查对象的整个视图及其内部连接，但用来检查对象本身太粗略了。</p>
+</li>
+<li>
+<p><strong>通过 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/7/docs/jre/api/management/extension/com/sun/management/ThreadMXBean.html"><code>MXBeans</code></a> 测量可用或已分配的内存</strong>。我们当然可以分配多个对象，并查看它们占用了多少内存。分配足够的对象后，我们可以消除由 <code>TLAB 分配</code>（及其退役），后台线程中的虚假分配等导致的异常值。但是，这并不能使我们在查看对象内部时有任何保真度：我们只能观察到对象的外观大小。这是进行研究的一种好方法，但是您需要正确地制定和测试假设，以得出能够解释每个结果的明智的对象模型。</p>
+</li>
+<li>
+<p><strong>诊断 JVM 标志</strong>。因为 JVM 本身负责创建对象，所以可以肯定它知道对象的布局，而且我们“仅”需要从那里得到它。 <code>-XX：+ PrintFieldLayout</code> 可以很容易的实现。不幸的是，该标志仅在 <code>debug JVM 版本</code>下可用。</p>
+</li>
+<li>
+<p><strong>深入对象内部的工具</strong>。幸运的是，使用 <code>Class.getDeclaredFields</code> 并询问 <code>Unsafe.objectFieldOffset</code> 可以使您知道字段所在的位置。这涉及到多个注意事项：首先，它使用反射功能侵入了大多数类，可能会被禁止使用；第二，<code>Unsafe.objectFieldOffset</code> 不会正式回答偏移量，而是一些 “cookie”，可以将其传递给其他 Unsafe 方法来使用。也就是说，它“通常是有效的”，因此，除非我们做至关重要的事情时才可以使用它侵入代码。某些工具（尤其是 <a target="_blank" rel="noopener" href="https://openjdk.java.net/projects/code-tools/jol/"><code>JOL</code></a> ）可以为我们做到这一点。</p>
+</li>
+</ol>
+<p>在本文中，我们将使用 <code>JOL</code>，因为我们希望看到 Java 对象的更精细的结构。对于我们的需求，使用 <code>JOL-CLI</code> 可执行 jar 包更合适，可以在这里找到：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">wget https://repo.maven.apache.org/maven2/org/openjdk/jol/jol-cli/0.10/jol-cli-0.10-full.jar -O jol-cli.jar</span></span><br><span class="line"><span class="meta">$ </span><span class="language-bash">java -jar jol-cli.jar</span></span><br><span class="line">Usage: jol-cli.jar &lt;mode&gt; [optional arguments]*</span><br><span class="line"></span><br><span class="line">Available modes:</span><br><span class="line">   internals: Show the object internals: field layout and default contents, object header</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>对于对象目标，我们将尽可能尝试使用各种 JDK 类本身。这样可以轻松验证整个过程，因为您只需要 JOL CLI JAR 和您喜欢的 JDK 安装即可运行测试。在更复杂的情况下，我们将转到 <a target="_blank" rel="noopener" href="https://hg.openjdk.java.net/code-tools/jol/file/tip/jol-samples/src/main/java/org/openjdk/jol/samples/">JOL 示例</a>，其中涵盖了此处的一些内容。作为最后的说明手段，我们将使用其它示例类。</p>
+<blockquote>
+<p>JOL 实例中的代码已经演示了大部分情景，可以自己动手运行并查看这些代码。</p>
+</blockquote>
+<h3 id="3-2-JDKs">3.2 JDKs</h3>
+<p>JDK 8 仍然是世界上部署最广泛的 JDK 版本。因此，我们也会在这里使用它。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">java -version</span></span><br><span class="line">openjdk version &quot;1.8.0_252&quot;</span><br><span class="line">OpenJDK Runtime Environment (AdoptOpenJDK)(build 1.8.0_252-b09)</span><br><span class="line">OpenJDK 64-Bit Server VM (AdoptOpenJDK)(build 25.252-b09, mixed mode)</span><br></pre></td></tr></table></figure>
+<h2 id="4-数据类型及其表示">4. 数据类型及其表示</h2>
+<p>我们需要从一些基础知识开始。在几乎每个 JOL “内部”运行中，您都会看到以下输出（为简便起见，在以后的调用中将省略此输出）：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/bin/java -jar jol-cli.jar internals java.lang.Object</span></span><br><span class="line">...</span><br><span class="line"><span class="meta"># </span><span class="language-bash">Field sizes by <span class="built_in">type</span>: 4, 1, 1, 2, 2, 4, 4, 8, 8 [bytes]</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Array element sizes: 4, 1, 1, 2, 2, 4, 4, 8, 8 [bytes]</span></span><br></pre></td></tr></table></figure>
+<p>这意味着 Java 引用占用 4 个字节（启用<a target="_blank" rel="noopener" href="https://shipilev.net/jvm/anatomy-quarks/23-compressed-references/">指针压缩</a>），<code>boolean</code> / <code>byte</code> 占用 1 个字节，<code>char</code> / <code>short</code> 占用 2 个字节，<code>int</code> / <code>float</code> 占用 4 个字节，<code>double</code> / <code>long</code> 占用 8 个字节。当作为数组元素呈现时，它们占据相同的空间。</p>
+<p>为什么这很重要？因为 Java 语言规范没有说明有关数据表示的任何内容，仅说明了这些类型接受的值。原则上，可以为所有原语分配 8 个字节，只要对它们的存储范围超过其规范即可。在当前的 Hotspot 中，除 <code>boolean</code> 外，几乎所有数据类型都与它们的值域完全匹配。例如，指定为支持 <code>int</code> 从 <code>-2147483648</code> 到 <code>2147483647</code> 的值，该值正好适合 4 字节带符号的表示形式。</p>
+<p>如上所述，有一个奇怪的地方，那就是 <code>boolean</code>。原则上，其值域仅包含两个值：<code>true</code> 和 <code>false</code>，因此可以用 1 位表示。所有 <code>boolean</code> 字段和数组元素仍然占据 1 个完整字节，这有两个原因：Java 内存模型保证了对于单个字段/元素不存在<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-17.html#jls-17.6">单词撕裂</a>的情况，这对于 1 位布尔字段来说很难做到，并且字段偏移量以字节为单位进行内存寻址，这使得寻址布尔型字段很尴尬。因此，这里每个布尔值占用 1 个字节是一个实际的折衷方案。</p>
+<h2 id="5-Mark-Word（标记信息）">5. Mark Word（标记信息）</h2>
+<p>回到实际的对象结构。让我们从最基本的 <code>java.lang.Object</code> 示例开始。 JOL 将打印此：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/java -jar jol-cli.jar internals java.lang.Object</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 64-bit HotSpot VM.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed oop with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed klass with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Objects are 8 bytes aligned.</span></span><br><span class="line"></span><br><span class="line">Instantiated the sample instance via default constructor.</span><br><span class="line"></span><br><span class="line">java.lang.Object object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      0     4        (object header)              01 00 00 00 # Mark word</span><br><span class="line">      4     4        (object header)              00 00 00 00 # Mark word</span><br><span class="line">      8     4        (object header)              00 10 00 00 # (not mark word)</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br></pre></td></tr></table></figure>
+<p>它显示前 12 个字节是对象头。不幸的是，它没有更详细地解析其内部结构，因此，我们需要深入研究 Hotspot 源代码以弄清楚这一点。在这里，你会注意到对象头<a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk/jdk/file/19afeaa0fdbe/src/hotspot/share/oops/oop.hpp#l52">包括两部分</a>：<em><code>mark word</code> 和 <code>class word</code></em>。Class word 包含对象类型的信息：它链接到描述该类的本机结构。我们将在下一节中讨论这一部分。其余的元数据保存在 <a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk/jdk/file/19afeaa0fdbe/src/hotspot/share/oops/markWord.hpp#l33">mark word</a> 中。</p>
+<p><img data-src="../../../images/java/jvm/object-memory-layout.png" alt="Object Memory Layout"></p>
+<p>mark word 有多种用途：</p>
+<ol>
+<li>存储用于 GC 的元数据（分代年龄和转发数据）</li>
+<li>存储身份标识 hash code</li>
+<li>存储锁标志位信息</li>
+</ol>
+<p>请注意，每个对象都必须有一个 mark word，因为它处理每个 Java 对象特有的事物。</p>
+<h3 id="5-1-存储用于-GC-的转发数据">5.1 存储用于 GC 的转发数据</h3>
+<p>GC 需要移动对象时，它们至少需要临时记录对象的新位置。mark word 将对此进行编码，以用于 GC 代码，以协调重定位和更新引用工作。这会将 mark word 锁定为与 Java 引用一样宽。GC 转发数据在 mark word 中实现所需要的最小内存量：32 位平台为 4 字节，而 64 位平台为 8 字节。</p>
+<p>不幸的是，我们无法显示展示来自 Java 应用程序（而 JOL 是 Java 应用程序）进行 GC 转发的 mark word，因为要么在我们取消阻止 full GC 时就已经消失了。要么并发 GC 障碍阻止我们看到旧对象。</p>
+<h3 id="5-2-存储-GC-分代年龄">5.2 存储 GC 分代年龄</h3>
+<p>但是，我们可以演示对象分代年龄位！</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-32/bin/java -<span class="built_in">cp</span> jol-samples.jar org.openjdk.jol.samples.JOLSample_19_Promotion</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 32-bit HotSpot VM.</span></span><br><span class="line"></span><br><span class="line">Fresh object is at d2d6c0f8</span><br><span class="line">*** Move  1, object is at d31104a0</span><br><span class="line">  (object header)  09 00 00 00 (00001001 00000000 00000000 00000000)</span><br><span class="line">                                 ^^^^</span><br><span class="line">*** Move  2, object is at d3398028</span><br><span class="line">  (object header)  11 00 00 00 (00010001 00000000 00000000 00000000)</span><br><span class="line">                                 ^^^^</span><br><span class="line">*** Move  3, object is at d3109688</span><br><span class="line">  (object header)  19 00 00 00 (00011001 00000000 00000000 00000000)</span><br><span class="line">                                 ^^^^</span><br><span class="line">*** Move  4, object is at d43c9250</span><br><span class="line">  (object header)  21 00 00 00 (00100001 00000000 00000000 00000000)</span><br><span class="line">                                 ^^^^</span><br><span class="line">*** Move  5, object is at d41453f0</span><br><span class="line">  (object header)  29 00 00 00 (00101001 00000000 00000000 00000000)</span><br><span class="line">                                 ^^^^</span><br><span class="line">*** Move  6, object is at d6350028</span><br><span class="line">  (object header)  31 00 00 00 (00110001 00000000 00000000 00000000)</span><br><span class="line">                                 ^^^^</span><br><span class="line">*** Move  7, object is at a760b638</span><br><span class="line">  (object header)  31 00 00 00 (00110001 00000000 00000000 00000000)</span><br><span class="line">                                 ^^^^</span><br></pre></td></tr></table></figure>
+<p>请注意，每一步移动都是如何向上计数的。那就是记录的对象年龄。奇怪的是，经过 7 次移动后，它在第 6 次停止。这是由于 <code>InitialTenuringThreshold = 7</code> 的默认设置。如果增加该值，则该对象将经历更多的移动，直到到达老年代为止。默认最多移动 15 次（1111），可以修改参数 <code>-XX:MaxTenuringThreshold</code> 调小。</p>
+<h3 id="5-3-身份标识信息">5.3 身份标识信息</h3>
+<p>每个 Java 对象都有一个<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#hashCode--">哈希码</a>。如果用户没有为其定义，则使用*<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#identityHashCode-java.lang.Object-">身份哈希码</a>*。由于身份哈希码在为给定对象计算后不应更改，因此我们需要将其存储在某个位置。在 Hotspot 中，它直接存储在目标对象的 <code>mark word</code> 中。根据身份哈希码接受的精度，可能需要多达 4 个字节来存储。</p>
+<blockquote>
+<p><strong>DDIQ：当我们也需要存储 GC 转发数据时，该如何工作？</strong></p>
+<p>答案很狡猾：当 GC 移动对象时，它实际上处理对象的两个副本，一个在旧位置，一个在新位置。新对象带有所有原始头信息。旧对象仅用于满足 GC 需求，因此我们可以使用 GC 元数据覆盖旧对象头信息。</p>
+</blockquote>
+<blockquote>
+<p><strong>DDIQ：为什么我们需要存储身份哈希码？这如何影响用户指定的哈希码？</strong></p>
+<p>哈希码应该具有两个属性：a) 良好的散列分布，这意味着不同对象的值或多或少是不同的；b) 幂等，意味着具有相同关键对象组件的对象具有相同的哈希码。注意后者暗示如果对象没有更改那些关键对象组件，则其哈希码也不应更改。</p>
+<p>对于身份哈希码，无法保证是否<em>存在</em>用于计算哈希码的字段，即使我们有一些字段，也无法得知这些字段的实际稳定性。考虑一下没有字段的 <code>java.lang.Object</code>：它的哈希码是什么？分配的两个对象几乎是彼此的镜像：它们具有相同的元数据，它们具有相同（即空）的内容。关于它们的唯一区别是分配的地址，但是即使那样，仍然有两个麻烦。第一，地址具有非常低的熵，尤其是像大多数 Java GC 所采用的那样，是来自 bump-ptr 分配器，因此它的分布不均。其次，GC 会移动对象，因此地址不是幂等的。从性能的角度来看，返回恒定值也是行不通的。</p>
+<p>因此，当前的实现从内部 PRNG（“良好分布”）计算身份哈希码，并为每个对象存储它（“幂等”）。</p>
+</blockquote>
+<p>可以通过相关的 <a target="_blank" rel="noopener" href="https://hg.openjdk.java.net/code-tools/jol/file/tip/jol-samples/src/main/java/org/openjdk/jol/samples/JOLSample_15_IdentityHashCode.java#l41">JOLSample_15_IdentityHashCode</a> 清楚地看到由身份哈希码引起的 mark word 变化。使用 64 位 VM 运行它：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/bin/java -<span class="built_in">cp</span> jol-samples.jar org.openjdk.jol.samples.JOLSample_15_IdentityHashCode</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 64-bit HotSpot VM.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed oop with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed klass with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"></span><br><span class="line">**** Fresh object</span><br><span class="line">org.openjdk.jol.samples.JOLSample_15_IdentityHashCode$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION              VALUE</span><br><span class="line">      0     4        (object header)          01 00 00 00 (00000001 00000000 00000000 00000000) (1)</span><br><span class="line">      4     4        (object header)          00 00 00 00 (00000000 00000000 00000000 00000000) (0)</span><br><span class="line">      8     4        (object header)          97 ef 00 f8 (10010111 11101111 00000000 11111000) (-134156393)</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">hashCode: 2f333739</span><br><span class="line"></span><br><span class="line">**** After identityHashCode()</span><br><span class="line">org.openjdk.jol.samples.JOLSample_15_IdentityHashCode$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION              VALUE</span><br><span class="line">      0     4        (object header)          01 39 37 33 (00000001 00111001 00110111 00110011) (859257089)</span><br><span class="line">      4     4        (object header)          2f 00 00 00 (00101111 00000000 00000000 00000000) (47)</span><br><span class="line">      8     4        (object header)          97 ef 00 f8 (10010111 11101111 00000000 11111000) (-134156393)</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br></pre></td></tr></table></figure>
+<p>请注意，哈希码值为 <code>2f333739</code>。计算机内部为小端字节序，<a target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2016/11/byte-order.html">低位字节在前，高位字节在后</a>，可以使用代码 <code>ByteOrder.nativeOrder()</code> 查看系统机器字节序。你现在可以在对象头中找到它的十六进制：<code>01 39 37 33 2f</code>。 <code>01</code> 是 mark word 标记，其余是用 little-endian 小端字节序编写的身份哈希码。而且，我们还有 3 个字节的备用空间！</p>
+<h3 id="5-4-锁信息">5.4 锁信息</h3>
+<p>Java 同步采用了<a target="_blank" rel="noopener" href="https://wiki.openjdk.java.net/display/HotSpot/Synchronization">复杂的状态机</a>。由于每个 Java 对象都可以使用 <code>synchronized</code>，因此锁定状态应与任何 Java 对象相关联。mark word 维护了大部分状态。</p>
+<p>这些锁定转换的不同部分可以在对象头中看到。例如，当 Java 锁定偏向特定线程时，我们需要在相关对象附近记录有关该偏向锁 (Biased Lock) 的信息。这由相关的 <a target="_blank" rel="noopener" href="https://hg.openjdk.java.net/code-tools/jol/file/tip/jol-samples/src/main/java/org/openjdk/jol/samples/JOLSample_13_BiasedLocking.java#l41">JOLSample_13_BiasedLocking</a> 示例演示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/bin/java -<span class="built_in">cp</span> jol-samples.jar org.openjdk.jol.samples.JOLSample_13_BiasedLocking</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 64-bit HotSpot VM.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed oop with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed klass with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"></span><br><span class="line">**** Fresh object</span><br><span class="line">org.openjdk.jol.samples.JOLSample_13_BiasedLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION               VALUE</span><br><span class="line">      0     4        (object header)           05 00 00 00 (00000101 00000000 00000000 00000000)  # 无锁</span><br><span class="line">      4     4        (object header)           00 00 00 00</span><br><span class="line">      8     4        (object header)           c0 07 08 00</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** With the lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_13_BiasedLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION               VALUE</span><br><span class="line">      0     4        (object header)           05 b0 00 80 (00000101 11010000 00000000 01111011) # 偏向锁</span><br><span class="line">      4     4        (object header)           b8 7f 00 00  # 偏向锁</span><br><span class="line">      8     4        (object header)           c0 07 08 00</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** After the lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_13_BiasedLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION               VALUE</span><br><span class="line">      0     4        (object header)           05 b0 00 80 (00000101 11010000 00000000 01111011) # 偏向锁</span><br><span class="line">      4     4        (object header)           b8 7f 00 00 # 偏向锁</span><br><span class="line">      8     4        (object header)           c0 07 08 00</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br></pre></td></tr></table></figure>
+<p>偏向锁指向线程的本地指针：<code>b0 00 80 b8 7f</code>。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://openjdk.java.net/jeps/374">JEP 374</a> 提案废除和禁用偏向锁，该提案在 JDK 15 及后续版本已经生效。</p>
+<p>偏置锁定是 HotSpot 虚拟机中使用的一种优化技术，用于减少无竞争锁定的开销。它旨在避免在获取监视器时执行比较和交换原子操作，方法是假设监视器一直归给定线程所有，直到不同的线程尝试获取它。监视器的初始锁定使监视器<em>偏向</em>该线程，从而避免在对同一对象的后续同步操作中需要原子指令。当许多线程对以单线程方式使用的对象执行许多同步操作时，与常规锁定技术相比，偏置锁历来会导致显着的性能改进。</p>
+<p>过去看到的性能提升今天远没有那么明显。许多受益于偏向锁定的应用程序是使用早期 Java 集合 API 的较旧的遗留应用程序，这些 API 在每次访问时使用同步（例如，<code>Hashtable</code> 和 <code>Vector</code>）。较新的应用程序通常使用非同步集合（例如，<code>HashMap</code> 和 <code>ArrayList</code>)，在  Java 1.2 中引入用于单线程场景，或者在 Java 5 中引入用于多线程场景的更高性能的并发数据结构。这意味着如果更新代码以使用这些较新的类，由于不必要的同步而受益于偏向锁定的应用程序可能会看到性能改进。此外，围绕线程池队列和工作线程构建的应用程序通常在禁用偏置锁定的情况下性能更好。偏向锁定带来了在争用情况下需要昂贵的撤销操作的成本。因此，受益于它的应用程序只有那些表现出大量无竞争同步操作的应用程序，如上面提到的那些。</p>
+<p>偏向锁定在同步子系统中引入了大量复杂的代码，并且对其他 HotSpot 组件也有侵入性。这种复杂性是理解代码各个部分的障碍，也是在同步子系统内进行重大设计更改的障碍。为此，我们希望禁用、弃用并最终删除对偏向锁定的支持。</p>
+</blockquote>
+<p>没有偏向的情况下锁定时，会发生 <a target="_blank" rel="noopener" href="https://hg.openjdk.java.net/code-tools/jol/file/tip/jol-samples/src/main/java/org/openjdk/jol/samples/JOLSample_14_FatLocking.java#l41">JOLSample_14_FatLocking</a> 如下锁升级情况：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/bin/java -<span class="built_in">cp</span> jol-samples.jar org.openjdk.jol.samples.JOLSample_14_FatLocking</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 64-bit HotSpot VM.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed oop with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed klass with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"></span><br><span class="line">**** Fresh object</span><br><span class="line">org.openjdk.jol.samples.JOLSample_14_FatLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION            VALUE</span><br><span class="line">      0     4        (object header)        01 00 00 00 (00000001 00000000 00000000 00000000) # 无锁</span><br><span class="line">      4     4        (object header)        00 00 00 00</span><br><span class="line">      8     4        (object header)        5a ef 00 f8</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** Before the lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_14_FatLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION            VALUE</span><br><span class="line">      0     4        (object header)        58 29 ad 04 (01011000 00101001 10101101 00000100) # 轻量级锁</span><br><span class="line">      4     4        (object header)        00 70 00 00</span><br><span class="line">      8     4        (object header)        5a ef 00 f8</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** With the lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_14_FatLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION            VALUE</span><br><span class="line">      0     4        (object header)        4a c1 80 e1 (01001010 11000001 10000000 11100001) # 重量级锁</span><br><span class="line">      4     4        (object header)        f6 7f 00 00</span><br><span class="line">      8     4        (object header)        5a ef 00 f8</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** After the lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_14_FatLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION            VALUE</span><br><span class="line">      0     4        (object header)        4a c1 80 e1 (01001010 11000001 10000000 11100001) # 重量级锁</span><br><span class="line">      4     4        (object header)        f6 7f 00 00</span><br><span class="line">      8     4        (object header)        5a ef 00 f8</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** After System.gc()</span><br><span class="line">org.openjdk.jol.samples.JOLSample_14_FatLocking$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION             VALUE</span><br><span class="line">      0     4        (object header)         09 00 00 00 (00001001 00000000 00000000 00000000) # 锁释放</span><br><span class="line">      4     4        (object header)         00 00 00 00</span><br><span class="line">      8     4        (object header)         5a ef 00 f8</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br></pre></td></tr></table></figure>
+<p>各种情况下锁结构如下：</p>
+<p><img data-src="../../../images/java/jvm/lock.png" alt="Mark Word Lock"></p>
+<p>在这里，我们看到了锁的通常升级过程：首先对象未记录任何锁信息，然后被其他线程获取，并升级为轻量级锁，然后主线程争用它，锁发生膨胀，升级为重量级锁，<strong>然后在线程释放锁后，锁定信息仍保持为重量级锁。最后，在 GC 时的安全点后，对象恢复为无锁状态。</strong></p>
+<p><img data-src="../../../images/java/jvm/lock-upgrade.png" alt="Java 锁升级"></p>
+<h3 id="5-5-观察：身份-Hashcode-禁用偏向锁">5.5 观察：身份 Hashcode 禁用偏向锁</h3>
+<p>但是，如果我们需要在偏向锁定生效时存储身份哈希码，该怎么办？很简单：身份哈希码优先，并且对该对象/类的偏向锁定被禁用。可以从相关示例 <a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/code-tools/jol/file/tip/jol-samples/src/main/java/org/openjdk/jol/samples/JOLSample_26_IHC_BL_Conflict.java">JOLSample_26_IHC_BL_Conflict</a> 中看到：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/bin/java -<span class="built_in">cp</span> jol-samples.jar org.openjdk.jol.samples.JOLSample_26_IHC_BL_Conflict</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 64-bit HotSpot VM.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed oop with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed klass with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"></span><br><span class="line">**** Fresh object</span><br><span class="line">org.openjdk.jol.samples.JOLSample_26_IHC_BL_Conflict$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                 VALUE</span><br><span class="line">      0     4        (object header)             05 00 00 00 (00000101 00000000 00000000 00000000) # No lock</span><br><span class="line">      4     4        (object header)             00 00 00 00 (00000000 00000000 00000000 00000000)</span><br><span class="line">      8     4        (object header)             5a ef 00 f8 (01011010 11101111 00000000 11111000)</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** With the lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_26_IHC_BL_Conflict$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                VALUE</span><br><span class="line">      0     4        (object header)            05 e0 80 c7 (00000101 11100000 10000000 11000111) # Biased lock</span><br><span class="line">      4     4        (object header)            f7 7f 00 00 (11110111 01111111 00000000 00000000) # Biased lock</span><br><span class="line">      8     4        (object header)            5a ef 00 f8 (01011010 11101111 00000000 11111000)</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** After the lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_26_IHC_BL_Conflict$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                VALUE</span><br><span class="line">      0     4        (object header)            05 e0 80 c7 (00000101 11100000 10000000 11000111) # Biased lock</span><br><span class="line">      4     4        (object header)            f7 7f 00 00 (11110111 01111111 00000000 00000000) # Biased lock</span><br><span class="line">      8     4        (object header)            5a ef 00 f8 (01011010 11101111 00000000 11111000)</span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">hashCode: 4cc77c2e</span><br><span class="line"></span><br><span class="line">**** After the hashcode</span><br><span class="line">org.openjdk.jol.samples.JOLSample_26_IHC_BL_Conflict$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION               VALUE</span><br><span class="line">      0     4        (object header)           01 2e 7c c7 (00000001 00101110 01111100 11000111) # Hashcode</span><br><span class="line">      4     4        (object header)           4c 00 00 00 (01001100 00000000 00000000 00000000) # Hashcode</span><br><span class="line">      8     4        (object header)           5a ef 00 f8 (01011010 11101111 00000000 11111000) </span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** With the second lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_26_IHC_BL_Conflict$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION        		VALUE</span><br><span class="line">      0     4        (object header)    		80 59 9e 02 (10000000 01011001 10011110 00000010) # Lightweight lock</span><br><span class="line">      4     4        (object header)    		00 70 00 00 (00000000 01110000 00000000 00000000) # Lightweight lock</span><br><span class="line">      8     4        (object header)    		5a ef 00 f8 (01011010 11101111 00000000 11111000) </span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br><span class="line"></span><br><span class="line">**** After the second lock</span><br><span class="line">org.openjdk.jol.samples.JOLSample_26_IHC_BL_Conflict$A object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION              VALUE</span><br><span class="line">      0     4        (object header)          01 2e 7c c7 (00000001 00101110 01111100 11000111) # Hashcode</span><br><span class="line">      4     4        (object header)          4c 00 00 00 (01001100 00000000 00000000 00000000) # Hashcode</span><br><span class="line">      8     4        (object header)          5a ef 00 f8 (01011010 11101111 00000000 11111000) </span><br><span class="line">     12     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br></pre></td></tr></table></figure>
+<p>刚开始对象通过偏向锁定的宽限期后为无锁状态，可偏向（锁标记为 …101）。第一次进入代码同步块时，<strong>偏向锁通过 CAS 操作将线程 ID 置换到 mark word 中。在释放锁后，偏向锁仍然会保留在对象头中，以便于减少单个线程未竞争情况下时锁定和解锁的 CAS 操作。</strong></p>
+<p>一旦我们调用了对象的 hashcode 方法，将触发 <code>identity hashcode</code> 的计算（我们的对象没有重写 <code>Object.hashcode</code>），<em><strong>偏向锁被撤销为无锁</strong></em>，线程 ID 置换为 hashcode。</p>
+<p>第二次执行到方法对象同步时，由于存放了 hashcode，这时检查到为不可偏向的无锁标志，虚拟机会将当前的 <code>mark word</code> 备份到当前线程方法的栈桢的 <code>Lock Record</code> 中，并通过 <code>CAS</code> 操作将 <code>Lock Record</code> 指针更新到对象的 <code>mark word</code> 中，如果 CAS 操作成功，那么该线程就获取了该对象上的锁，并且对象的 mark word 锁标记变为 00，表示该对象处于轻量级锁状态。<strong>在代码退出同步块时，轻量级锁释放，再通过 CAS 操作把对象当前的 mark word 和线程中复制的替换回来。</strong></p>
+<p><img data-src="../../../images/java/jvm/light-weight-lock-before-cas.png" alt="轻量级锁 CAS 操作之前堆栈与对象的状态"></p>
+<p><img data-src="../../../images/java/jvm/light-weight-after-cas.png" alt="轻量级锁 CAS 操作之后堆栈与对象的状态"></p>
+<h2 id="6-Class-Word">6. Class Word</h2>
+<p>从机器的角度来看，每个对象只是一堆字节。在某些情况下，我们想知道在运行时处理的对象的<strong>类型</strong>是什么。需要的非详尽清单：</p>
+<ul>
+<li>运行时类型检查</li>
+<li>确定对象的大小</li>
+<li>找出虚拟/接口调用的目标。</li>
+</ul>
+<p>Class word 也可以被压缩。即使类指针不是 Java 堆引用，它们仍然可以享受类似的优化。</p>
+<h3 id="6-1-运行时类型检查">6.1 运行时类型检查</h3>
+<p>Java 是一门类型安全的语言，所以在很多地方都需要运行时类型检查。Class word 携带有关我们拥有的对象的实际类型的数据，这使编译器可以发出<em>运行时类型检查</em>。这些运行时检查的效率取决于元数据类型的形状。</p>
+<p>如果元数据以简单的形式编码，则编译器甚至可以直接在代码流中内联那些检查。在 Hotspot 中，Class word 持有指向 <a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk/jdk/file/19afeaa0fdbe/src/hotspot/share/oops/oop.hpp#l57">VM <code>Klass</code> 实例的本机指针</a>(Klass Pointer)，该实例包含大量元信息，包括它<a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk/jdk/file/19afeaa0fdbe/src/hotspot/share/oops/klass.hpp#l120">继承的超类的类型，实现的接口等</a>，它还带有 <em>Java 镜像</em> - <code>java.lang.Class</code> 的<a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk/jdk/file/19afeaa0fdbe/src/hotspot/share/oops/klass.hpp#l138">关联实例</a>。这种间接方式允许将 <code>java.lang.Class</code> 实例视为常规对象，并在 GC 期间不更新每个 class word 的情况下移动它们：<code>java.lang.Class</code> 可以移动，而 <code>Klass</code> 始终保持在同一位置。</p>
+<h3 id="6-2-确定对象大小">6.2 确定对象大小</h3>
+<p>确定对象大小采用相似的方法。与运行时类型检查无法静态地知道对象的类型相比，分配确实或多或少地精确地知道了分配对象的大小：它由使用的构造函数的类型，使用的数组初始化器等定义。因此，在这些情况下，不需要通过 class word 进行访问。</p>
+<p>但是，本机代码中有一些情况（最著名的是垃圾收集器）想要使用以下代码遍历<a target="_blank" rel="noopener" href="https://shipilev.net/jvm/anatomy-quarks/5-tlabs-and-heap-parsability/">可解析堆</a>：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">HeapWord* cur = heap_start;</span><br><span class="line"><span class="keyword">while</span> (cur &lt; heap_used) &#123;</span><br><span class="line">  object o = (object)cur;</span><br><span class="line">  <span class="built_in">do_object</span>(o);</span><br><span class="line">  cur = cur + o-&gt;<span class="built_in">size</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为此，本机代码需要提前知道当前（未确定类型）object 的大小。因此，对于本机代码，如何安排类元数据非常重要。在 Hotspot 中，我们可以遍历 class word 访问<a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk/jdk/file/19afeaa0fdbe/src/hotspot/share/oops/klass.hpp#l89">布局助手</a>，这将为我们提供有关对象大小的信息。</p>
+<h3 id="6-3-找出虚方法-接口调用的目标">6.3 找出虚方法/接口调用的目标</h3>
+<p>当运行时需要在对象实例上调用虚拟/接口方法时，它需要确定目标方法在哪里。虽然大多数时间<a target="_blank" rel="noopener" href="https://shipilev.net/blog/2015/black-magic-method-dispatch/">可以优化</a>，但在某些情况下，<a target="_blank" rel="noopener" href="https://shipilev.net/jvm/anatomy-quarks/16-megamorphic-virtual-calls/">我们需要</a>进行实际的调度。该调度的性能还取决于类元数据的距离，因此不能忽略这一点。</p>
+<h3 id="6-4-观察：压缩引用影响对象头文件">6.4 观察：压缩引用影响对象头文件</h3>
+<p>与根据 JVM 位数观察 mark word 大小类似，我们也可以期待压缩引用模式会影响对象大小，<em>即使不涉及引用字段</em>。为了证明这一点，让我们在两个堆大小上使用 java.lang.Integer，小 (1 GB) 和大 (64 GB)。默认情况下，这些堆大小将分别打开和关闭压缩引用。这意味着默认情况下压缩类指针也是打开或关闭的。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/bin/java -Xmx1g -jar jol-cli.jar internals java.lang.Integer</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 64-bit HotSpot VM.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed oop with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Using compressed klass with 3-bit <span class="built_in">shift</span>.</span></span><br><span class="line"></span><br><span class="line">Instantiated the sample instance via public java.lang.Integer(int)</span><br><span class="line"></span><br><span class="line">java.lang.Integer object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      0     4        (object header)              01 00 00 00 # Mark word</span><br><span class="line">      4     4        (object header)              00 00 00 00 # Mark word</span><br><span class="line">      8     4        (object header)              de 21 00 20 # Class word</span><br><span class="line">     12     4    int Integer.value                0</span><br><span class="line">Instance size: 16 bytes</span><br><span class="line">Space losses: 0 bytes internal + 0 bytes external = 0 bytes total</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$ </span><span class="language-bash">jdk8-64/bin/java -Xmx64g -jar jol-cli.jar internals java.lang.Integer</span></span><br><span class="line"><span class="meta"># </span><span class="language-bash">Running 64-bit HotSpot VM.</span></span><br><span class="line"></span><br><span class="line">Instantiated the sample instance via public java.lang.Integer(int)</span><br><span class="line"></span><br><span class="line">java.lang.Integer object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      0     4        (object header)              01 00 00 00 # Mark word</span><br><span class="line">      4     4        (object header)              00 00 00 00 # Mark word</span><br><span class="line">      8     4        (object header)              40 69 25 ad # Class word</span><br><span class="line">     12     4        (object header)              e5 7f 00 00 # (uncompressed)</span><br><span class="line">     16     4    int Integer.value                0</span><br><span class="line">     20     4        (loss due to the next object alignment)</span><br><span class="line">Instance size: 24 bytes # AHHHHHHH....</span><br><span class="line">Space losses: 0 bytes internal + 4 bytes external = 4 bytes total</span><br></pre></td></tr></table></figure>
+<p>这里，在具有 1 GB 堆的 VM 中，对象头占用 8（mark word）+ 4（class word）= 12 个字节，而 64G VM 头占用 8（mark word）和 + 8（class word）= 16 个字节。如果没有字段，由于对象对齐方式为 8，两者都会四舍五入到 16 个字节。 但是，由于有一个 int 字段，在 64 GB 的情况下，我们需要将其分配超过 16 个字节，因此需要另外 8 个字节，总共占用 24 个字节。</p>
+<h2 id="7-对象头：数组长度">7. 对象头：数组长度</h2>
+<p>数组带有另一小部分元数据：数组长度。由于数组元素类型仅编码对象类型，因此我们需要将数组长度存储在其他位置。</p>
+<p>可以通过相关的 <a target="_blank" rel="noopener" href="https://hg.openjdk.java.net/code-tools/jol/file/tip/jol-samples/src/main/java/org/openjdk/jol/samples/JOLSample_25_ArrayAlignment.java#l41">JOLSample_25_ArrayAlignment</a> 查看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line">$ jdk8-<span class="number">64</span>/bin/java -cp jol-samples.jar org.openjdk.jol.samples.JOLSample_25_ArrayAlignment</span><br><span class="line"># Running <span class="number">64</span>-bit HotSpot VM.</span><br><span class="line"># Using compressed oop with <span class="number">3</span>-bit shift.</span><br><span class="line"># Using compressed klass with <span class="number">3</span>-bit shift.</span><br><span class="line"></span><br><span class="line">[J object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      <span class="number">0</span>     <span class="number">4</span>        (object header)              <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">4</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">8</span>     <span class="number">4</span>        (object header)              d8 0c <span class="number">00</span> <span class="number">00</span>  # Class word</span><br><span class="line">     <span class="number">12</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Array length</span><br><span class="line">     <span class="number">16</span>     <span class="number">0</span>   <span class="type">long</span> [J.&lt;elements&gt;                N/A</span><br><span class="line">Instance size: <span class="number">16</span> bytes</span><br><span class="line">Space losses: <span class="number">0</span> bytes internal + <span class="number">0</span> <span class="type">bytes</span> <span class="variable">external</span> <span class="operator">=</span> <span class="number">0</span> bytes total</span><br><span class="line">                      </span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">[B object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      <span class="number">0</span>     <span class="number">4</span>        (object header)              <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">4</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">8</span>     <span class="number">4</span>        (object header)              <span class="number">68</span> <span class="number">07</span> <span class="number">00</span> <span class="number">00</span>  # Class word</span><br><span class="line">     <span class="number">12</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Array length</span><br><span class="line">     <span class="number">16</span>     <span class="number">0</span>   <span class="type">byte</span> [B.&lt;elements&gt;                N/A</span><br><span class="line">Instance size: <span class="number">16</span> bytes</span><br><span class="line">Space losses: <span class="number">0</span> bytes internal + <span class="number">0</span> <span class="type">bytes</span> <span class="variable">external</span> <span class="operator">=</span> <span class="number">0</span> bytes total</span><br><span class="line"></span><br><span class="line">[B object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      <span class="number">0</span>     <span class="number">4</span>        (object header)              <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">4</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">8</span>     <span class="number">4</span>        (object header)              <span class="number">68</span> <span class="number">07</span> <span class="number">00</span> <span class="number">00</span>  # Class word</span><br><span class="line">     <span class="number">12</span>     <span class="number">4</span>        (object header)              <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Array length</span><br><span class="line">     <span class="number">16</span>     <span class="number">1</span>   <span class="type">byte</span> [B.&lt;elements&gt;                N/A</span><br><span class="line">     <span class="number">17</span>     <span class="number">7</span>        (loss due to the next object alignment)</span><br><span class="line">Instance size: <span class="number">24</span> bytes</span><br><span class="line">Space losses: <span class="number">0</span> bytes internal + <span class="number">7</span> <span class="type">bytes</span> <span class="variable">external</span> <span class="operator">=</span> <span class="number">7</span> bytes total</span><br><span class="line"></span><br><span class="line">[B object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      <span class="number">0</span>     <span class="number">4</span>        (object header)              <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">4</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">8</span>     <span class="number">4</span>        (object header)              <span class="number">68</span> <span class="number">07</span> <span class="number">00</span> <span class="number">00</span>  # Class word</span><br><span class="line">     <span class="number">12</span>     <span class="number">4</span>        (object header)              <span class="number">02</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Array length</span><br><span class="line">     <span class="number">16</span>     <span class="number">2</span>   <span class="type">byte</span> [B.&lt;elements&gt;                N/A</span><br><span class="line">     <span class="number">18</span>     <span class="number">6</span>        (loss due to the next object alignment)</span><br><span class="line">Instance size: <span class="number">24</span> bytes</span><br><span class="line">Space losses: <span class="number">0</span> bytes internal + <span class="number">6</span> <span class="type">bytes</span> <span class="variable">external</span> <span class="operator">=</span> <span class="number">6</span> bytes total</span><br><span class="line"></span><br><span class="line">[B object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      <span class="number">0</span>     <span class="number">4</span>        (object header)              <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">4</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">8</span>     <span class="number">4</span>        (object header)              <span class="number">68</span> <span class="number">07</span> <span class="number">00</span> <span class="number">00</span>  # Class word</span><br><span class="line">     <span class="number">12</span>     <span class="number">4</span>        (object header)              <span class="number">03</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Array length</span><br><span class="line">     <span class="number">16</span>     <span class="number">3</span>   <span class="type">byte</span> [B.&lt;elements&gt;                N/A</span><br><span class="line">     <span class="number">19</span>     <span class="number">5</span>        (loss due to the next object alignment)</span><br><span class="line">Instance size: <span class="number">24</span> bytes</span><br><span class="line">Space losses: <span class="number">0</span> bytes internal + <span class="number">5</span> <span class="type">bytes</span> <span class="variable">external</span> <span class="operator">=</span> <span class="number">5</span> bytes total</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">[B object internals:</span><br><span class="line"> OFFSET  SIZE   TYPE DESCRIPTION                  VALUE</span><br><span class="line">      <span class="number">0</span>     <span class="number">4</span>        (object header)              <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">4</span>     <span class="number">4</span>        (object header)              <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Mark word</span><br><span class="line">      <span class="number">8</span>     <span class="number">4</span>        (object header)              <span class="number">68</span> <span class="number">07</span> <span class="number">00</span> <span class="number">00</span>  # Class word</span><br><span class="line">     <span class="number">12</span>     <span class="number">4</span>        (object header)              08 <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  # Array length</span><br><span class="line">     <span class="number">16</span>     <span class="number">8</span>   <span class="type">byte</span> [B.&lt;elements&gt;                N/A</span><br><span class="line">Instance size: <span class="number">24</span> bytes</span><br><span class="line">Space losses: <span class="number">0</span> bytes internal + <span class="number">0</span> <span class="type">bytes</span> <span class="variable">external</span> <span class="operator">=</span> <span class="number">0</span> bytes total</span><br></pre></td></tr></table></figure>
+<p>偏移 +12 处有一个插槽，用于承载数组长度。当我们分配 0…8 个元素的 byte[] 数组时，该插槽不断变化。将 arraylength 与数组实例一起携带有助于计算对象遍历器的实际大小，并且还可以进行有效的范围检查，以使数组长度非常接近。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://shipilev.net/jvm/objects-inside-out/#_introduction"><em>原文链接</em></a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+              <a href="/tags/Mark-Word/" rel="tag"># Mark Word</a>
+              <a href="/tags/Class-Word/" rel="tag"># Class Word</a>
+              <a href="/tags/Klass/" rel="tag"># Klass</a>
+              <a href="/tags/GC-%E5%88%86%E4%BB%A3/" rel="tag"># GC 分代</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/middleware/Elasticsearch-%E5%85%A5%E9%97%A8/" rel="prev" title="Elasticsearch 入门">
+                  <i class="fa fa-chevron-left"></i> Elasticsearch 入门
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" rel="next" title="Java 中的 lambda 表达式如何工作？">
+                  Java 中的 lambda 表达式如何工作？ <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"3ad5872da03473f59e4e9e19344b6ede"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

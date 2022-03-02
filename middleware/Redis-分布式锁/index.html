@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="用锁来做什么？ 在计算机科学中，锁是多线程环境中防止不同线程对同一资源进行操作的机制。锁的目的是确保在可能尝试执行同一工作的多个节点中，只有一个节点实际执行此操作（至少一次只有一个）。这项工作可能是将一些数据写入共享存储系统、执行一些计算、调用一些外部 API 等。概括而言，您可能需要在分布式应用程序中锁定的原因有两个：为了效率或为了正确性。为了区分这些情况，您可以询问如果锁定失败会发生什么：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 分布式锁">
+<meta property="og:url" content="https://www.zeral.cn/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="用锁来做什么？ 在计算机科学中，锁是多线程环境中防止不同线程对同一资源进行操作的机制。锁的目的是确保在可能尝试执行同一工作的多个节点中，只有一个节点实际执行此操作（至少一次只有一个）。这项工作可能是将一些数据写入共享存储系统、执行一些计算、调用一些外部 API 等。概括而言，您可能需要在分布式应用程序中锁定的原因有两个：为了效率或为了正确性。为了区分这些情况，您可以询问如果锁定失败会发生什么：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/exceed-ttl.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/fencing-token.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/redis-lock-pub-sub.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/redis-lock-monitor.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/redisson.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/redisson-lock.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/redisson-lock-lockinng.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/redis/redisson-lock-unlock.png">
+<meta property="article:published_time" content="2021-06-01T05:53:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.224Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Lock">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/middleware/redis/exceed-ttl.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/","path":"middleware/Redis-分布式锁/","title":"Redis 分布式锁"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Redis 分布式锁 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">用锁来做什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">安全性和活跃性保证</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">分布式锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9F%BA%E4%BA%8E%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%98%AF%E4%B8%8D%E5%A4%9F%E7%9A%84"><span class="nav-number">3.1.</span> <span class="nav-text">为什么基于故障转移的实现是不够的</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">基于单实例的正确实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">Redlock 算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E6%98%AF%E5%BC%82%E6%AD%A5%E7%9A%84%E5%90%97%EF%BC%9F"><span class="nav-number">5.1.</span> <span class="nav-text">算法是异步的吗？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%B1%E8%B4%A5%E6%97%B6%E9%87%8D%E8%AF%95"><span class="nav-number">5.2.</span> <span class="nav-text">失败时重试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8A%E6%94%BE%E9%94%81"><span class="nav-number">5.3.</span> <span class="nav-text">释放锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E6%80%A7%E5%8F%82%E6%95%B0"><span class="nav-number">5.4.</span> <span class="nav-text">安全性参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B4%BB%E8%B7%83%E6%80%A7%E5%8F%82%E6%95%B0"><span class="nav-number">5.5.</span> <span class="nav-text">活跃性参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E3%80%81%E5%B4%A9%E6%BA%83%E6%81%A2%E5%A4%8D%E5%92%8C-fsync"><span class="nav-number">5.6.</span> <span class="nav-text">性能、崩溃恢复和 fsync</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%AE%97%E6%B3%95%E6%9B%B4%E5%8F%AF%E9%9D%A0%EF%BC%9A%E6%89%A9%E5%B1%95%E9%94%81"><span class="nav-number">5.7.</span> <span class="nav-text">使算法更可靠：扩展锁</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E5%AE%9E%E4%BE%8B%E4%B8%8B%E7%9A%84%E6%9C%89%E6%95%88%E9%94%81"><span class="nav-number">6.1.</span> <span class="nav-text">单实例下的有效锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RedissonLock"><span class="nav-number">6.1.1.</span> <span class="nav-text">RedissonLock</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E9%94%81"><span class="nav-number">6.1.2.</span> <span class="nav-text">加锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E9%94%81"><span class="nav-number">6.1.3.</span> <span class="nav-text">获取锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E9%94%81"><span class="nav-number">6.1.4.</span> <span class="nav-text">解锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">参考链接：</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis 分布式锁
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-01 13:53:00" itemprop="dateCreated datePublished" datetime="2021-06-01T13:53:00+08:00">2021-06-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>用锁来做什么？</h1>
+<p>在计算机科学中，锁是多线程环境中防止不同线程对同一资源进行操作的机制。锁的目的是确保在可能尝试执行同一工作的多个节点中，只有一个节点实际执行此操作（至少一次只有一个）。这项工作可能是将一些数据写入共享存储系统、执行一些计算、调用一些外部 API 等。概括而言，您可能需要在分布式应用程序中锁定的原因有两个：<strong>为了效率</strong>或<strong>为了正确性</strong>。为了区分这些情况，您可以询问如果锁定失败会发生什么：</p>
+<ul>
+<li><strong>效率 - Efficiency</strong>：获取锁可以避免你不必要地做同样的工作两次（例如一些昂贵的计算）。</li>
+<li><strong>正确性 - Correctness</strong>：使用锁可以防止并发进程相互干扰并破坏系统状态。如果锁失败，两个节点同时处理同一份数据，结果是文件损坏，数据丢失，永久性不一致、错误的执行结果或其他一些严重问题。</li>
+</ul>
+<p>两者都是需要锁的有效情况，但您需要非常清楚您正在处理的是两者中的哪一个。</p>
+<h1>安全性和活跃性保证</h1>
+<p>我们将仅使用三个属性对我们的设计进行建模，从我们的角度来看，这是以有效方式使用分布式锁所需的最低保证。</p>
+<ol>
+<li><strong>安全特性</strong>：互斥。在任何给定时刻，只有一个客户端可以持有锁。</li>
+<li>活跃性属性 A：无死锁。最终总是有可能获得锁，即使锁定资源的客户端崩溃或被分区。</li>
+<li>活跃性属性 B：容错。只要大多数 Redis 节点都已启动，客户端就可以获取和释放锁。</li>
+</ol>
+<span id="more"></span>
+<h1>分布式锁</h1>
+<p>分布式锁在许多环境中是非常有用的原语，在这些环境中，不同的进程必须以互斥的方式使用共享资源。操作系统或我们的软件一般会使用锁管理器来组织和顺序化去访问资源。<strong>分布式锁管理器 (distributed lock manager - DLM</strong>) 运行在集群中的每台机器上，并具有集群范围相同副本的锁数据库。通过这种方式，DLM 为分布在多台机器上的集群中的软件应用程序提供了一种同步对共享资源的访问的方法。</p>
+<h2 id="为什么基于故障转移的实现是不够的">为什么基于故障转移的实现是不够的</h2>
+<p>为了了解我们想要改进的地方，让我们分析大多数基于 Redis 的分布式锁库的当前状态。</p>
+<p>使用 Redis 锁定资源的最简单方法是在实例中创建 key。创建的 key 通常是有限的生存时间的，使用 Redis 过期功能，以便最终将其释放（我们列表中的属性 2）。</p>
+<p>从表面上看，这很有效，但有一个问题：这是我们架构中的单点故障。如果 Redis master 宕机了怎么办？好吧，让我们添加一个 slave！如果 master 不可用，则使用它。不幸的是，这是不可行的。这样做我们无法实现互斥的安全属性，<strong>因为 Redis 复制是异步的</strong>。</p>
+<p>这个模型有一个明显的竞争条件：</p>
+<ol>
+<li>客户端 A 获取 master 的锁</li>
+<li>写入 key 到 slave 之前，master 崩溃了</li>
+<li>slave 提升为 master</li>
+<li>客户端 B 获取对 A 已经持有锁的同一资源的锁。<strong>违背安全性！</strong></li>
+</ol>
+<p>有时，在特殊情况下（例如在故障期间），多个客户端可以同时持有锁是完全没问题的。如果允许这种情况，您可以使用基于复制的解决方案。否则，我们建议实施本文档中描述的解决方案。</p>
+<h1>基于单实例的正确实现</h1>
+<p>在尝试克服上述单实例崩溃的限制之前，让我们检查一下如何在这个简单的情况下正确地做到这一点，因为在不经常出现竞争条件的应用程序中，这实际上是一个可行的解决方案，并且因为锁定单个实例是我们将用于此处描述的分布式算法的基础。</p>
+<p>要获取锁，方法如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET resource_name my_random_value NX PX 30000</span><br></pre></td></tr></table></figure>
+<p>该命令仅在 key 不存在（NX 选项）时设置，过期时间为 30000 毫秒（PX 选项）。将 key 设置为值 “myrandomvalue”。该值在所有客户端和所有锁定请求中必须是唯一的。</p>
+<p>随机值用于以安全的方式释放锁，该脚本告诉 Redis：仅当 key 存在并且存储在 key 中的值正是我期望的值时才删除它。这是通过以下 Lua 脚本完成的：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> redis.call(<span class="string">&quot;get&quot;</span>,KEYS[<span class="number">1</span>]) == ARGV[<span class="number">1</span>] <span class="keyword">then</span></span><br><span class="line">    <span class="keyword">return</span> redis.call(<span class="string">&quot;del&quot;</span>,KEYS[<span class="number">1</span>])</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这对于避免删除由另一个客户端创建的锁很重要。例如，客户端可能获取锁，在某些操作中被阻塞超过锁有效时间（key 将到期的时间），然后删除其他客户端已经获取的锁。仅使用 DEL 是不安全的，因为客户端可能会删除另一个客户端的锁。使用上面的脚本，每个锁都用一个随机字符串“签名”，因此只有当它仍然是试图删除它的客户端设置的锁时，才会删除它。</p>
+<p>这个随机字符串应该是什么？我假设它是来自 /dev/urandom 的 20 个字节，但是你可以找到更便捷的方法来使它对你的任务足够唯一。例如，一个安全的选择是用 /dev/urandom 为 RC4 做种子，并从中生成一个伪随机流。一个更简单的解决方案是使用 unix 时间微秒，将它与客户端 ID 连接，它不是那么安全，但可能适合大多数环境中的任务。</p>
+<p>我们用作 key *存活时间（time to live - TTL）*的时间，称为“锁有效时间”。它既是自动释放时间，也是客户端在另一个客户端能够再次获取锁之前执行操作所需的时间，也就是该客户端对该 key 的租期，在技术上不违反互斥保证的情况下，互斥保证只限于从获取锁那一刻起的给定时间窗口。</p>
+<p>所以现在我们有一个很好的方法来获取和释放锁。我们推理由单个始终可用的实例组成的非分布式系统是安全的。让我们将这个概念扩展到没有这种保证的分布式系统。</p>
+<h1>Redlock 算法</h1>
+<p>在算法的分布式版本中，我们假设我们有 N 个 Redis master 节点。这些节点是完全独立的，所以我们不使用复制或任何其他隐式协调系统。我们已经描述了如何在单个实例中安全地获取和释放锁。我们理所当然地认为算法会在单个实例中使用这种方法来获取和释放锁。</p>
+<p>为了获取锁，客户端执行以下操作：</p>
+<ol>
+<li>客户端以毫秒为单位获取当前时间。</li>
+<li>它尝试顺序获取所有 N 个实例中的锁，并在所有实例中使用相同的 key 和随机值。在第 2 步中，当在每个实例中设置锁时，客户端使用一个比总锁自动释放时间更小的超时时间来获取锁。例如，如果自动释放时间为 10 秒，则超时时间可能在 ~ 5-50 毫秒范围内。这可以防止客户端长时间处于阻塞状态，试图与已关闭的 Redis 节点通信：如果实例不可用，我们应该尽快尝试与下一个实例通信。</li>
+<li>客户端通过从当前时间中减去步骤 1 中获得的时间戳来计算获取锁所用的时间。当且仅当客户端能够在大多数实例（至少 3 个）中获取锁，并且获取锁所用的总时间小于锁有效时间，则认为该锁已获取。</li>
+<li>如果获得了锁，则其有效时间被视为初始有效时间减去经过的时间，如步骤 3 中计算的那样。</li>
+<li>如果客户端由于某种原因获取锁失败（或者它无法锁定 N/2+1 个实例或有效时间为负），它将尝试解锁所有实例（即使是它认为没有锁定的实例）能够锁定）。</li>
+</ol>
+<h2 id="算法是异步的吗？">算法是异步的吗？</h2>
+<p>该算法依赖于这样的假设：虽然进程之间没有同步时钟，但每个进程中的本地时间仍然以大致相同的速率流动，与锁的自动释放时间相比误差很小。这个假设与现实世界的计算机非常相似：每台计算机都有一个本地时钟，我们通常可以依靠不同的计算机来实现很小的时钟漂移。</p>
+<p>此时我们需要更好地指定我们的互斥规则：<strong>只有持有锁的客户端会在锁的有效期内（如步骤 3 中获得的）内终止其工作，我们才能保证互斥</strong>，减去一些时间（只需几毫秒以补偿进程之间的时钟漂移）。</p>
+<p>有关需要绑定*时钟漂移（clock drift）*的类似系统的更多信息，这篇论文是一个有趣的参考：<a target="_blank" rel="noopener" href="http://dl.acm.org/citation.cfm?id=74870">Leases：一种用于分布式文件缓存一致性的高效容错机制。</a></p>
+<p>如果在锁的有效期内未停止其工作，如下图：</p>
+<p><img data-src="../../images/middleware/redis/exceed-ttl.png" alt="image-20200804204605476"></p>
+<p>客户端 1 在获得锁之后发生了很长时间的 GC pause，在此期间，它获得的锁租约过期了，而客户端 2 重新获得了该锁。当客户端 1 从 GC pause 中恢复过来的时候，它不知道自己持有的锁已经过期了，它依然向共享资源发起了写数据请求，而这时锁实际上被客户端 2 持有，因此两个客户端的写请求就有可能冲突（锁的互斥作用失效了）。</p>
+<p>那怎么解决这个问题呢？<a target="_blank" rel="noopener" href="https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html">Martin</a> 给出了一种方法，称为 fencing token。fencing token 是一个单调递增的数字，当客户端成功获取锁的时候它随同锁一起返回给客户端。而客户端访问共享资源的时候带着这个 fencing token，这样提供共享资源的服务就能根据它进行检查，拒绝掉延迟到来的访问请求（避免了冲突）。如下图：</p>
+<p><img data-src="../../images/middleware/redis/fencing-token.png" alt="image-20200804204717901"></p>
+<p>在上图中，客户端 1 先获取到的锁，因此有一个较小的 fencing token，等于 33，而客户端 2 后获取到的锁，有一个较大的 fencing token，等于 34。客户端 1 从 GC pause 中恢复过来之后，依然是向存储服务发送访问请求，但是带了 fencing token = 33。存储服务发现它之前已经处理过 34 的请求，所以会拒绝掉这次 33 的请求。这样就避免了冲突。</p>
+<blockquote>
+<p>但这种处理又将锁的排他安全性转移给了资源服务，如果资源服务本身就可以保证排他访问，为什么需要分布式锁？</p>
+</blockquote>
+<h2 id="失败时重试">失败时重试</h2>
+<p>当客户端无法获取锁时，它应该在随机延迟后重试，以尝试使多个客户端同时尝试获取同一资源的锁（这可能会导致没有人获胜的脑裂情况）。此外，客户端尝试在大多数 Redis 实例中获取锁的速度越快，出现脑裂情况的窗口就越小（以及需要重试），<strong>所以理想情况下，客户端应该尝试使用多路复用将 SET 命令同时发送到 N 个实例。</strong></p>
+<p>值得强调的是，对于未能获取大部分锁的客户端，尽快释放（部分）获取的锁是多么重要，这样就不需要等待 key 到期才能再次获取锁（但是，如果发生网络分区并且客户端不再能够与 Redis 实例通信，则在等待 key 到期时需要容忍可用性损失）。</p>
+<h2 id="释放锁">释放锁</h2>
+<p>释放锁很简单，只涉及在所有实例中释放锁，无论客户端是否相信它能够成功锁定给定的实例。</p>
+<p>如果一个分布式锁占用资源时间过长，导致其他客户端无法在有效时间内获取同一资源，则可以使用 Redis 的发布订阅功能，去主动告知其他需要资源的客户端。</p>
+<p><img data-src="../../images/middleware/redis/redis-lock-pub-sub.png" alt="Pub Sub Lock"></p>
+<h2 id="安全性参数">安全性参数</h2>
+<p>算法安全吗？我们可以尝试了解在不同场景中会发生什么。</p>
+<p>首先让我们假设客户端能够在大多数情况下获取锁。所有实例都将包含一个具有相同生存时间的 key。但是，key 是在不同的时间设置的，因此 key 也会在不同的时间到期。但是如果第一个 key 最差在时间 T1（我们在联系第一台服务器之前采样的时间）设置，而最后一个 key 最差在时间 T2（我们从最后一个服务器获得回复的时间）设置，我们确信集合中第一个要过期的 key 至少会存在 MIN_VALIDITY=TTL-(T2-T1)-CLOCK_DRIFT。所有其他 key 将在稍后到期，因此我们确信至少这次 key 将同时设置。</p>
+<p>在设置了大多数 key 的时间内，另一个客户端将无法获取锁，因为如果 N/2+1 个 key 已经存在，则 N/2+1 次 SET NX 操作将无法成功。因此，如果获取了锁，则不可能同时重新获取它（违反互斥属性）。</p>
+<p>但是，我们还希望确保多个客户端同时尝试获取锁不能同时成功。</p>
+<p>如果客户端使用接近或大于锁定最大有效时间（我们用于 SET 的 TTL）的时间锁定大多数实例，它将认为锁定无效并解锁实例，所以我们只需要考虑客户端能够在小于有效时间的时间内锁定大多数实例的情况。在这种情况下，对于上面已经陈述的参数，对于  MIN_VALIDITY，没有客户端应该能够重新获取锁。因此，只有当锁定多数的时间大于 TTL 时间时，多个客户端才能同时锁定 N/2+1 个实例（“时间”为第 2 步的结束），从而使锁定无效。</p>
+<h2 id="活跃性参数">活跃性参数</h2>
+<p>系统活跃性基于三个主要特征：</p>
+<ol>
+<li>锁的自动释放（因为 key 过期）：最终 key 可以再次被锁定。</li>
+<li>事实上，客户端通常会在没有获得锁时合作移除锁，或者当获得锁并且工作终止时合作移除锁，这使得我们可能不必等待 key 到期来重新获取锁锁。</li>
+<li>事实上，当客户端需要重试锁时，它等待的时间比获取大多数锁所需的时间要长，以便在资源争用期间从概率上使脑裂情况不太可能发生。</li>
+</ol>
+<p>然而，我们在网络分区上容忍了与 <a target="_blank" rel="noopener" href="https://redis.io/commands/ttl">TTL</a> 时间相等的可用性损失，所以如果有连续的分区，我们需要无限期地容忍这个损失。每次客户端获取锁并在能够删除锁之前被分区时都会发生这种情况。</p>
+<p>基本上，如果有无限连续的网络分区，系统可能会在无限长的时间内变得不可用。</p>
+<h2 id="性能、崩溃恢复和-fsync">性能、崩溃恢复和 fsync</h2>
+<p>许多使用 Redis 作为锁服务器的用户在获取和释放锁的延迟方面以及每秒可能执行的获取/释放操作数量方面都需要高性能。为了满足这个需求，与 N 个 Redis 服务器对话以减少延迟的策略肯定是多路复用（即把 socket 置于非阻塞模式，发送所有命令，然后读取所有命令，假设客户端和每个实例之间的 RTT 相似）。</p>
+<p>然而，如果我们想要针对崩溃恢复系统模型，还有另一个关于持久性的考虑。</p>
+<p>假设一共有 5 个 Redis 节点：A, B, C, D, E。设想发生了如下的事件序列：</p>
+<ol>
+<li>客户端 1 成功锁住了 A, B, C，<strong>获取锁</strong>成功（但 D 和 E 没有锁住）。</li>
+<li>节点 C 崩溃重启了，但客户端 1 在 C 上加的锁没有持久化下来，丢失了。</li>
+<li>节点 C 重启后，客户端 2 锁住了 C, D, E，<strong>获取锁</strong>成功。</li>
+</ol>
+<p>这样，客户端 1 和客户端 2 同时获得了锁（针对同一资源），违反了锁的排他性的安全属性。</p>
+<p>如果我们启用 AOF 持久化，情况会有所改善。例如，我们可以通过发送 SHUTDOWN 并重新启动它来升级服务器。因为 Redis 过期是在语义上实现的，所以当服务器关闭时，实际上时间仍然在流逝，所以我们所有的要求都很好。然而，一切都很好，只要它是干净的关机。停电了怎么办？如果 Redis 配置为默认情况下每秒在磁盘上进行 fsync，则可能在重新启动后丢失我们的 key 。理论上，如果我们想在面对任何类型的实例重启时保证锁的安全，我们需要在持久化设置中启用 <code>fsync=always</code>。这样会破坏性能，将会和传统上用于以安全方式实现分布式锁的 CP 系统相同级别。</p>
+<p>然而，事情总比乍一看的样子要好。基本上，只要实例在崩溃后重新启动，<strong>它不再参与任何当前活动的锁</strong>，就可以保留算法安全性。这样当实例重新启动时，当前活动的一组锁都是通过锁定实例而不是重新加入系统的实例获得的。</p>
+<p>为了保证这一点，我们只需要确保一个实例，在崩溃后，至少在比我们使用的最大 TTL 多一点的时间内不可用，即实例崩溃时存在的所有锁的 key 所需的时间，即实例崩溃，失效并自动释放时存在的所有锁的 key 所需的时间。</p>
+<p><strong>使用延迟重启</strong>，即使没有任何可用的 Redis 持久性，基本上也可以实现安全性，但是请注意，这可能会转化为可用性损失。例如，如果大多数实例崩溃，系统将在 TTL 中全局不可用（这里全局意味着在此期间根本没有资源可锁定）。</p>
+<h2 id="使算法更可靠：扩展锁">使算法更可靠：扩展锁</h2>
+<p>如果客户端执行的工作由小步骤组成，则可以默认使用较小的锁有效时间，并扩展实现锁扩展机制的算法。基本上客户端，如果在计算的中间，当锁有效性接近低值时，如果 key 存在并且它的值仍然是获取锁时客户端分配的随机值，可以通过向所有扩展 key 的实例的 Lua 脚本发送一个 Lua 脚本来扩展锁。 如果客户端能够将锁扩展到大多数实例，并且在有效时间内（基本上使用的算法与获取锁时使用的算法非常相似），客户端应该只考虑重新获取锁。 然而，这在技术上不会改变算法，因此应该限制锁重新获取尝试的最大次数，否则会违反活跃性属性之一。</p>
+<p>在单实例时使用监视器也可以达成该目的，在多实例下实现会更加复杂。</p>
+<p>比如使用守护线程或其他形式去观察并自动续约，例如 Redisson 的 watchdog。</p>
+<p><img data-src="../../images/middleware/redis/redis-lock-monitor.png" alt="Monitor Lock"></p>
+<h1>实现</h1>
+<p><a target="_blank" rel="noopener" href="https://github.com/redisson/redisson">Redisson</a> 作为 Java 版本的 Redis 客户端，底层使用 Netty 这种高性能无阻塞的 IO 框架，为我们提供了很多 Redis 数据结构的 Java 版本，还有很多分布式锁、分布式对象，分布式服务等，以及提供了异步、响应式的请求方式。</p>
+<p><img data-src="../../images/middleware/redis/redisson.png" alt="img"></p>
+<p>它也支持 Redis 的多种部署方式：复制、集群、哨兵、主从、单例模式。</p>
+<h2 id="单实例下的有效锁">单实例下的有效锁</h2>
+<p><code>Redisson</code> 中基于单实例的正确实现锁有很多，他们都实现了 RLock 接口，该接口继承与 Java 的 Lock 接口，实现该接口的类也都实现了可重入性。最基本的实现有：</p>
+<ul>
+<li><code>RedissonLock</code>：Java Lock 的分布式实现，实现可重入锁。如果客户端断开连接，锁定将自动解除。实现非公平锁定，因此不保证获取顺序。</li>
+<li><code>RedissonFairLock</code>：和上述锁相同，但实现了公平性，以保证线程的获取顺序。</li>
+</ul>
+<h3 id="RedissonLock">RedissonLock</h3>
+<p>接下来我们就来看下 <code>RedissonLock</code> 是如何实现锁的，他的 UML 类继承图如下：</p>
+<p><img data-src="../../images/middleware/redis/redisson-lock.png" alt="RedissonLock"></p>
+<p>这里需要有几点认知：</p>
+<ul>
+<li><code>RedissonLock</code> 实现了 <code>java.util.concurrent.locks.Lock</code> 接口中除了 <code>newCondition()</code> 方法外的所有方法，也就是可以基本无缝适配 <code>Lock</code> 接口，对于习惯 <code>Lock</code> 接口的 <code>API</code> 的使用者来说是一个福音</li>
+<li><code>RedissonLock</code> 基本所有同步 <code>API</code> 都依赖于异步 <code>API</code> 的实现，也就是 <code>RLock</code> 的实现依赖于 <code>RLockAsync</code> 的实现，底层依赖的是 <code>Netty</code> 的 <code>io.netty.util.concurrent.Promise</code>，具体见 <code>RedissonPromise</code>，如果用过 <code>JUC</code> 中的 <code>Future</code> 的开发者应该比较熟悉 <code>Future#get()</code>，这里的做法类似</li>
+<li>右边的几个父类的简单功能描述如下：
+<ul>
+<li><code>RObjectAsync</code>：所有 <code>Redisson</code> 对象的基础接口，提供一些内存测量、对象拷贝、移动等的异步方法</li>
+<li><code>RObject</code>：<code>RObjectAsync</code> 的同步版本</li>
+<li><code>RExpirableAsync</code>：提供对象 <code>TTL</code> 相关的异步方法</li>
+<li><code>RExpirable</code>：<code>RExpirableAsync</code> 的同步版本</li>
+<li><code>RedissonObject</code>：直接实现类 <code>RObject</code> 接口中的方法</li>
+<li><code>RedissonExpirable</code>：主要是实现了 <code>RExpirable</code> 接口中的方法</li>
+</ul>
+</li>
+</ul>
+<p>下面我们就来看下如何使用该 Lock，一般我们使用 Java 的 Lock 典型用法为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Lock</span> <span class="variable">lock</span> <span class="operator">=</span> ...;</span><br><span class="line"> <span class="keyword">if</span> (lock.tryLock(<span class="number">5L</span>, TimeUnit.SECONDS)) &#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">     <span class="comment">// 操作保护资源</span></span><br><span class="line">   &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">     lock.unlock();</span><br><span class="line">   &#125;</span><br><span class="line"> &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">   <span class="comment">// 执行锁获取失败的可选操作</span></span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>在 RedissonLock 中我们同样可以这样使用，但是就像我们之前陈述的，我们需要为锁定义有效时间（TTL），让我们看下代码中是如何实现的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 该类实现了 Lock 的 tryLock 接口，</span></span><br><span class="line"><span class="comment">// 调用自身的 tryLock，第二个参数为锁的有效时间，这里传入 -1  </span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">tryLock</span><span class="params">(<span class="type">long</span> waitTime, TimeUnit unit)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">  <span class="keyword">return</span> tryLock(waitTime, -<span class="number">1</span>, unit);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="加锁">加锁</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">tryLock</span><span class="params">(<span class="type">long</span> waitTime, <span class="type">long</span> leaseTime, TimeUnit unit)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">  <span class="type">long</span> <span class="variable">time</span> <span class="operator">=</span> unit.toMillis(waitTime);</span><br><span class="line">  <span class="type">long</span> <span class="variable">current</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">  <span class="type">long</span> <span class="variable">threadId</span> <span class="operator">=</span> Thread.currentThread().getId();</span><br><span class="line">  <span class="comment">// 尝试获取锁，为 null 代表锁操作成功，可能是初次获取成功，或者重入获取成功，将会在后面的 lua 脚本说明</span></span><br><span class="line">  <span class="comment">// 否则返回锁的有效时间</span></span><br><span class="line">  <span class="type">Long</span> <span class="variable">ttl</span> <span class="operator">=</span> tryAcquire(waitTime, leaseTime, unit, threadId);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (ttl == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果尝试获取锁的经过时间大于允许等待的时间，则获取锁失败</span></span><br><span class="line">  time -= System.currentTimeMillis() - current;</span><br><span class="line">  <span class="keyword">if</span> (time &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">    acquireFailed(waitTime, unit, threadId);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 重新获取当前时间</span></span><br><span class="line">  current = System.currentTimeMillis();</span><br><span class="line">  <span class="comment">// 使用 redis 的发布订阅 pub/sub 功能来等待该锁的释放通知，这里的 threadId 并没有什么意义</span></span><br><span class="line">  RFuture&lt;RedissonLockEntry&gt; subscribeFuture = subscribe(threadId);</span><br><span class="line">  <span class="comment">// 订阅时间超过允许等待的时间，取消订阅，获取锁失败</span></span><br><span class="line">  <span class="keyword">if</span> (!subscribeFuture.await(time, TimeUnit.MILLISECONDS)) &#123;</span><br><span class="line">    <span class="keyword">if</span> (!subscribeFuture.cancel(<span class="literal">false</span>)) &#123;</span><br><span class="line">      subscribeFuture.onComplete((res, e) -&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> (e == <span class="literal">null</span>) &#123;</span><br><span class="line">          unsubscribe(subscribeFuture, threadId);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    acquireFailed(waitTime, unit, threadId);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 之前操作经过的时间超过允许等待的时间，获取锁失败</span></span><br><span class="line">    time -= System.currentTimeMillis() - current;</span><br><span class="line">    <span class="keyword">if</span> (time &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">      acquireFailed(waitTime, unit, threadId);</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 循环处理</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">      <span class="type">long</span> <span class="variable">currentTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">      <span class="comment">// 尝试获取锁</span></span><br><span class="line">      ttl = tryAcquire(waitTime, leaseTime, unit, threadId);</span><br><span class="line">      <span class="comment">// 获取锁成功</span></span><br><span class="line">      <span class="keyword">if</span> (ttl == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 继续判断是否超时</span></span><br><span class="line">      time -= System.currentTimeMillis() - currentTime;</span><br><span class="line">      <span class="keyword">if</span> (time &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        acquireFailed(waitTime, unit, threadId);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 锁有效时间一般都是 &gt;= 0 的，则实际等待时间取决于 ttl 和允许等待时间。</span></span><br><span class="line">      <span class="comment">// 等待内部使用 Java 许可数为 0 的信号量（Semaphore）进行等待，由于没有可用的许可，等待时线程将处于休眠状态。</span></span><br><span class="line">      <span class="comment">// 在锁释放时将放出一个信号量，则等待取消，继续尝试获取锁，否则一直等到过期</span></span><br><span class="line">      currentTime = System.currentTimeMillis();</span><br><span class="line">      <span class="keyword">if</span> (ttl &gt;= <span class="number">0</span> &amp;&amp; ttl &lt; time) &#123;</span><br><span class="line">        subscribeFuture.getNow().getLatch().tryAcquire(ttl, TimeUnit.MILLISECONDS);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        subscribeFuture.getNow().getLatch().tryAcquire(time, TimeUnit.MILLISECONDS);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 执行超时，获取锁失败</span></span><br><span class="line">      time -= System.currentTimeMillis() - currentTime;</span><br><span class="line">      <span class="keyword">if</span> (time &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        acquireFailed(waitTime, unit, threadId);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="comment">// 退出锁竞争(锁获取成功或者放弃获取锁)，则取消锁的释放订阅</span></span><br><span class="line">    unsubscribe(subscribeFuture, threadId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>整个流程如下图：</p>
+<p><img data-src="../../images/middleware/redis/redisson-lock-lockinng.png" alt="img"></p>
+<p>这里面比较重要的是获取锁 <code>tryAcquire</code> 的操作，如下。</p>
+<h3 id="获取锁">获取锁</h3>
+<p>在这里，它有两种处理方式，一种是带有过期时间的锁，一种是不带过期时间的锁。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> &lt;T&gt; RFuture&lt;Long&gt; <span class="title function_">tryAcquireAsync</span><span class="params">(<span class="type">long</span> waitTime, <span class="type">long</span> leaseTime, TimeUnit unit, <span class="type">long</span> threadId)</span> &#123;</span><br><span class="line">    RFuture&lt;Long&gt; ttlRemainingFuture;</span><br><span class="line">    <span class="keyword">if</span> (leaseTime != -<span class="number">1</span>) &#123;</span><br><span class="line">        ttlRemainingFuture = tryLockInnerAsync(waitTime, leaseTime, unit, threadId, RedisCommands.EVAL_LONG);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果没有过期时间，就像我们调用的那样，使用 watchdog 默认的租约时间：30s</span></span><br><span class="line">        ttlRemainingFuture = tryLockInnerAsync(waitTime, internalLockLeaseTime,</span><br><span class="line">                TimeUnit.MILLISECONDS, threadId, RedisCommands.EVAL_LONG);</span><br><span class="line">    &#125;</span><br><span class="line">    ttlRemainingFuture.onComplete((ttlRemaining, e) -&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> (e != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 已经获取了锁</span></span><br><span class="line">        <span class="keyword">if</span> (ttlRemaining == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (leaseTime != -<span class="number">1</span>) &#123;</span><br><span class="line">                <span class="comment">// 过期时间存在，设置 watchdog 的租约时间为该过期时间</span></span><br><span class="line">                internalLockLeaseTime = unit.toMillis(leaseTime);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// 过期时间不存在，如果还持有这个锁，则开启定时任务不断刷新该锁的过期时间</span></span><br><span class="line">                scheduleExpirationRenewal(threadId);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">return</span> ttlRemainingFuture;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接着往下看，<code>tryLockInnerAsync</code> 方法是真正执行获取锁的逻辑，它是一段 LUA 脚本代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">&lt;T&gt; RFuture&lt;T&gt; <span class="title function_">tryLockInnerAsync</span><span class="params">(<span class="type">long</span> waitTime, <span class="type">long</span> leaseTime, TimeUnit unit, <span class="type">long</span> threadId, RedisStrictCommand&lt;T&gt; command)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> evalWriteAsync(getRawName(), LongCodec.INSTANCE, command,</span><br><span class="line">            <span class="comment">// 如果锁不存在，则通过 hincrby 将锁对象的名称（RawName）key 下的该线程的锁（LockName）field 的数值递增 1</span></span><br><span class="line">            <span class="comment">// 并设置 RawName 作为 key 的过期时间为 leaseTime</span></span><br><span class="line">            <span class="comment">// 执行成功，返回 null，前面检查 为 null 代表执行成功</span></span><br><span class="line">            <span class="string">&quot;if (redis.call(&#x27;exists&#x27;, KEYS[1]) == 0) then &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;redis.call(&#x27;hincrby&#x27;, KEYS[1], ARGV[2], 1); &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[1]); &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;return nil; &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;end; &quot;</span> +</span><br><span class="line">                    <span class="comment">// 如果锁存在，且持有线程是当前线程，则通过 hincrby 将该锁对应的该线程的数值递增 1，并重新设置过期时间</span></span><br><span class="line">                    <span class="comment">// 执行成功，返回 null</span></span><br><span class="line">                    <span class="string">&quot;if (redis.call(&#x27;hexists&#x27;, KEYS[1], ARGV[2]) == 1) then &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;redis.call(&#x27;hincrby&#x27;, KEYS[1], ARGV[2], 1); &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[1]); &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;return nil; &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;end; &quot;</span> +</span><br><span class="line">                     <span class="comment">// 如果锁已存在，且持有锁的线程不是该线程，则返回该锁的有效时间</span></span><br><span class="line">                    <span class="string">&quot;return redis.call(&#x27;pttl&#x27;, KEYS[1]);&quot;</span>,</span><br><span class="line">            Collections.singletonList(getRawName()), </span><br><span class="line">            unit.toMillis(leaseTime), getLockName(threadId));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>LUA 中的数组从 1 开始计数，KEYS 代表键数组，ARGV 代表参数数组。同时，Redis 保证以一种原子性的方式来执行脚本：当 LUA 脚本在执行的时候，不会有其他脚本和命令同时执行，这种语义类似于 MULTI/EXEC。从别的客户端的视角来看，一个 LUA 脚本要么不可见，要么已经执行完，这也因为 Redis 是单线程的原因。</p>
+<h3 id="解锁">解锁</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> RFuture&lt;Boolean&gt; <span class="title function_">unlockInnerAsync</span><span class="params">(<span class="type">long</span> threadId)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> evalWriteAsync(getRawName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN,</span><br><span class="line">            <span class="comment">// 该锁不是由该线程占有的，返回 null</span></span><br><span class="line">            <span class="string">&quot;if (redis.call(&#x27;hexists&#x27;, KEYS[1], ARGV[3]) == 0) then &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;return nil;&quot;</span> +</span><br><span class="line">                    <span class="string">&quot;end; &quot;</span> +</span><br><span class="line">                     <span class="comment">// 该锁对应的该线程的数值 - 1，重入数 - 1</span></span><br><span class="line">                    <span class="string">&quot;local counter = redis.call(&#x27;hincrby&#x27;, KEYS[1], ARGV[3], -1); &quot;</span> +</span><br><span class="line">                     <span class="comment">// 锁依然被占用，则续约，返回 0</span></span><br><span class="line">                    <span class="string">&quot;if (counter &gt; 0) then &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[2]); &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;return 0; &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;else &quot;</span> +</span><br><span class="line">                     <span class="comment">// 锁无人占用，删除锁，并发布锁释放信号，这里会向之前等待的信号量释放一个许可</span></span><br><span class="line">                    <span class="string">&quot;redis.call(&#x27;del&#x27;, KEYS[1]); &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;redis.call(&#x27;publish&#x27;, KEYS[2], ARGV[1]); &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;return 1; &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;end; &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;return nil;&quot;</span>,</span><br><span class="line">            Arrays.asList(getRawName(), getChannelName()), </span><br><span class="line">            LockPubSub.UNLOCK_MESSAGE, internalLockLeaseTime, getLockName(threadId));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>解锁主要也是通过 LUA 脚本执行的，流程如下：</p>
+<p><img data-src="../../images/middleware/redis/redisson-lock-unlock.png" alt="img"></p>
+<hr>
+<h1>参考链接：</h1>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://redis.io/topics/distlock">Distributed locks with Redis</a></li>
+<li><a target="_blank" rel="noopener" href="https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html">How to do distributed locking</a></li>
+<li><a target="_blank" rel="noopener" href="https://xiaomi-info.github.io/2019/12/17/redis-distributed-lock/">分布式锁的实现之 redis 篇</a></li>
+<li><a target="_blank" rel="noopener" href="https://wendajiang.github.io/redis-distribute-lock/">Redis 分布式锁 [翻译]</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/throwable/p/14264804.html#%E5%B0%8F%E7%BB%93">冷饭新炒：理解Redisson中分布式锁的实现</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Lock/" rel="tag"># Lock</a>
+              <a href="/tags/Redis/" rel="tag"># Redis</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/java/Java-NIO/" rel="prev" title="Java NIO">
+                  <i class="fa fa-chevron-left"></i> Java NIO
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/java/Java-Agent/" rel="next" title="Java Agent">
+                  Java Agent <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"15cf10d7a26b896721755211f3d5602f"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

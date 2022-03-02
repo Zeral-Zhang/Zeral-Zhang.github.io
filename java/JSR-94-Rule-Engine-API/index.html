@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="文章节选部分并翻译自：Getting Started With the Java Rule Engine API (JSR 94): Toward Rule-Based Applications  Java 规则引擎 API (JSR 94) 规范是通过 Java Community Process (JCP) 项目开发的，它通过提供一个简单的 API 来访问来自 Java 平台标准版的规则引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JSR 94 Rule Engine API【翻译】">
+<meta property="og:url" content="https://www.zeral.cn/java/JSR-94-Rule-Engine-API/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="文章节选部分并翻译自：Getting Started With the Java Rule Engine API (JSR 94): Toward Rule-Based Applications  Java 规则引擎 API (JSR 94) 规范是通过 Java Community Process (JCP) 项目开发的，它通过提供一个简单的 API 来访问来自 Java 平台标准版的规则引擎">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/rule-engine/expert-system-program.jpeg">
+<meta property="og:image" content="https://www.zeral.cn/images/java/rule-engine/rule-based-system.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/rule-engine/inference-engine.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/rule-engine/resolve-conflict.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/rule-engine/rule-engine-inkscape_enterprise.png">
+<meta property="og:image" content="https://www.zeral.cn/images/java/rule-engine/rules-execution-trees.png">
+<meta property="article:published_time" content="2021-10-18T02:44:14.000Z">
+<meta property="article:modified_time" content="2022-03-01T16:06:45.438Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Rule Engine">
+<meta property="article:tag" content="JSR 94">
+<meta property="article:tag" content="Drools">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/rule-engine/expert-system-program.jpeg">
+
+
+<link rel="canonical" href="https://www.zeral.cn/java/JSR-94-Rule-Engine-API/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/java/JSR-94-Rule-Engine-API/","path":"java/JSR-94-Rule-Engine-API/","title":"JSR 94 Rule Engine API【翻译】"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>JSR 94 Rule Engine API【翻译】 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Rule-Engine"><span class="nav-number">2.</span> <span class="nav-text">Rule Engine</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AF%E8%AF%AD"><span class="nav-number">2.1.</span> <span class="nav-text">术语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A8%E7%90%86%E5%BC%95%E6%93%8E"><span class="nav-number">2.2.</span> <span class="nav-text">推理引擎</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E8%A7%84%E5%88%99%E5%BC%95%E6%93%8E%E7%9A%84%E6%97%B6%E9%97%B4%E3%80%81%E5%9C%B0%E7%82%B9%E5%92%8C%E5%8E%9F%E5%9B%A0"><span class="nav-number">3.</span> <span class="nav-text">使用规则引擎的时间、地点和原因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JSR-94"><span class="nav-number">4.</span> <span class="nav-text">JSR 94</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JSR-94-%E6%9E%B6%E6%9E%84"><span class="nav-number">5.</span> <span class="nav-text">JSR 94 架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86%E5%91%98-API"><span class="nav-number">5.1.</span> <span class="nav-text">规则管理员 API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%AE%A2%E6%88%B7%E7%AB%AF-API"><span class="nav-number">5.2.</span> <span class="nav-text">运行时客户端 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E5%AE%9E%E7%8E%B0"><span class="nav-number">6.</span> <span class="nav-text">参考实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Drools-engine"><span class="nav-number">6.1.</span> <span class="nav-text">Drools engine</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/JSR-94-Rule-Engine-API/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JSR 94 Rule Engine API【翻译】
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-10-18 10:44:14" itemprop="dateCreated datePublished" datetime="2021-10-18T10:44:14+08:00">2021-10-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-03-02 00:06:45" itemprop="dateModified" datetime="2022-03-02T00:06:45+08:00">2022-03-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>文章节选部分并翻译自：<a target="_blank" rel="noopener" href="https://www.oracle.com/technical-resources/articles/javase/javarule.html">Getting Started With the Java Rule Engine API (JSR 94): Toward Rule-Based Applications</a></p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="http://www.jcp.org/en/jsr/detail?id=94">Java 规则引擎 API (JSR 94)</a> 规范是通过 <a target="_blank" rel="noopener" href="http://www.jcp.org/">Java Community Process (JCP)</a> 项目开发的，它通过提供一个简单的 API 来访问来自 Java 平台标准版的规则引擎，从而为规则引擎定义了 Java 运行时 API（ Java SE）或 Java Platform Enterprise Edition（Java EE）Java 技术客户端。本文概述了 JSR 94，并讨论了如何将业务规则技术融入 Java 技术应用程序中。示例代码展示了开发基于规则的应用程序所涉及的工作。</p>
+<h2 id="引言">引言</h2>
+<p>许多业务应用程序必须应对市场经济的动态变化。例如，用于保险和银行业的应用程序必须能够适应在设计过程中没有人能够预测或计划的不可避免的市场变化。一个解决方案是拥有一个规则引擎，它根本上是一组工具，使业务分析师和开发人员能够根据组织的数据构建决策逻辑。规则引擎应用最终用户定义的规则和操作，而不会影响应用程序的运行方式。该应用程序是为处理单独设计的规则而构建的。</p>
+<p>规则引擎的示例包括 Drools、Fair Isaac Blaze Advisor、ILOG JRules 和 Jess，仅举几例。然而，缺乏标准可能是阻止企业使用基于规则的应用程序的主要因素。大多数规则引擎都有专有的 API，这使得它们很难与应用程序集成。如果不再支持某个规则引擎，而业务决定采用其他规则引擎，则需要重写大部分应用程序代码。JSR 94 尝试标准化 Java 技术的规则引擎实现。前面提到的四个规则引擎都支持 JSR 94。</p>
+<p>JSR 94 为规则管理和规则运行时 API 提供了指南，但它没有定义用于定义规则和操作的语言的指南。正在努力标准化通用规则语言，包括 <a target="_blank" rel="noopener" href="http://www.ruleml.org/">规则标记语言 (RuleML)</a>。</p>
+<span id="more"></span>
+<h2 id="Rule-Engine">Rule Engine</h2>
+<p><strong>规则引擎的基本思想是将业务或应用程序逻辑外部化。</strong> 规则引擎可以被视为一个复杂的 <em>if-then</em> 语句解释器。<em>if-then</em> 语句是规则。规则由条件和动作两部分组成：当条件满足时，动作被执行。<em>if</em> 部分包含条件（例如金额 &gt;=$100），<em>then</em> 部分包含操作（例如优惠折扣 5%）。规则引擎的输入是称为规则执行集和数据对象的规则集合。输出由输入决定，可能包括经过修改的原始输入数据对象、新数据对象和可能的副作用（例如向客户发送电子邮件）。</p>
+<p>规则引擎应该用于具有高度动态业务逻辑的应用程序以及允许最终用户编写业务规则的应用程序。规则引擎是高效决策的绝佳工具，因为它可以快速、可靠和重复地根据数以千计的事实做出决策。</p>
+<p>规则引擎允许对于在开发周期外的人制定的规则能够快速响应，快速部署。</p>
+<h3 id="术语">术语</h3>
+<ul>
+<li>
+<p><strong>规则 - Rule</strong>：<em>一组条件（condition），然后是一组动作（action）</em>。它代表了系统的逻辑。规则主要以 <em>if-then</em> 形式表示。它主要包含<strong>条件</strong>和<strong>动作</strong>两部分。规则有时也被称为<strong>作业（production）</strong>。</p>
+<blockquote>
+<p><strong>Rule = Condition + Action</strong></p>
+</blockquote>
+<p>条件也称为<strong>事实（fact）或前因（antecedents）或模式（pattern）</strong>。动作也被称为<strong>结果（consequent）</strong>。</p>
+<p>规则在以下原则上工作：</p>
+<ul>
+<li>它们是相互独立的</li>
+<li>很容易变更（修改、移除、增加）</li>
+<li>每个规则控制最小数量的所需信息，原子性</li>
+<li>可以允许不同背景的人协作</li>
+</ul>
+</li>
+<li>
+<p><strong>人类专家</strong>：相应业务领域的专家。这个人以规则的形式提供<strong>知识（Knowledge）</strong>。</p>
+<p>规则形式的知识：</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Rule</span> <span class="number">1</span>: 一个人是否有资格获得住房贷款？</span><br><span class="line"><span class="attribute">if</span>:</span><br><span class="line">   <span class="attribute">1</span>. 他的月薪超过 <span class="number">7</span>K。</span><br><span class="line">   <span class="attribute">2</span>. 他的征信评分超过 <span class="number">80</span>。</span><br><span class="line"><span class="attribute">then</span>:</span><br><span class="line">   <span class="attribute">1</span>. 获批房屋贷款。 </span><br><span class="line">   <span class="attribute">2</span>. 获批房屋贷款总额的 <span class="number">30</span>%。</span><br><span class="line"><span class="attribute">Rule</span> <span class="number">2</span>: 一个人是否有资格获得住房贷款？</span><br><span class="line"><span class="attribute">if</span>:</span><br><span class="line">   <span class="attribute">1</span>. 他的月薪超过 <span class="number">15</span>K。</span><br><span class="line">   <span class="attribute">2</span>. 他的征信评分超过 <span class="number">70</span>。</span><br><span class="line"><span class="attribute">then</span>:</span><br><span class="line">   <span class="attribute">1</span>. 获批房屋贷款。</span><br><span class="line">   <span class="attribute">2</span>. 获批房屋贷款总额的 <span class="number">60</span>%。   </span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>专家系统 - Expert System</strong>：它是一个使用人类专家的知识来解决问题并给出解决方案的程序。它也被称为基于规则的系统或者作业系统。</p>
+<p><img data-src="../../images/java/rule-engine/expert-system-program.jpeg" alt="Expert System Program"></p>
+</li>
+<li>
+<p><strong>推理引擎 - Inference Engine</strong>：它是专家系统的大脑，管理专家系统内部的大量规则和事实。它的工作是挑选规则并应用数据并生成解决方案。我们将详细讨论它。</p>
+</li>
+</ul>
+<p>规则引擎，也是一个专家系统程序，它对数据运行规则，如果有任何条件匹配，则执行相应的动作。</p>
+<p><img data-src="../../images/java/rule-engine/rule-based-system.png" alt="Rule Based System"></p>
+<p>在上图中，表明我们以规则（if-then 形式）的形式收集知识并将它们放置在任意的存储系统中，如文件或数据库。现在推理引擎根据需求选择规则并在输入数据或查询上运行它们。如果任何模式/条件匹配，则它执行相应的操作并返回结果或解决方案。</p>
+<h3 id="推理引擎">推理引擎</h3>
+<p>推理引擎是专家系统的核心组成部分，它将逻辑规则应用于知识库，从已知事实中推断出新信息。推理引擎通常以两种模式运行，它们是：</p>
+<ul>
+<li>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Forward_chaining">正向推理 - Forward chaining</a></p>
+<p>数据驱动，其基本思想是：从问题已有的事实（初始证据）出发，正向使用规则，当规则的条件部分与已有的事实匹配时，就把该规则作为可用规则放入候选规则队列中，然后通过冲突消解，在候选队列中选择一条规则作为启用规则进行推理，并将其结论放入数据库中，作为下一步推理时的证据。如此重复这个过程，直到再无可用规则可被选用或者求得了所要求的解为止。</p>
+</li>
+</ul>
+<p>例如：假如我们想根据给定的规则和数据知道名字为 Fritz 宠物的肤色。</p>
+<p>Rules：</p>
+<figure class="highlight tp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>. if <span class="keyword">X</span> 呱呱叫 and <span class="keyword">X</span> 吃苍蝇 - then <span class="keyword">X</span> 是一只青蛙</span><br><span class="line"><span class="number">2</span>. if <span class="keyword">X</span> 啁啾叫 - then <span class="keyword">X</span> 是金丝雀</span><br><span class="line"><span class="number">3</span>. if <span class="keyword">X</span> 是一只青蛙 - then <span class="keyword">X</span> 是绿色的</span><br><span class="line"><span class="number">4</span>. if <span class="keyword">X</span> 是金丝雀 - then <span class="keyword">X</span> 是黄色的</span><br></pre></td></tr></table></figure>
+<p>Data:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">1.</span> Fritz 呱呱叫</span><br><span class="line"><span class="bullet">2.</span> Fritz 吃苍蝇</span><br></pre></td></tr></table></figure>
+<p>根据给定的规则和数据我们可以提取到以下信息：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Fritz</span> 是青蛙。</span><br><span class="line">Fritz 是绿色的。</span><br></pre></td></tr></table></figure>
+<ul>
+<li>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Backward_chaining">反向推理 - Backward chaing</a></p>
+<p>目标驱动，它是首先提出某个假设，然后寻找支持该假设的证据，若所需的证据都能找到，说明原假设是正确的；若无论如何都找不到所需要的证据，则说明原假设不成立，此时需要另做新的假设。</p>
+</li>
+</ul>
+<p>还有一类称为 <em><strong>双向推理 - Hybrid chaining</strong></em>，它是正向和反向推理的组合。</p>
+<p>推理引擎的程序分三个阶段工作，以对给定数据执行规则。</p>
+<p><img data-src="../../images/java/rule-engine/inference-engine.png" alt="Inference Engine"></p>
+<p><strong>阶段 1 — 匹配 Match</strong>：在此阶段，推理引擎将事实和数据与规则集进行匹配。这个过程称为模式匹配。</p>
+<p>我们可以用于模式匹配的算法有：</p>
+<ul>
+<li>Linear</li>
+<li>Rete</li>
+<li>Treat</li>
+<li>Leaps</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://docs.jboss.org/drools/release/7.27.0.Final/drools-docs/html_single/index.html">Drools</a> 是规则引擎的实现之一，使用 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Rete_algorithm">Rete 算法</a>变种 <a target="_blank" rel="noopener" href="https://docs.jboss.org/drools/release/latestFinal/drools-docs/html_single/index.html#phreak-algorithm-con_decision-engine">Phreak 算法</a> 进行模式匹配。它是模式匹配的最佳算法之一。</p>
+<p><em>第一阶段的输出是一个冲突集（Conflict Set）</em>。冲突集意味着，对于相同的事实或条件，可能满足不止一个规则。所以它返回冲突规则集。</p>
+<p><strong>阶段 2 — 解决 Resolve</strong>：在此阶段，推理引擎管理冲突规则的顺序。它解决了冲突并给出了选定的规则。为了解决冲突，它可以使用以下任何算法。</p>
+<ul>
+<li>Lex</li>
+<li>Recency</li>
+<li>MEA</li>
+<li>Refactor</li>
+<li>Priority wise</li>
+</ul>
+<p><img data-src="../../images/java/rule-engine/resolve-conflict.png" alt="Resolve Conflict"></p>
+<p><strong>阶段 3 — 执行 Execute</strong>：在此阶段，推理引擎仅对给定数据运行所选规则的动作，并将输出/结果返回给客户端。</p>
+<h2 id="使用规则引擎的时间、地点和原因">使用规则引擎的时间、地点和原因</h2>
+<p>规则引擎在应用程序中用于替换和管理一些业务逻辑。它们最适用于业务逻辑过于动态而无法在源代码级别进行管理的应用程序——也就是说，业务策略的更改需要立即反映在应用程序中。保险（例如保险评级）、金融服务（贷款、欺诈检测、索赔路由和管理）、政府（申请流程和税收计算）、电信客户服务和计费（需要的长途电话促销）等领域的应用集成到计费系统中）、电子商务（个性化用户体验）等都可以从使用规则引擎中受益匪浅。</p>
+<p>基于规则的应用程序通过传入要执行的规则集来与规则引擎进行通信。然后，应用程序可以检查结果并将其显示给最终用户或执行进一步处理。规则引擎根据规则所需的输入以及从先前规则的评估中获得的结果来确定何时评估每个规则。您不需要指定规则的顺序或依赖关系。</p>
+<p>例如，在 Java EE 企业应用程序中，规则可以适合如下应用程序：</p>
+<ul>
+<li>在应用层管理动态业务逻辑和任务流</li>
+<li>在表现层自定义页面流程和工作流程，以及根据会话状态构建自定义页面</li>
+</ul>
+<p>为您的应用程序采用基于规则的方法具有以下优势：</p>
+<ul>
+<li>代表策略的规则很容易传达和理解。</li>
+<li>规则比传统的编程语言保持更高级别的独立性。</li>
+<li>规则将知识与其实现逻辑分开。</li>
+<li>无需更改源代码即可更改规则；因此，无需重新编译应用程序的代码。</li>
+</ul>
+<p>然而，这些好处并非没有代价。与任何工具一样，将规则引擎集成到您的应用程序中的决定应基于成本与收益。成本包括学习曲线以及在应用程序和规则引擎之间构建接口所涉及的工作。此外，不同的规则引擎使用不同的格式和语法来定义规则。因此，如果组织决定从一种规则引擎转移到另一种规则引擎，业务分析师和开发人员必须学习和了解另一种工具的操作。</p>
+<h2 id="JSR-94">JSR 94</h2>
+<p>JSR 94 定义了一个简单的 API，用于从 Java SE 或 Java EE 客户端访问规则引擎。它提供 API</p>
+<ul>
+<li>注册和注销规则</li>
+<li>解析规则</li>
+<li>检查规则元数据</li>
+<li>执行规则</li>
+<li>检索结果</li>
+<li>过滤结果</li>
+</ul>
+<p>请注意，JSR 94 <em>未</em>对以下内容进行标准化：</p>
+<ul>
+<li>规则引擎本身</li>
+<li>规则的执行流程</li>
+<li>用于描述规则的语言</li>
+<li>Java EE 技术的部署机制</li>
+</ul>
+<p>换句话说，它没有标准化规则执行的语义。</p>
+<h2 id="JSR-94-架构">JSR 94 架构</h2>
+<p>API 定义在两个主要包中：</p>
+<ul>
+<li><strong>规则管理员 API</strong>：这个 API 在 <code>javax.rules.admin</code> 包中定义 ，提供可用于加载规则和关联动作来作为执行集的类。一个 <em>rule execution set - 规则执行集</em>是规则的集合。规则可以从外部资源加载，例如 URI、一个 <code>InpuTStream</code>、一个 XML <code>Element</code>、一个二元抽象语法树或一个 <code>Reader</code> 。它还提供了注册和取消注册规则执行集的方法。此包还可用于定义对执行集的权限以提供访问授权。</li>
+<li><strong>运行时客户端 API</strong>：此 API 在 <code>javax.rules</code> 包中定义 ，提供客户端使用的类来运行规则并获取结果。只能访问使用规则管理器 API 注册的规则。此 API 使客户端能够获取规则会话并在该会话中执行规则。</li>
+</ul>
+<p>JSR 94 专家组决定使用两个单独的包来加强以下区别：(1) 执行管理员 API 先前加载并注册到运行时环境中的规则执行集和 (2) 动态加载和执行外部资源（只能通过使用规则管理员 API 来执行）。此外，分离允许对用户群进行更细粒度的控制，允许一些用户执行规则但不能管理它们。</p>
+<h3 id="规则管理员-API"><strong>规则管理员 API</strong></h3>
+<p>此 API 使用 <code>RuleServiceProvider</code> 该类获取 <code>RuleAdministrator</code> 接口的实例，该实例提供注册和取消注册执行集的方法。管理员 API 的高级功能如下：</p>
+<ul>
+<li>它通过 <code>RuleServiceProvider</code> 类获取接口 <code>RuleAdministrator</code> 的实例</li>
+<li>它从外部可序列化或不可序列化的资源创建一个 <code>RuleExecutionSet</code>，包括
+<ul>
+<li><code>org.w3c.dom.Element</code> 用于从 XML 子文档中读取</li>
+<li><code>java.io.InputStream</code> 用于从二进制流中读取</li>
+<li><code>java.lang.Object</code> 用于从特定于供应商的抽象语法树中读取</li>
+<li><code>java.io.Reader</code> 用于从字符流中读取</li>
+<li><code>java.lang.String</code> 用于从 URI 中读取</li>
+</ul>
+</li>
+<li>它根据 URI 注册 <code>RuleExecutionSet</code> 对象以供 <code>RuleRuntime</code> 使用。</li>
+<li>它根据 URI 取消注册 <code>RuleExecutionSet</code> 对象，因此不再可以从 <code>RuleRuntime</code> 访问它。</li>
+<li>它通过从 <code>RuleExecutionSet</code> 检索 <code>Rule</code> 对象列表来查询规则执行集的结构元数据。</li>
+<li>它在规则执行集和规则上设置和获取应用程序或供应商特定的属性。</li>
+</ul>
+<h3 id="运行时客户端-API"><strong>运行时客户端 API</strong></h3>
+<p>此 API 以类似于 Java 数据库连接 (JDBC) 软件的方式提供对规则引擎 API 的供应商实现的访问。供应商通过 <code>RuleServiceProvider</code> 类向客户公开他们的规则引擎实现。此类提供对运行时和管理 API 的访问。供应商提供唯一标识实现的规则服务提供程序 URL。所有规则服务提供者都应该注册一个 <code>RuleServiceProviderManager </code> 对象，以便客户端可以访问。</p>
+<p>这个 API 的核心是 <code>RuleRuntime</code> 接口，它提供了允许客户端创建 <code>RuleSession</code> 用于运行规则的方法。<code>RuleSession</code> 是客户端和规则引擎之间的运行时连接；它与单个规则执行集相关联，可能会消耗规则引擎资源，但当客户端不再需要规则会话时，必须明确释放规则会话。因此，规则会话做了两件事：</p>
+<ul>
+<li>它提供了一种机制来访问向规则服务提供者注册的所有规则执行集的列表。</li>
+<li>它定义了客户端希望建立的会话类型：有状态或无状态。
+<ul>
+<li><code>statelessRuleSession</code> 无状态规则会话提供了高性能和简单的 API，该 API 执行具有输入对象列表的规则执行集。无状态规则会话方法是幂等的。</li>
+<li><code>statefulRuleSession</code> 有状态规则会话允许客户端与规则执行集合进行长时间的交互。输入对象可以逐步添加到会话中，输出对象也可以被重复查询。</li>
+</ul>
+</li>
+</ul>
+<p>Runtime Client API 的高级功能如下：</p>
+<ul>
+<li>它通过 <code>RuleServiceManager</code> 类获取规则引擎供应商的规则服务提供者的实例 。</li>
+<li>它通过 <code>RuleServiceProvider</code> 类获取接口 <code>RuleRuntime</code> 的实例 。</li>
+<li>它通过 <code>RuleRuntime</code> 创建一个 <code>RuleSession</code>。</li>
+<li>它获取已注册 URI 的 <code>java.util.List</code>。</li>
+<li>它与获取的 <code>RuleSession</code> 交互。</li>
+<li>它通过 <code>RuleExecutionSetMetadata</code> 接口检索 <code>RuleSession</code> 的元数据。</li>
+<li>它提供了一个 <code>ObjectFilter</code> 接口来过滤执行 <code>RuleExecutionSet</code> 的结果。</li>
+<li>它使用 <code>Handle</code> 实例来访问添加到 <code>statefulRuleSession</code> 的对象。</li>
+</ul>
+<h2 id="参考实现">参考实现</h2>
+<p>Drools 是一个业务规则管理系统，具有基于正向推理和反向推理的规则引擎，允许快速可靠地评估业务规则和复杂事件处理。规则引擎也是创建专家系统的基本构件，在人工智能中，专家系统是模拟人类专家决策能力的计算机系统。</p>
+<p>Drools 支持多种类型资产，您可以使用这些资产为决策服务定义业务决策规则。每个决策创作资产都有不同的优势，您可能更喜欢使用一种资产或多种资产的组合，具体取决于您的目标和需求。</p>
+<p>这些资产类型包括：决策模型和符号 (DMN) 模型、引导决策表、电子表格决策表、引导规则、引导规则模版、DRL 规则、预测模型标记语言 (PMML) 模型。</p>
+<p>一个简单的 DRL 规则文件结构如下，它由条件和动作组成：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">rule <span class="string">&quot;name&quot;</span> </span><br><span class="line"></span><br><span class="line">when     </span><br><span class="line">  (Conditions) - also called Left Hand Side of the <span class="title function_">Rule</span> <span class="params">(LHS)</span> </span><br><span class="line">then     </span><br><span class="line">  (Actions/Consequence) - also called Right Hand Side of the <span class="title function_">Rule</span> <span class="params">(RHS)</span> </span><br><span class="line">end </span><br></pre></td></tr></table></figure>
+<h3 id="Drools-engine">Drools engine</h3>
+<p>Drools 引擎的基本功能是将传入的数据或事实与规则的条件进行匹配，并确定是否以及如何执行规则。</p>
+<p>Drools 引擎使用以下基本组件运行：</p>
+<ul>
+<li><strong>Rules</strong>：规则，您定义的业务规则或 DMN 决策。所有规则必须至少包含触发规则的条件和规则规定的动作。</li>
+<li><strong>Facts</strong>：事实，在 Drools 引擎中输入或更改的数据，Drools 引擎与规则条件匹配以执行适用的规则。</li>
+<li><strong>Production memory</strong>：作业内存，Rules 存储在 Drools 引擎中的位置。</li>
+<li><strong>Working memory</strong>：工作内存，Facts 存储在 Drools 引擎中的位置。</li>
+<li><strong>Agenda</strong>：议程，激活的规则被注册和排序（如果适用）以准备执行的位置。</li>
+</ul>
+<p>当业务用户或自动化系统在 Drools 中添加或更新与规则相关的信息时，该信息以一个或多个事实的形式插入到 Drools 引擎的工作内存中。Drools 引擎将这些事实与存储在作业内存中的规则条件进行匹配，以确定符合条件的规则执行。 （这种将事实与规则匹配的过程通常称为<em>模式匹配 - pattern matching</em>。）当满足规则条件时，Drools 引擎在议程中激活并注册规则，然后 Drools 引擎对优先或冲突的规则进行排序以准备执行。</p>
+<p>下图说明了 Drools 引擎的这些基本组件：</p>
+<p><img data-src="../../images/java/rule-engine/rule-engine-inkscape_enterprise.png" alt="rule-engine-inkscape_enterprise"></p>
+<p>Drools 规则引擎会将规则转换成执行树，每个规则条件都被拆分为小块，在树结构中连接并重用。每当数据被传送到规则引擎，它将在此类似的树中进行评估并最终到达动作节点，这些规则将会标记为该数据特定的执行规则集。</p>
+<p><img data-src="../../images/java/rule-engine/rules-execution-trees.png" alt="Rules Execution Trees"></p>
+<p>同样的 Drools 中的会话也分为有状态和无状态：</p>
+<ul>
+<li>Stateless Session 无状态会话，无状态会话是<strong>不使用推理</strong>来随时间对事实进行迭代更改的会话。在无状态会话中，来自先前会话调用（先前会话状态）的数据在会话调用之间被丢弃，而在有状态会话中，该数据被保留。无状态会话的行为类似于函数，因为它产生的结果由 KIE 基础的内容和传递到会话以在特定时间点执行的数据确定。</li>
+<li>Stateful Session 有状态会话，它<strong>使用推理</strong>随着时间的推移对事实进行迭代更改。在有状态的会话中，来自会话的先前调用（先前的会话状态）的数据在会话调用之间保留，而在无状态会话中，该数据被丢弃。有状态会话会保留之前输入的 Facts 的 Working memory 和当前输入的 Facts 来做联合评判、推理。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Rule-Engine/" rel="tag"># Rule Engine</a>
+              <a href="/tags/JSR-94/" rel="tag"># JSR 94</a>
+              <a href="/tags/Drools/" rel="tag"># Drools</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/methodology/AOP-Alliance/" rel="prev" title="AOP 联盟白皮书【翻译】">
+                  <i class="fa fa-chevron-left"></i> AOP 联盟白皮书【翻译】
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/java/Unsafe.park-vs-Object.wait/" rel="next" title="Unsafe.park vs Object.wait">
+                  Unsafe.park vs Object.wait <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"dde0100196320ceebd0db5c90de9d4a9"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

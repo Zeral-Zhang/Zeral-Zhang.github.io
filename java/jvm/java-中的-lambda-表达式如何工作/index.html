@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="lambda 表达式在 Java 代码和 JVM 内部是什么样的？显然，它是某种类型的值，而 Java 只允许两种类型的值：原始类型和对象引用。lambda 显然不是原始类型，因此 Lambda 表达式必须是某种返回对象引用的表达式。 让我们看一个例子： 12345678910public class LambdaExample &amp;#123;    private static final Str">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 中的 lambda 表达式如何工作？">
+<meta property="og:url" content="https://www.zeral.cn/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="lambda 表达式在 Java 代码和 JVM 内部是什么样的？显然，它是某种类型的值，而 Java 只允许两种类型的值：原始类型和对象引用。lambda 显然不是原始类型，因此 Lambda 表达式必须是某种返回对象引用的表达式。 让我们看一个例子： 12345678910public class LambdaExample &amp;#123;    private static final Str">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/java/stream/lambda-invokedynamic.svg">
+<meta property="article:published_time" content="2020-06-28T06:40:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.360Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Lambda">
+<meta property="article:tag" content="invokedynamic">
+<meta property="article:tag" content="CallSite">
+<meta property="article:tag" content="MethodHandle">
+<meta property="article:tag" content="BootstrapMethod">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/java/stream/lambda-invokedynamic.svg">
+
+
+<link rel="canonical" href="https://www.zeral.cn/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/","path":"java/jvm/java-中的-lambda-表达式如何工作/","title":"Java 中的 lambda 表达式如何工作？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Java 中的 lambda 表达式如何工作？ | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Call-sites"><span class="nav-number">1.</span> <span class="nav-text">Call sites</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Method-handles"><span class="nav-number">2.</span> <span class="nav-text">Method handles</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bootstrapping"><span class="nav-number">3.</span> <span class="nav-text">Bootstrapping</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E7%A0%81-lambda-%E7%9A%84-bootstrap-%E6%96%B9%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">解码 lambda 的 bootstrap 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-lambda-metafactories"><span class="nav-number">5.</span> <span class="nav-text">The lambda metafactories</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BF%BB%E8%AF%91%E7%AD%96%E7%95%A5"><span class="nav-number">6.</span> <span class="nav-text">翻译策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-7"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9D%9F"><span class="nav-number">8.</span> <span class="nav-text">结束</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/java/jvm/java-%E4%B8%AD%E7%9A%84-lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java 中的 lambda 表达式如何工作？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-06-28 14:40:00" itemprop="dateCreated datePublished" datetime="2020-06-28T14:40:00+08:00">2020-06-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>lambda 表达式在 Java 代码和 JVM 内部是什么样的？显然，它是某种类型的值，而 Java 只允许两种类型的值：原始类型和对象引用。lambda 显然不是原始类型，因此 Lambda 表达式必须是某种返回对象引用的表达式。</p>
+<p>让我们看一个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LambdaExample</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">HELLO</span> <span class="operator">=</span> <span class="string">&quot;Hello World!&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">Runnable</span> <span class="variable">r</span> <span class="operator">=</span> () -&gt; System.out.println(HELLO);</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(r);</span><br><span class="line">        t.start();</span><br><span class="line">        t.join();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>熟悉内部类的程序员可能会猜测 lambda 实际上只是 <code>Runnable</code> 匿名内部类的语法糖。但是，编译以上类将生成一个文件：<code>LambdaExample.class</code>。该类中并没有其他类文件。</p>
+<span id="more"></span>
+<p>这意味着 lambda 不是内部类。相反，它们必须是其他某种机制。实际上，通过 <code>javap -c -p</code> 反编译字节码揭示了两件事。</p>
+<p>首先是以下事实：lambda 主体已被编译为私有的静态方法，该方法出现在主类中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> lambda$main$<span class="number">0</span>();</span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: getstatic     #<span class="number">7</span>                  <span class="comment">// Field java/lang/System.out:Ljava/io/PrintStream;</span></span><br><span class="line">       <span class="number">3</span>: ldc           #<span class="number">9</span>                  <span class="comment">// String Hello World!</span></span><br><span class="line">       <span class="number">5</span>: invokevirtual #<span class="number">10</span>                 <span class="comment">// Method java/io/PrintStream.println:(Ljava/lang/String;)V</span></span><br><span class="line">       <span class="number">8</span>: <span class="keyword">return</span></span><br></pre></td></tr></table></figure>
+<p>关于字节码的第二件事要注意的是 main 方法的形式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(java.lang.String[])</span> <span class="keyword">throws</span> java.lang.Exception;</span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: invokedynamic #<span class="number">2</span>,  <span class="number">0</span>              <span class="comment">// InvokeDynamic #0:run:()Ljava/lang/Runnable;</span></span><br><span class="line">       <span class="number">5</span>: astore_1</span><br><span class="line">       <span class="number">6</span>: <span class="keyword">new</span>           #<span class="number">3</span>                  <span class="comment">// class java/lang/Thread</span></span><br><span class="line">       <span class="number">9</span>: dup</span><br><span class="line">      <span class="number">10</span>: aload_1</span><br><span class="line">      <span class="number">11</span>: invokespecial #<span class="number">4</span>                  <span class="comment">// Method java/lang/Thread.&quot;&lt;init&gt;&quot;:(Ljava/lang/Runnable;)V</span></span><br><span class="line">      <span class="number">14</span>: astore_2</span><br><span class="line">      <span class="number">15</span>: aload_2</span><br><span class="line">      <span class="number">16</span>: invokevirtual #<span class="number">5</span>                  <span class="comment">// Method java/lang/Thread.start:()V</span></span><br><span class="line">      <span class="number">19</span>: aload_2</span><br><span class="line">      <span class="number">20</span>: invokevirtual #<span class="number">6</span>                  <span class="comment">// Method java/lang/Thread.join:()V</span></span><br><span class="line">      <span class="number">23</span>: <span class="keyword">return</span></span><br></pre></td></tr></table></figure>
+<p>请注意，字节码以 <code>invokedynamic</code> 调用开始。此操作码已添加到版本 7 的 Java 中（这是有史以来唯一添加到 JVM 字节码的操作码）。我在“<a target="_blank" rel="noopener" href="https://blogs.oracle.com/javamagazine/real-world-bytecode-handling-with-asm?source=:em:nw:mt:::RC_WWMK200429P00043:NSL400105991">使用 ASM 的操作字节码</a>”和“<a target="_blank" rel="noopener" href="https://www.oracle.com/a/ocom/docs/corporate/java-magazine-nov-dec-2017.pdf#page=67?source=:em:nw:mt:::RC_WWMK200429P00043:NSL400105991">了解使用 invokedynamic 进行 Java 方法调用</a>”中讨论了方法调用，您可以将其作为本文的附带内容阅读。</p>
+<p>理解此代码中的 <code>invokedynamic</code> 调用的最直接方法是将其视为对某种特殊形式的 factory 方法的调用。方法调用返回实现 <code>Runnable</code> 的某种类型的实例。确切的类型没有在字节码中指定，从根本上来说也没什么关系。</p>
+<p>实际类型在编译时不存在，将在运行时按需创建。为了更好地说明这一点，我将讨论三种结合使用以实现该效果的机制：<strong>调用站点(call sites)</strong>，<strong>方法句柄(method handles)<strong>和</strong>引导程序(bootstrapping)</strong>。</p>
+<blockquote>
+<p>🤔 <strong>句柄</strong>这个翻译有点生涩，直接理解 Handle 即可。</p>
+</blockquote>
+<h2 id="Call-sites">Call sites</h2>
+<p>字节码中方法调用指令发生的位置称为调用站点。</p>
+<p>调用站点持有一个 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/invoke/MethodHandle.html"><code>MethodHandle</code></a> 变量，作为它的调用目标，链接到调用站点的 <code>invokedynamic</code> 调用将会全部委托给 <code>MethodHandle</code>。调用站点可能和多个 <code>invokedynamic</code> 关联，也可能是“自由浮动”的，没有任何关联。无论哪种情况，它都可以通过 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/invoke/CallSite.html#:~:text=handle%20called%20its-,dynamic%20invoker,-.">dynamic Invoker</a> 方法来调用。</p>
+<p>传统上，Java 字节码具有四个处理不同方法调用情况的操作码：</p>
+<ul>
+<li><strong>(invokestatic)</strong> 静态方法，用于调用类方法</li>
+<li><strong>(invokevirtual)</strong> “常规”调用，用于调用对象的实例方法（可能涉及方法重写的虚拟调用）</li>
+<li><strong>(invokeinterface)</strong> 接口查找，用以调用接口方法，在运行时搜索一个实现了这个接口方法的对象，找出适合的方法进行调用。</li>
+<li><strong>(invokespecial)</strong> “特殊”调用，用于调用一些需要特殊处理的实例方法（对于不需要重写解析的情况，例如超类调用和私有方法）。</li>
+</ul>
+<p><strong>(invokedynamic)</strong> 相比于之前的四条指令，他们的分派逻辑都是固化在 JVM 内部，而 invokedynamic 则用于处理新的方法分派：它允许应用级别的代码来确定执行哪一个方法调用，只有在调用要执行的时候，才会进行这种判断，从而达到动态语言的支持。</p>
+<p>在这里，<code>invokedynamic</code> 调用站点在 Java 堆中表示为 <code>CallSite</code> 对象。这并不奇怪：自 Java 1.1 开始，Java 就使用了反射 API 做类似的事情，其中包含诸如 <code>Method</code> 之类的类型，Java 在运行时具有许多动态行为，因此 Java 现在正在对调用站点以及其他运行时类型信息进行建模的想法应该就不足为奇了。</p>
+<p>每个 <code>invokedynamic</code> 指令的调用被称为<em>动态调用站点（dynamic call site）</em>，动态调用站点最开始是未链接的状态，在这种状态下，调用站点没有要调用的目标方法。在 JVM 可以执行动态调用站点（<code>invokedynamic</code> 指令）之前，必须首先链接调用站点。链接是通过调用 <code>bootstrap</code> 方法来完成的，该方法获得调用站点的静态信息内容，并且必须生成一个提供调用站点行为的方法句柄（<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/invoke/MethodHandle.html"><code>method handle</code></a>）。</p>
+<p>当执行到 <code>invokedynamic</code> 指令时，JVM 会找到相应的调用站点对象（或者，如果以前从未执行过此调用站点，它将创建一个新对象）。</p>
+<p>调用站点对象是必要的间接级别，允许关联的调用目标（即方法句柄）随时间变化。</p>
+<p><code>CallSite</code>（抽象类）有三个可用的子类：<code>ConstantCallSite</code>，<code>MutableCallSite</code> 和 <code>VolatileCallSite</code>。基类仅具有包访问权限构造函数，而三个子类型具有公共构造函数。这意味着 <code>CallSite</code> 不能由用户代码直接子类化，但是可以继承其子类。例如，<code>JRuby</code> 语言使用 <code>invokedynamic</code> 作为其实现的一部分，并继承了 <code>MutableCallSite</code> 子类。</p>
+<p><strong>注意</strong>：某些 <code>invokedynamic</code> 调用站点实际上只是延迟计算，并且目标对象的方法在第一次执行后就不会改变。这是 <code>ConstantCallSite</code> 的非常常见的用例，其中包括 lambda 表达式。</p>
+<p>这意味着在程序的整个生命周期中，非常量调用站点可以改变不同的方法句柄作为其目标 <code>setTarget(MethodHandle newTarget)</code>，新目标必须与前一个目标具有相同的<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/lang/invoke/MethodHandle.html#type--">方法类型（MethodType）</a>。</p>
+<h2 id="Method-handles">Method handles</h2>
+<p>反射是一种用于执行运行时技巧的强大技术，但它具有许多设计缺陷。反射的一个关键问题是性能，尤其是因为即时调用（JIT）编译器难以内联（<code>inlining</code>）反射调用。</p>
+<p>这很不好，因为内联在几种方面对 JIT 编译非常重要，其中最重要的一点是因为内联通常是首次应用优化，并且为其他技术打开了大门（例如转义分析和无效代码消除）。</p>
+<p>第二个问题是，每次遇到 <code>Method.invoke()</code> 的调用站点时，都会链接反射调用。例如，这意味着执行安全访问检查。这是非常浪费的，因为在第一次调用时检查通常会成功还是失败，并且如果成功，它将在程序的整个生命周期中继续这样做。然而，反射却又一次又一次地链接调用。因此，反射通过重新链接和浪费 CPU 时间而导致许多不必要的成本。</p>
+<p>为了解决这些问题（以及其他问题），Java 7 引入了一个新的 API，即 <code>java.lang.invoke</code>，由于它引入的主类的名称，通常将其称为<em>方法句柄 (method handles)</em>。</p>
+<p>方法句柄（MH）是 Java 版本的类型安全的函数指针。类似于 Java 反射中的 Method 对象。MH 具有实际上与反射执行底层方法相同的 <code>invoke()</code> 方法。</p>
+<p>一方面，MH 实际上只是一种更有效的反射机制，它更接近本质。反射 API 中由对象表示的任何内容都可以转换为等效的 MH。例如，可以使用 <code>Lookup.unreflect(Method m)</code> 将反射方法对象转换为 MH。创建的 MH 通常是访问基础方法的更有效方法。</p>
+<p>可以通过 <code>MethodHandles</code> 类中的静态辅助方法以多种方式来修改 MH，例如通过组合和方法参数的部分绑定（柯理化），它还提供了一个静态的查询工厂类用于构建方法句柄。</p>
+<p>通常，方法链接需要类型描述符的精确匹配。但是，MH 上 的 <code>invoke()</code> 方法具有特殊的多态签名，无论调用的方法的签名如何，都允许进行链接。</p>
+<p>在运行时，<code>invoke()</code> 调用站点上的签名应该看起来和你正在直接调用引用的方法一样，这避免了反射调用通常会发生的类型转换和自动装箱成本。</p>
+<p>由于 Java 是一种静态类型的语言，因此出现了一个问题，即当使用这种动态的机制时，可以保留多少类型安全性。MH API 通过使用一种称为 <code>MethodType</code> 的类型来解决此问题，该类型是方法采用的参数的不可变表示：<strong>方法的签名</strong>。</p>
+<p>MH 的内部实现在 Java 8 的生命周期内进行了更改。新的实现称为 lambda 形式，<strong>它提供了显着的性能提升，现在 MH 在许多用例中都比反射更好。</strong></p>
+<h2 id="Bootstrapping">Bootstrapping</h2>
+<p>字节码指令流中<strong>第一次</strong>遇到每个特定的 <code>invokedynamic</code> 调用站点时，JVM 不知道它的目标是哪个方法。实际上，没有与该指令关联的调用站点对象。</p>
+<p>调用站点需要被*引导（bootstrapped）*来完成链接，并且 JVM 通过运行引导方法 <code>bootstrap method（BSM）</code>生成并返回调用站点对象来实现此目的。</p>
+<p>每个 <code>invokedynamic</code> 调用站点都有与其关联的 BSM，该 BSM 存储在类文件的单独区域中。这些方法允许用户代码在运行时以编程方式确定链接。</p>
+<p>链接首先解析引导方法的常量池条目，并解析动态调用站点的类型描述符的 <code>MethodType</code> 对象。此解析过程可能会触发类加载。因此，如果类加载失败，它可能会引发错误。链接不会触发类初始化。</p>
+<p>反编译 <code>invokedynamic</code> 调用（例如我在 Runnable 的原始示例中的调用）表明它具有以下形式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0: invokedynamic #2,  0</span><br></pre></td></tr></table></figure>
+<p>在类文件的常量池中，请注意，条目 <code>#2</code> 是类型 <code>CONSTANT_InvokeDynamic</code> 的常量。常量池的相关部分如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#2 = InvokeDynamic      #0:#31</span><br><span class="line">   ...</span><br><span class="line">  #31 = NameAndType        #46:#47        // run:()Ljava/lang/Runnable;</span><br><span class="line">  #46 = Utf8               run</span><br><span class="line">  #47 = Utf8               ()Ljava/lang/Runnable;</span><br></pre></td></tr></table></figure>
+<p>常数中存在 0 是一个提示。常量池条目从 1 开始编号，因此 0 会提醒您实际的 BSM 位于类文件的另一部分。</p>
+<p>对于 lambda，<code>NameAndType</code> 条目采用特殊形式。名称是任意的，但是类型签名包含一些有用的信息。</p>
+<p>返回类型对应于 <code>invokedynamic</code> 工厂的返回类型。它是 lambda 表达式的目标类型。同样，参数列表由 lambda 捕获的元素类型组成。对于无状态 lambda，返回类型将始终为空。只有 Java 闭包才会有参数存在。</p>
+<p>BSM 至少需要接受三个参数并返回 <code>CallSite</code>。标准参数是以下类型：</p>
+<ul>
+<li><code>MethodHandles.Lookup</code>：发生调用站点的类上的查找对象</li>
+<li><code>String</code>: <code>NameAndType</code> 中提到的名称</li>
+<li><code>MethodType</code>：<code>NameAndType</code> 中的已解析类型描述符</li>
+</ul>
+<p>除了这几个参数，后面的参数是 BSM 所需的任何其他参数。这些在文档中称为附加静态参数。</p>
+<p>BSM 的普遍用例允许一种非常灵活的机制，非 Java 语言实现者可以使用这种机制。但是，Java 语言没有提供用于生成任意 <code>invokedynamic</code> 调用站点的语言级别的构造。</p>
+<p>对于 lambda 表达式，BSM 采用一种特殊形式，为了充分理解该机制的工作原理，我将对其进行更仔细的研究。</p>
+<h2 id="解码-lambda-的-bootstrap-方法">解码 lambda 的 bootstrap 方法</h2>
+<p>对 <code>javap</code> 使用 <code>-v</code> 参数可查看引导程序方法。这是必需的，因为引导程序方法位于类文件的特殊部分中，并且将引用返回到主常量池中。对于这个简单的 <code>Runnable</code> 示例，它有一个引导程序方法（BSM）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">BootstrapMethods:</span><br><span class="line">  0: #28 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:</span><br><span class="line">        (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;</span><br><span class="line">         Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;</span><br><span class="line">         Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;</span><br><span class="line">    Method arguments:</span><br><span class="line">      #29 ()V</span><br><span class="line">      #30 REF_invokeStatic LambdaExample.lambda$main$0:()V</span><br><span class="line">      #29 ()V</span><br></pre></td></tr></table></figure>
+<p>有点难以理解，所以让我们对其进行解码。</p>
+<p>此调用站点的引导方法是常量池中的条目 <code>#28</code>。这是 <code>MethodHandle</code> 类型的条目（一种常量池类型，已在 Java 7 中添加到标准中）。现在，将其与字符串函数示例的情况进行比较：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">0: #27 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:</span><br><span class="line">        (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;</span><br><span class="line">         Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;</span><br><span class="line">         Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;</span><br><span class="line">    Method arguments:</span><br><span class="line">      #28 (Ljava/lang/Object;)Ljava/lang/Object;</span><br><span class="line">      #29 REF_invokeStatic StringFunction.lambda$static$0:(Ljava/lang/String;)Ljava/lang/Integer;</span><br><span class="line">      #30 (Ljava/lang/String;)Ljava/lang/Integer;</span><br></pre></td></tr></table></figure>
+<p>将用作 BSM 的方法句柄与静态方法 <code>LambdaMetafactory.metafactory(...)</code> 相同。</p>
+<p>更改的部分是方法参数。这些是 lambda 表达式的附加静态参数，其中有三个。它们代表了 lambda 的签名以及 lambda 实际最终调用目标的方法句柄：lambda 主体。第三个静态参数是签名的擦除形式。</p>
+<p>让我们将代码跟随到 <code>java.lang.invoke</code> 中，看看平台如何使用 <em>metafactories</em> 来动态实际实现 lambda 表达式目标类型的类。</p>
+<h2 id="The-lambda-metafactories">The lambda metafactories</h2>
+<p>在 lambda 表达式将被捕获的点上，它会生成一个 <code>invokedynamic</code> 调用站点，该站点在被调用时返回 lambda 正在转换为的函数接口的实例。此调用站点称为给定 lambda 的 <em>lambda 工厂</em>。lambda 工厂的动态参数是从词法作用域中捕获的值。lambda 工厂的 bootstrap 方法是 Java 语言运行库中的标准化方法，称为 <em>lambda 元工厂</em>。静态引导程序参数在编译时捕获有关 lambda 的已知信息（它将被转换为的功能接口、脱糖 lambda 主体的方法句柄、有关 SAM 类型是否可序列化的信息等）。</p>
+<p>BSM 对此静态方法进行调用，该方法最终<strong>返回调用站点对象</strong>。当执行 <code>invokedynamic</code> 指令时，调用站点（Call Site）中包含的方法句柄（Method Handle）将返回一个实现 lambda 目标类型的类的实例。</p>
+<p>lambda 元工厂 metafactory 方法的源代码相对简单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> CallSite <span class="title function_">metafactory</span><span class="params">(MethodHandles.Lookup caller,</span></span><br><span class="line"><span class="params">                                       String invokedName,</span></span><br><span class="line"><span class="params">                                       MethodType invokedType,</span></span><br><span class="line"><span class="params">                                       MethodType samMethodType,</span></span><br><span class="line"><span class="params">                                       MethodHandle implMethod,</span></span><br><span class="line"><span class="params">                                       MethodType instantiatedMethodType)</span></span><br><span class="line">            <span class="keyword">throws</span> LambdaConversionException &#123;</span><br><span class="line">        AbstractValidatingLambdaMetafactory mf;</span><br><span class="line">        mf = <span class="keyword">new</span> <span class="title class_">InnerClassLambdaMetafactory</span>(caller, invokedType,</span><br><span class="line">                                             invokedName, samMethodType,</span><br><span class="line">                                             implMethod, instantiatedMethodType,</span><br><span class="line">                                             <span class="literal">false</span>, EMPTY_CLASS_ARRAY, EMPTY_MT_ARRAY);</span><br><span class="line">        mf.validateMetafactoryArgs();</span><br><span class="line">        <span class="keyword">return</span> mf.buildCallSite();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>查找对象对应于 <code>invokedynamic</code> 指令所在的上下文。在这种情况下，就是定义 lambda 的同一个类，因此查找上下文将具有访问 lambda 主体编译成的私有方法的正确权限。</p>
+<p>调用的名称和类型由 VM 提供，并且是实现的详细信息。最后三个参数是 BSM 的其他静态参数。</p>
+<p>在当前的实现中，<code>metafactory</code> 将代码委派给使用 <a target="_blank" rel="noopener" href="https://asm.ow2.io/?source=:em:nw:mt:::RC_WWMK200429P00043:NSL400105991">ASM 字节码库</a>的内部拷贝的代码，以编织实现目标类型的内部类。</p>
+<p>如果 lambda 没有从其封闭范围中捕获任何参数，则结果对象是无状态的，因此该实现可通过预先计算单个实例来进行优化 - 有效地将 lambda 的实现类设为单例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">jshell&gt; </span><span class="language-bash">Function&lt;String, Integer&gt; <span class="function"><span class="title">makeFn</span></span>() &#123;</span></span><br><span class="line">   ...&gt;   return s -&gt; s.length();</span><br><span class="line">   ...&gt; &#125;</span><br><span class="line">|  created method makeFn()</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">jshell&gt; </span><span class="language-bash">var f1 = makeFn();</span></span><br><span class="line">f1 ==&gt; $Lambda$27/0x0000000800b8f440@533ddba</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">jshell&gt; </span><span class="language-bash">var f2 = makeFn();</span></span><br><span class="line">f2 ==&gt; $Lambda$27/0x0000000800b8f440@533ddba</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">jshell&gt; </span><span class="language-bash">var f3 = makeFn();</span></span><br><span class="line">f3 ==&gt; $Lambda$27/0x0000000800b8f440@533ddba</span><br></pre></td></tr></table></figure>
+<p>这是文档强烈劝阻 Java 程序员不要依赖任何形式的 lambda 身份语义的原因之一。</p>
+<h2 id="翻译策略">翻译策略</h2>
+<p>我们可以通过多种方式在字节码中表示 lambda 表达式，例如内部类、方法句柄、动态代理等。这些方法中的每一种都有优点和缺点。在选择策略时，有两个相互竞争的目标：通过不承诺特定策略来最大化未来优化的灵活性，以及在类文件表示中提供稳定性。我们可以通过使用 <a target="_blank" rel="noopener" href="http://jcp.org/en/jsr/detail?id=292">JSR 292</a> 的 <code>invokedynamic</code> 特性来实现这两个目标将字节码中 lambda 创建的二进制表示与在运行时评估 lambda 表达式的机制分开。我们没有生成字节码来创建实现 lambda 表达式的对象（例如调用内部类的构造函数），而是描述了构造 lambda 的方法，并将实际构造委托给语言运行时。该配方被编码在 <code>invokedynamic</code> 指令的静态和动态参数列表中。</p>
+<p><code>invokedynamic</code> 的使用让我们将翻译策略的选择推迟到运行时。运行时实现可以自由地动态选择策略来评估 lambda 表达式。运行时实现选择隐藏在用于 lambda 构造的标准化（即平台规范的一部分）API 之后，以便静态编译器可以发出对该 API 的调用，并且 JRE 实现可以选择其首选的实现策略。该 <code>invokedynamic</code> 机制允许在没有这种后期绑定方法可能强加的性能成本的情况下完成此操作。</p>
+<h2 id="总结-7">总结</h2>
+<p>一旦 JVM 第一次看到 <code>invokedynamic</code>，它就会调用 <code>bootstrap</code> 引导方法，该引导方法告诉调用指令真正调用的方法类型是什么，如何查找该方法等。有了这些信息，我们就可以在<strong>运行时</strong>动态的链接到该调用方法，链接行为发生在 <code>CallSite</code> 上，并返回去做真正调用处理的 <code>MH</code>。</p>
+<p>在撰写本文时，lambda bootstrap 方法将使用 <code>metafactory</code> 的 <code>InnerClassLambdaMetafactory</code> 在运行时使用 <code>ASM</code> 字节码操作库为 lambda 生成内部类，然后 <code>bootstrap</code> 方法将生成的内部类封装在称为 <code>ConstantCallSite</code> 的特殊类型的 <code>CallSite</code> 中，<code>CallSite</code> 的 target <code>MethodHandle</code> 将返回一个实现 lambda 目标类型的类的实例。这种类型的 <code>CallSite</code> 在设置后永远不会改变。因此，在对每个 lambda 进行首次链接后，JVM 将始终使用快速路径直接调用 lambda 实例逻辑。</p>
+<p><img data-src="../../../images/java/stream/lambda-invokedynamic.svg" alt="img"></p>
+<p>尽管这是最有效的 <code>invokedynamic</code> 类型，但它肯定不是唯一可用的选项。事实上，Java 提供了 <code>MutableCallSite</code> 和 <code>VolatileCallSite</code> 来适应更多的动态需求。</p>
+<h2 id="结束">结束</h2>
+<p>本文探讨了 JVM 如何实现对 lambda 表达式的支持的详细细节。这是您将要遇到的更复杂的平台功能之一，因为它深入到语言实现者的领域。</p>
+<p>一路上，我讨论了 <code>invokedynamic</code> 和方法句柄 API。这是现代 JVM 平台的主要部分的两项关键技术。这两种机制都在整个生态系统中得到了越来越多的使用。例如，在 Java 9 及更高版本中，<code>invokedynamic</code> 已用于实现新形式的字符串连接。</p>
+<p>了解这些功能可以使您深入了解 Java 应用程序所依赖的平台和现代框架的最深层运作。</p>
+<blockquote>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://blogs.oracle.com/javamagazine/behind-the-scenes-how-do-lambda-expressions-really-work-in-java?source=:em:nw:mt:::RC_WWMK200429P00043:NSL400105991&amp;elq_mid=178066&amp;sh=01220926150119261320312809260905&amp;cmid=WWMK200429P00043C0012">Behind the scenes: How do lambda expressions really work in Java?</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Lambda/" rel="tag"># Lambda</a>
+              <a href="/tags/invokedynamic/" rel="tag"># invokedynamic</a>
+              <a href="/tags/CallSite/" rel="tag"># CallSite</a>
+              <a href="/tags/MethodHandle/" rel="tag"># MethodHandle</a>
+              <a href="/tags/BootstrapMethod/" rel="tag"># BootstrapMethod</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/java/jvm/Java-Object-%E7%94%B1%E5%86%85%E5%8F%8A%E5%A4%96/" rel="prev" title="Java Object 由内及外">
+                  <i class="fa fa-chevron-left"></i> Java Object 由内及外
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/data-structure/Map.merge()/" rel="next" title="Map.merge()">
+                  Map.merge() <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"25ee9d466197225e52391c7bf7b52e8b"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

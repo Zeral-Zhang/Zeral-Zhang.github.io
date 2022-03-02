@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="适用于 Windows 10 的子系统 Linux 安装指南 启用 Windows 子系统 Linux 在 Windows 上安装任何 Linux 发行版之前，您必须首先启用“Windows Subsystem for Linux&#x2F;适用于Linux的Windows子系统”可选功能。  或者以管理员身份打开 PowerShell 并运行： PowerShell复制 1dism.exe &#x2F;online">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WSL2 使用指南">
+<meta property="og:url" content="https://www.zeral.cn/devops/WSL2-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="适用于 Windows 10 的子系统 Linux 安装指南 启用 Windows 子系统 Linux 在 Windows 上安装任何 Linux 发行版之前，您必须首先启用“Windows Subsystem for Linux&#x2F;适用于Linux的Windows子系统”可选功能。  或者以管理员身份打开 PowerShell 并运行： PowerShell复制 1dism.exe &#x2F;online">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/devops/wsl-enable.jpeg">
+<meta property="og:image" content="https://docs.microsoft.com/zh-cn/windows/wsl/media/store.png">
+<meta property="og:image" content="https://docs.microsoft.com/zh-cn/windows/wsl/media/ubuntustore.png">
+<meta property="og:image" content="https://docs.microsoft.com/zh-cn/windows/wsl/media/ubuntuinstall.png">
+<meta property="og:image" content="https://www.zeral.cn/images/devops/wsl-schedule-task.png">
+<meta property="og:image" content="https://www.zeral.cn/images/devops/wsl-schedule-task-trigger.png">
+<meta property="article:published_time" content="2021-07-31T02:35:25.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.208Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="WSL2">
+<meta property="article:tag" content="OpenSSH">
+<meta property="article:tag" content="SFTP">
+<meta property="article:tag" content="SSH">
+<meta property="article:tag" content="Zsh">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/devops/wsl-enable.jpeg">
+
+
+<link rel="canonical" href="https://www.zeral.cn/devops/WSL2-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/devops/WSL2-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/","path":"devops/WSL2-使用指南/","title":"WSL2 使用指南"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>WSL2 使用指南 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">适用于 Windows 10 的子系统 Linux 安装指南</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E7%94%A8-Windows-%E5%AD%90%E7%B3%BB%E7%BB%9F-Linux"><span class="nav-number">1.1.</span> <span class="nav-text">启用 Windows 子系统 Linux</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E7%94%A8%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%8A%9F%E8%83%BD"><span class="nav-number">1.2.</span> <span class="nav-text">启用虚拟机功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD-Linux-%E5%86%85%E6%A0%B8%E6%9B%B4%E6%96%B0%E5%8C%85"><span class="nav-number">1.3.</span> <span class="nav-text">下载 Linux 内核更新包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%86-WSL-2-%E8%AE%BE%E7%BD%AE%E4%B8%BA%E9%BB%98%E8%AE%A4%E7%89%88%E6%9C%AC"><span class="nav-number">1.4.</span> <span class="nav-text">将 WSL 2 设置为默认版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%89%80%E9%80%89%E7%9A%84-Linux-%E5%88%86%E5%8F%91%E7%89%88"><span class="nav-number">1.5.</span> <span class="nav-text">安装所选的 Linux 分发版</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">配置 WSL2 Linux</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-SSH-%E6%88%96-FTP"><span class="nav-number">2.1.</span> <span class="nav-text">配置 SSH 或 FTP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenSSH-%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.1.1.</span> <span class="nav-text">OpenSSH 介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">2.1.2.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-SSH"><span class="nav-number">2.1.3.</span> <span class="nav-text">配置 SSH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-FTP"><span class="nav-number">2.1.4.</span> <span class="nav-text">配置 FTP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SSH-Keys"><span class="nav-number">2.1.5.</span> <span class="nav-text">SSH Keys</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-WSL2-%E5%A4%96%E9%83%A8%E8%BF%9C%E7%A8%8B%E8%AE%BF%E9%97%AE"><span class="nav-number">2.2.</span> <span class="nav-text">配置 WSL2 外部远程访问</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96-WSL2-IP"><span class="nav-number">2.2.1.</span> <span class="nav-text">获取 WSL2 IP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91"><span class="nav-number">2.2.2.</span> <span class="nav-text">配置端口转发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%93%E5%BC%80%E7%AB%AF%E5%8F%A3%E5%85%A5%E7%AB%99%E9%98%B2%E7%81%AB%E5%A2%99"><span class="nav-number">2.2.3.</span> <span class="nav-text">打开端口入站防火墙</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E8%84%9A%E6%9C%AC%E8%87%AA%E5%8A%A8%E5%8C%96%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.2.4.</span> <span class="nav-text">使用脚本自动化设置</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">配置 Linux</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Shell-%E4%B8%BA-Zsh"><span class="nav-number">3.1.</span> <span class="nav-text">配置 Shell 为 Zsh</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-2"><span class="nav-number">3.1.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Oh-My-Zsh"><span class="nav-number">3.1.2.</span> <span class="nav-text">配置 Oh My Zsh</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/devops/WSL2-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          WSL2 使用指南
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-31 10:35:25" itemprop="dateCreated datePublished" datetime="2021-07-31T10:35:25+08:00">2021-07-31</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/DevOps/" itemprop="url" rel="index"><span itemprop="name">DevOps</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>适用于 Windows 10 的子系统 Linux 安装指南</h1>
+<h2 id="启用-Windows-子系统-Linux">启用 Windows 子系统 Linux</h2>
+<p>在 Windows 上安装任何 Linux 发行版之前，您必须首先启用“<strong>Windows Subsystem for Linux</strong>/<strong>适用于Linux的Windows子系统</strong>”可选功能。</p>
+<p><img data-src="../../images/devops/wsl-enable.jpeg" alt="wsl-enable"></p>
+<p>或者以管理员身份打开 PowerShell 并运行：</p>
+<p>PowerShell复制</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dism.exe /online /<span class="built_in">enable-feature</span> /featurename:Microsoft<span class="literal">-Windows-Subsystem-Linux</span> /all /norestart</span><br></pre></td></tr></table></figure>
+<h2 id="启用虚拟机功能">启用虚拟机功能</h2>
+<p>安装 WSL 2 之前，必须启用“<strong>Virtual Machine Platform</strong>/<strong>虚拟机平台</strong>”可选功能。 计算机需要<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/windows/wsl/troubleshooting#error-0x80370102-the-virtual-machine-could-not-be-started-because-a-required-feature-is-not-installed">虚拟化功能</a>才能使用此功能。</p>
+<p>以管理员身份打开 PowerShell 并运行：</p>
+<p>PowerShell复制</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dism.exe /online /<span class="built_in">enable-feature</span> /featurename:VirtualMachinePlatform /all /norestart</span><br></pre></td></tr></table></figure>
+<p><strong>重新启动</strong> 计算机，以完成 WSL 安装并更新到 WSL 2。</p>
+<span id="more"></span>
+<h2 id="下载-Linux-内核更新包">下载 Linux 内核更新包</h2>
+<ol>
+<li>
+<p>下载最新包：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi">适用于 x64 计算机的 WSL2 Linux 内核更新包</a></li>
+</ul>
+<blockquote>
+<p>备注</p>
+<p>如果使用的是 ARM64 计算机，请下载 <a target="_blank" rel="noopener" href="https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_arm64.msi">ARM64 包</a>。 如果不确定自己计算机的类型，请打开命令提示符或 PowerShell，并输入：<code>systeminfo | find &quot;System Type&quot;</code>。 <strong>警告：</strong> 在非英语 Windows 版本中，你可能需要修改搜索文本，例如在德语中为 <code>systeminfo | find &quot;Systemtyp&quot;</code>。</p>
+</blockquote>
+</li>
+<li>
+<p>运行上一步中下载的更新包。 （双击以运行 - 系统将提示你提供提升的权限，选择“是”以批准此安装。）</p>
+</li>
+</ol>
+<p>安装完成后，请继续执行下一步 - 在安装新的 Linux 分发时，将 WSL 2 设置为默认版本。 （如果希望将新的 Linux 安装设置为 WSL 1，请跳过此步骤。）</p>
+<h2 id="将-WSL-2-设置为默认版本">将 WSL 2 设置为默认版本</h2>
+<p>打开 PowerShell，然后在安装新的 Linux 发行版时运行以下命令，将 WSL 2 设置为默认版本：</p>
+<p>PowerShell 复制</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--set-default-version</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<h2 id="安装所选的-Linux-分发版">安装所选的 Linux 分发版</h2>
+<ol>
+<li>
+<p>打开 <a target="_blank" rel="noopener" href="https://aka.ms/wslstore">Microsoft Store</a>，并选择你偏好的 Linux 分发版。</p>
+<p><img data-src="https://docs.microsoft.com/zh-cn/windows/wsl/media/store.png" alt="Microsoft Store 中的 Linux 分发版的视图"></p>
+<p>单击以下链接会打开每个分发版的 Microsoft Store 页面：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9N9TNGVNDL3Q">Ubuntu 18.04 LTS</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9n6svws3rx71">Ubuntu 20.04 LTS</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9NJFZK00FGKV">openSUSE Leap 15.1</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9MZ3D1TRP8T1">SUSE Linux Enterprise Server 12 SP5</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9PN498VPMF3Z">SUSE Linux Enterprise Server 15 SP1</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9PKR34TNCV07">Kali Linux</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9MSVKQC78PK6">Debian GNU/Linux</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9n6gdm4k2hnc">Fedora Remix for WSL</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9NV1GV1PXZ6P">Pengwin</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9N8LP0X93VCP">Pengwin Enterprise</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/store/apps/9p804crf0395">Alpine WSL</a></li>
+</ul>
+</li>
+<li>
+<p>在分发版的页面中，选择“获取”。</p>
+<p><img data-src="https://docs.microsoft.com/zh-cn/windows/wsl/media/ubuntustore.png" alt="Microsoft Store 中的 Linux 分发版"></p>
+</li>
+</ol>
+<p>首次启动新安装的 Linux 分发版时，将打开一个控制台窗口，系统会要求你等待一分钟或两分钟，以便文件解压缩并存储到电脑上。 未来的所有启动时间应不到一秒。</p>
+<p>然后，需要<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/windows/wsl/user-support">为新的 Linux 分发版创建用户帐户和密码</a>。</p>
+<p><img data-src="https://docs.microsoft.com/zh-cn/windows/wsl/media/ubuntuinstall.png" alt="Windows 控制台中的 Ubuntu 解包"></p>
+<p><strong>祝贺你！现已成功安装并设置了与 Windows 操作系统完全集成的 Linux 分发！</strong></p>
+<h1>配置 WSL2 Linux</h1>
+<h2 id="配置-SSH-或-FTP">配置 SSH 或 FTP</h2>
+<h3 id="OpenSSH-介绍">OpenSSH 介绍</h3>
+<p>OpenSSH 是一个强大的工具集合，用于远程控制联网计算机和在联网计算机之间传输数据。您还将了解一些可能使用 OpenSSH 服务器应用程序进行的配置设置以及如何在您的 Ubuntu 系统上更改它们。</p>
+<p>OpenSSH 是安全外壳 (SSH) 协议系列工具的免费可用版本，用于远程控制计算机或在计算机之间传输文件。用于完成这些功能的传统工具，例如 telnet 或 rcp，是不安全的，并且在使用时以明文形式传输用户密码。OpenSSH 提供了一个服务器守护进程和客户端工具来促进安全、加密的远程控制和文件传输操作，有效地替代了传统工具。</p>
+<p>OpenSSH 服务器组件 <code>sshd - ssh daemon</code> 持续侦听来自任何客户端工具的客户端连接。当发生连接请求时，sshd 会根据客户端工具连接的类型设置正确的连接。例如，如果远程计算机与 ssh 客户端应用程序连接，则 OpenSSH 服务器在身份验证后建立远程控制会话。如果远程用户使用 scp 连接到 OpenSSH 服务器，则 OpenSSH 服务器守护程序会在身份验证后在服务器和客户端之间启动文件的安全副本。OpenSSH 可以使用多种身份验证方法，包括普通密码、公钥和 Kerberos 票证。</p>
+<h3 id="安装">安装</h3>
+<p>OpenSSH 客户端和服务器应用程序的安装很简单。要在 Ubuntu 系统上安装 OpenSSH 客户端应用程序，请在终端提示符下使用以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt install openssh-client</span><br></pre></td></tr></table></figure>
+<p>要安装 OpenSSH 服务器应用程序和相关支持文件，请在终端提示符下使用以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt install openssh-server</span><br></pre></td></tr></table></figure>
+<p>启动</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service ssh start</span><br></pre></td></tr></table></figure>
+<h3 id="配置-SSH">配置 SSH</h3>
+<p>您可以通过编辑文件来配置 OpenSSH 服务器应用程序 sshd 的默认行为<code>/etc/ssh/sshd_config</code>。有关此文件中使用的配置指令的信息，您可以使用在终端提示符下发出的以下命令查看相应的手册页：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">man sshd_config</span><br></pre></td></tr></table></figure>
+<p>sshd 配置文件中有许多指令控制诸如通信设置和身份验证模式等内容。以下是可以通过编辑<code>/etc/ssh/sshd_config</code>文件更改的配置指令示例。</p>
+<blockquote>
+<p><strong>Tip</strong></p>
+<p>在编辑配置文件之前，您应该制作原始文件的副本并保护它不被写入，以便您将原始设置作为参考并在必要时重新使用。</p>
+<p><code>/etc/ssh/sshd_config</code>使用以下命令复制文件并防止写入，在终端提示符下发出：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo <span class="built_in">cp</span> /etc/ssh/sshd_config /etc/ssh/sshd_config.original</span><br><span class="line">sudo <span class="built_in">chmod</span> a-w /etc/ssh/sshd_config.original</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>此外，由于丢失 ssh 服务器可能意味着无法访问服务器，请在更改配置后和重新启动服务器之前检查配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo sshd -t -f /etc/ssh/sshd_config</span><br></pre></td></tr></table></figure>
+<p>以下是您可以更改的配置指令<em>示例</em>：</p>
+<ul>
+<li>要将 OpenSSH 设置为侦听 TCP 端口 2222 而不是默认的 TCP 端口 22，请将 Port 指令更改为：</li>
+</ul>
+<blockquote>
+<p>Port 2222</p>
+</blockquote>
+<ul>
+<li>要让您的 OpenSSH 服务器将<code>/etc/issue.net</code>文件内容显示为登录前横幅，只需在<code>/etc/ssh/sshd_config</code>文件中添加或修改以下行：</li>
+</ul>
+<blockquote>
+<p>Banner /etc/issue.net</p>
+</blockquote>
+<ul>
+<li>要将监听地址设为所有，修改配置：</li>
+</ul>
+<blockquote>
+<p>ListenAddress 0.0.0.0</p>
+</blockquote>
+<ul>
+<li>如果想使用 SSH 密钥而不是密码进行身份验证，您还可以将 <code>PasswordAuthentication</code> 设置为 “no”。如果您知道自己在做什么并且不知道如何使用 ssh 密钥，请将其设置为 “yes” 使用密码登录。</li>
+</ul>
+<blockquote>
+<p>PasswordAuthentication yes</p>
+</blockquote>
+<ul>
+<li>要将 root 用户配置为允许使用密码登录，默认的配置为 <code>prohibit-password</code> 禁止密码登录。</li>
+</ul>
+<blockquote>
+<p>PermitRootLogin yes</p>
+</blockquote>
+<p>对<code>/etc/ssh/sshd_config</code>文件进行更改后，保存文件，然后在终端提示符下使用以下命令重新启动 sshd 服务器应用程序以使更改生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service ssh restart</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><strong>警告</strong></p>
+<p>sshd 的许多其他配置指令可用于更改服务器应用程序的行为以满足您的需要。但是，请注意，如果您访问服务器的唯一方法是 ssh，并且您在通过该<code>/etc/ssh/sshd_config</code>文件配置 sshd 时出错，您可能会发现在重新启动服务器时您被锁定在服务器之外。此外，如果提供了不正确的配置指令，sshd 服务器可能会拒绝启动，因此在远程服务器上编辑此文件时要格外小心。</p>
+</blockquote>
+<h3 id="配置-FTP">配置 FTP</h3>
+<p>sftp 是一个文件传输程序，类似于 ftp，它通过加密的 ssh 传输执行所有操作。它还可能使用 ssh 的许多功能，例如公钥认证和压缩。</p>
+<p>OpenSSH 本身实现了 SFTP 客户端和服务，通过配置 <code>/etc/ssh/sshd_config</code> 来启用内置的 SFTP。</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#注释掉这行，使用内置的 internal-sftp</span></span><br><span class="line"><span class="comment">#Subsystem      sftp    /usr/libexec/openssh/sftp-server</span></span><br><span class="line"><span class="attr">Subsystem</span> <span class="string">sftp internal-sftp</span></span><br></pre></td></tr></table></figure>
+<p>如果需要为 sftp 单独设置用户组及配置，请参考：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/binarylei/p/9201975.html">SFTP 安装与配置</a></p>
+<h3 id="SSH-Keys">SSH Keys</h3>
+<p>SSH 允许在不需要密码的情况下在两台主机之间进行身份验证。 SSH 密钥认证使用<em>私钥</em>和<em>公钥</em>。</p>
+<p>如果本机没有密钥，要生成密钥，请从终端提示输入：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa</span><br></pre></td></tr></table></figure>
+<p>这将使用 <em>RSA 算法</em>生成密钥。在撰写本文时，生成的密钥将有 3072 位。您可以使用该 <code>-b</code> 选项修改位数。例如，要生成 4096 位的密钥，您可以执行以下操作：</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh</span>-keygen -t rsa -b <span class="number">4096</span></span><br></pre></td></tr></table></figure>
+<p>在此过程中，系统将提示您输入密码。当提示创建密钥时，只需<em>按 Enter</em>键即可。</p>
+<p>默认情况下，<em>公钥</em>保存到文件中<code>~/.ssh/id_rsa.pub</code>，同时<code>~/.ssh/id_rsa</code>是<em>私钥</em>。现在将<code>id_rsa.pub</code>文件复制到远程主机并通过输入将其附加到远程服务器的<code>~/.ssh/authorized_keys</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-copy-id username@remotehost</span><br></pre></td></tr></table></figure>
+<p>最后，仔细检查<code>authorized_keys</code>文件的权限，只有经过身份验证的用户才有读写权限。如果权限不正确，请通过以下方式更改它们：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 600 .ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+<p>您现在应该能够通过 SSH 连接到主机而不会被提示输入密码。</p>
+<h2 id="配置-WSL2-外部远程访问">配置 WSL2 外部远程访问</h2>
+<p>如果需要从外部访问 WSL2 中的服务，则需要将 WSL2 中的端口转发到 windows 监听，并开启相应端口的防火墙设置。</p>
+<h3 id="获取-WSL2-IP">获取 WSL2 IP</h3>
+<p>要进行转发，需要先获取 WSL2 的 IP 地址，可以在 windows 下使用 powershell 执行获取：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl hostname <span class="literal">-I</span></span><br></pre></td></tr></table></figure>
+<h3 id="配置端口转发">配置端口转发</h3>
+<p>使用<strong>管理员权限</strong>的 powershell 执行 22 SSH/SFTP 端口转发，并设置监听任意 IP 访问：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netsh interface portproxy add v4tov4 listenaddress=<span class="number">0.0</span>.<span class="number">0.0</span> listenport=<span class="number">22</span> connectaddress=<span class="number">172.23</span>.<span class="number">129.80</span> connectport=<span class="number">22</span></span><br></pre></td></tr></table></figure>
+<h3 id="打开端口入站防火墙">打开端口入站防火墙</h3>
+<p>接下来，在相同的<strong>管理员权限</strong>命令行下，打开入站防火墙端口。您可以从高级防火墙设置中执行此操作，但您可以再次使用 netsh 更轻松！</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netsh advfirewall firewall add rule name=”Open Port <span class="number">22</span> <span class="keyword">for</span> WSL2” <span class="built_in">dir</span>=<span class="keyword">in</span> action=allow protocol=TCP localport=<span class="number">22</span></span><br></pre></td></tr></table></figure>
+<p>如果您担心，可以像这样列出所有 portproxy 规则：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netsh interface portproxy show v4tov4</span><br></pre></td></tr></table></figure>
+<p>如果需要，您可以将它们全部删除：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netsh int portproxy reset all</span><br></pre></td></tr></table></figure>
+<h3 id="使用脚本自动化设置">使用脚本自动化设置</h3>
+<p>由于 WSL2 重启或者 Windows 重启会导致其 IP 发生变化，使用自动化脚本完成更加方便。</p>
+<p>脚本详见：<a target="_blank" rel="noopener" href="https://gist.github.com/daehahn/497fa04c0156b1a762c70ff3f9f7edae?WT.mc_id=-blog-scottha">WSL 2 TCP NETWORK FORWARDING</a></p>
+<p>使用 Windows <strong>Task Scheduler</strong>/<strong>任务计划程序</strong>设置最高权限，设置启动或者登录自动触发脚本。</p>
+<p><img data-src="../../images/devops/wsl-schedule-task.png" alt="wsl2 schedule task"></p>
+<p>使用 <code>powershell</code> 执行该 psl 脚本：</p>
+<p><img data-src="../../images/devops/wsl-schedule-task-trigger.png" alt="image-20210802180358093"></p>
+<h1>配置 Linux</h1>
+<h2 id="配置-Shell-为-Zsh">配置 Shell 为 Zsh</h2>
+<h3 id="安装-2">安装</h3>
+<p>具体参考：<a target="_blank" rel="noopener" href="https://github.com/ohmyzsh/ohmyzsh/wiki/Installing-ZSH">Installing ZSH</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt install zsh</span><br></pre></td></tr></table></figure>
+<p>Oh My Zsh 使你的命令行更加酷炫和便捷，也可以更便捷的管理 Zsh 配置，安装 Oh My Zsh：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh -c &quot;$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&quot;</span><br></pre></td></tr></table></figure>
+<p>如果出现：Failed to connect to <a target="_blank" rel="noopener" href="http://raw.githubusercontent.com">raw.githubusercontent.com</a> port 443: Connection refused，则代表你的 DNS 可能被污染，使用 VPN 或是配置 <code>/etc/hosts</code> 指明 ip 映射：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">199.232.68.133</span> <span class="string">raw.githubusercontent.com</span></span><br></pre></td></tr></table></figure>
+<h3 id="配置-Oh-My-Zsh">配置 Oh My Zsh</h3>
+<p>默认的配置文件位于：<em>~/.zshrc</em>，你可以配置主题、插件、alias、PATH 等等，具体参考：<a target="_blank" rel="noopener" href="https://github.com/ohmyzsh/ohmyzsh/wiki">https://github.com/ohmyzsh/ohmyzsh/wiki</a></p>
+<hr>
+<p>参考链接：</p>
+<p><a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/windows/wsl/install-win10">适用于 Linux 的 Windows 子系统安装指南 (Windows 10)</a></p>
+<p><a target="_blank" rel="noopener" href="https://ubuntu.com/server/docs/service-openssh">OpenSSH Server</a></p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/WSL2/" rel="tag"># WSL2</a>
+              <a href="/tags/OpenSSH/" rel="tag"># OpenSSH</a>
+              <a href="/tags/SFTP/" rel="tag"># SFTP</a>
+              <a href="/tags/SSH/" rel="tag"># SSH</a>
+              <a href="/tags/Zsh/" rel="tag"># Zsh</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/middleware/Consul-%E5%85%A5%E9%97%A8/" rel="prev" title="Consul 入门">
+                  <i class="fa fa-chevron-left"></i> Consul 入门
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/security/OAuth2-%E5%92%8C-OpenID/" rel="next" title="OAuth2 和 OpenID Connect">
+                  OAuth2 和 OpenID Connect <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"29a26a2b6b2bc1958953555f0162aa7a"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

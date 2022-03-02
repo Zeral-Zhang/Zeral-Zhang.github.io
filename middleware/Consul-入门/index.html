@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="Consul 简介 Consul 解决了各种规模的组织在微服务架构中遇到的挑战。包括各种分布式环境下及跨地理位置下的所有应用程序流量的保护，它关注计算网络层。 Consul 是一个服务网格解决方案，它的核心功能主要包含：  Service Discovery - 服务发现：Consul 的客户端可以注册服务，例如 api 或 mysql，其他客户端可以使用 Consul 发现给定服务的提供者。使用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Consul 入门">
+<meta property="og:url" content="https://www.zeral.cn/middleware/Consul-%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="Consul 简介 Consul 解决了各种规模的组织在微服务架构中遇到的挑战。包括各种分布式环境下及跨地理位置下的所有应用程序流量的保护，它关注计算网络层。 Consul 是一个服务网格解决方案，它的核心功能主要包含：  Service Discovery - 服务发现：Consul 的客户端可以注册服务，例如 api 或 mysql，其他客户端可以使用 Consul 发现给定服务的提供者。使用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/consul/consul-arch.png">
+<meta property="og:image" content="https://www.zeral.cn/images/distributed/gossip.gif">
+<meta property="article:published_time" content="2021-07-26T09:11:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.219Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Consul">
+<meta property="article:tag" content="Raft">
+<meta property="article:tag" content="Gossip">
+<meta property="article:tag" content="Consensus Protocol">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/middleware/consul/consul-arch.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/middleware/Consul-%E5%85%A5%E9%97%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/middleware/Consul-%E5%85%A5%E9%97%A8/","path":"middleware/Consul-入门/","title":"Consul 入门"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Consul 入门 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Consul 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Consul 术语</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Agent"><span class="nav-number">2.1.</span> <span class="nav-text">Agent</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Client"><span class="nav-number">2.1.1.</span> <span class="nav-text">Client</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Server"><span class="nav-number">2.1.2.</span> <span class="nav-text">Server</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Datacenter"><span class="nav-number">2.2.</span> <span class="nav-text">Datacenter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Access-Control-List-ACL"><span class="nav-number">2.3.</span> <span class="nav-text">Access Control List (ACL)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">Consul 架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">共识协议 - Consensus Protocol</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Raft-%E5%8D%8F%E8%AE%AE%E6%A6%82%E8%BF%B0"><span class="nav-number">4.1.</span> <span class="nav-text">Raft 协议概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Raft-in-Consul"><span class="nav-number">4.2.</span> <span class="nav-text">Raft in Consul</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%BC%8F"><span class="nav-number">4.3.</span> <span class="nav-text">一致性模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E8%A1%A8"><span class="nav-number">4.4.</span> <span class="nav-text">部署表</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">Gossip 协议</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Gossip-in-Consul"><span class="nav-number">5.1.</span> <span class="nav-text">Gossip in Consul</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lifeguard-%E5%A2%9E%E5%BC%BA"><span class="nav-number">5.2.</span> <span class="nav-text">Lifeguard 增强</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">反墒 - Anti-Entropy</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%84%E4%BB%B6"><span class="nav-number">6.1.</span> <span class="nav-text">组件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Agent-2"><span class="nav-number">6.1.0.1.</span> <span class="nav-text">Agent</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Catalog"><span class="nav-number">6.1.0.2.</span> <span class="nav-text">Catalog</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Anti-Entropy"><span class="nav-number">6.2.</span> <span class="nav-text">Anti-Entropy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E6%9C%9F%E5%90%8C%E6%AD%A5"><span class="nav-number">6.3.</span> <span class="nav-text">定期同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%A4%A7%E5%8A%AA%E5%8A%9B%E4%BA%A4%E4%BB%98"><span class="nav-number">6.4.</span> <span class="nav-text">最大努力交付</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E7%94%A8%E6%A0%87%E7%AD%BE%E8%A6%86%E7%9B%96"><span class="nav-number">6.5.</span> <span class="nav-text">启用标签覆盖</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">所需端口</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E8%A1%A8"><span class="nav-number">7.1.</span> <span class="nav-text">端口表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E4%BF%A1%E6%81%AF"><span class="nav-number">7.2.</span> <span class="nav-text">端口信息</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Consul-%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Consul 入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-26 17:11:00" itemprop="dateCreated datePublished" datetime="2021-07-26T17:11:00+08:00">2021-07-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>Consul 简介</h1>
+<p>Consul 解决了各种规模的组织在微服务架构中遇到的挑战。包括各种分布式环境下及跨地理位置下的所有应用程序流量的保护，它关注计算网络层。</p>
+<p>Consul 是一个服务网格解决方案，它的核心功能主要包含：</p>
+<ul>
+<li><strong>Service Discovery - 服务发现</strong>：Consul 的客户端可以注册服务，例如 <code>api</code> 或 <code>mysql</code>，其他客户端可以使用 Consul 发现给定服务的提供者。使用 DNS 或 HTTP，应用程序可以轻松找到它们所依赖的服务。</li>
+<li><strong>Health Checking - 健康检查</strong>：Consul 客户端可以提供任意数量的健康检查，或者与给定服务相关联（“网络服务器是否返回 200 OK”），或者与本地节点相关联（“内存利用率是否低于 90%”）。操作员可以使用此信息来监控集群的健康状况，服务发现组件使用它将流量路由到健康的主机。</li>
+<li><strong>KV Store - KV 存储</strong>：应用程序可以将 Consul 的分层键/值存储用于任意数量的目的，包括动态配置、特征标记、协调、领导者选举等。简单的 HTTP API 也使其易于使用。</li>
+<li><strong>Secure Service Communication - 安全服务通信</strong>：Consul 可以为服务生成和分发 TLS 证书以建立相互 TLS 连接。<a target="_blank" rel="noopener" href="https://www.consul.io/docs/connect/intentions">Intentions</a> 可用于定义允许通信的服务。可以通过实时更改意图轻松管理服务分段，而不是使用复杂的网络拓扑和静态防火墙规则。</li>
+<li><strong>Multi Datacenter - 多数据中心</strong>：Consul 开箱即用地支持多个数据中心。这意味着 Consul 的用户不必担心构建额外的抽象层以扩展到多个区域。</li>
+</ul>
+<p>Consul 旨在对 DevOps 社区和应用程序开发人员都友好，使其非常适合现代、弹性的基础设施。</p>
+<span id="more"></span>
+<h1>Consul 术语</h1>
+<p>本节收集了 Consul 和 Consul Enterprise 文档中使用的一些技术术语的简要定义，以及在整个 Consul 社区的对话中经常出现的一些术语。</p>
+<h2 id="Agent">Agent</h2>
+<p><strong>代理 - Agent</strong> 是 Consul 集群每个成员上长时间运行的守护进程，代理负责节点上的服务以及节点本身的健康检查。它是通过运行 <code>consul agent</code> 启动的。代理可以在客户端或服务器模式下运行。由于所有节点都必须运行代理，发现其他服务或获取/设置键/值数据不需要运行代理，因此将节点称为客户端或服务器更简单，但还有其他代理实例。所有代理都可以运行 DNS 或 HTTP 接口，并负责运行检查和保持服务同步。</p>
+<h3 id="Client">Client</h3>
+<p><strong>客户端 - Client</strong> 是将所有 RPC 转发到服务器的代理。客户端是相对无状态的。客户端执行的唯一后台活动是参与 LAN gossip 池。这具有最小的资源开销并且仅消耗少量的网络带宽。</p>
+<h3 id="Server">Server</h3>
+<p><strong>服务器 - Server</strong> 是具有扩展职责集的代理，包括参与 Raft 仲裁、维护集群状态、响应 RPC 查询、与其他数据中心交换 WAN gossip、并将查询转发给领导者或远程数据中心。</p>
+<h2 id="Datacenter">Datacenter</h2>
+<p>我们将数据中心定义为私有、低延迟和高带宽的网络环境。这不包括穿越公共互联网的通信，但就我们而言，单个 EC2 区域内的多个可用区将被视为单个数据中心的一部分。</p>
+<h2 id="Access-Control-List-ACL">Access Control List (ACL)</h2>
+<p>访问控制列表 - Access Control List (ACL) 是文件、文件夹或其他对象的用户权限列表。它定义了哪些用户和组可以访问对象以及他们可以执行哪些操作。</p>
+<p>Consul 使用访问控制列表 (ACL) 来保护 UI、API、CLI、服务通信和代理通信。</p>
+<p>访问 <a target="_blank" rel="noopener" href="https://www.consul.io/docs/acl">Consul ACL 文档和指南</a>。</p>
+<h1>Consul 架构</h1>
+<p>俯视整个 Consul ，它的架构是这样的：</p>
+<p><img data-src="../../images/middleware/consul/consul-arch.png" alt="consul-arch"></p>
+<p>让我们分解这张图片并描述每一块。首先，我们可以看到有两个数据中心，分别标记为“DATACENTER 1”和“DATACENTER 2”。 Consul 对<a target="_blank" rel="noopener" href="https://learn.hashicorp.com/tutorials/consul/federarion-gossip-wan">多个数据中心</a>有最高级别的支持，并希望这是常见的使用情况。</p>
+<p>在每个数据中心内，我们混合了客户端和服务器。预计将有三到五台服务器。这在故障情况下的可用性和性能之间取得了平衡，因为随着添加更多机器，共识将变得越来越慢。但是，客户端数量没有限制，它们可以轻松扩展到数千或数万。</p>
+<p>数据中心中的所有代理都参与 <a target="_blank" rel="noopener" href="https://www.consul.io/docs/internals/gossip">gossip 协议</a>。这意味着有一个 gossip 池包含给定数据中心的所有代理。这有几个目的：首先，不需要使用服务器地址配置客户端；发现是自动完成的。其次，检测代理故障的工作不是放在服务器上而是分布式的。这使得故障检测比简单的心跳方案更具可扩展性。它还为节点提供故障检测；如果代理不可访问，则节点可能遇到故障。第三，它用作消息传递层，以在发生领导者选举等重要事件时进行通知。</p>
+<p>每个数据中心中的服务器都是单个 <code>Raft</code> 对等集的一部分。这意味着他们一起工作来选举一个领导者，领导者为一个有额外职责的选定服务器。领导者负责处理所有查询和事物。作为<a target="_blank" rel="noopener" href="https://www.consul.io/docs/internals/consensus">共识协议</a>的一部分，事物还必须复制到所有对等点。由于这个要求，当一个非领导服务器收到一个 RPC 请求时，它会将它转发给集群领导。</p>
+<p>服务器代理还作为 WAN gossip 池的一部分运行。此池与 LAN 池不同，因为它针对 Internet 的更高延迟进行了优化，并且只期待与其他 Consul 服务器代理交互。这个池的目的是允许数据中心以低接触的方式发现彼此。使新数据中心上线就像加入现有的 WAN gossip 池一样简单。因为服务器都在这个池中运行，所以它也支持跨数据中心请求。当服务器收到对不同数据中心的请求时，它会将其转发到正确数据中心中的随机服务器。该服务器然后可以转发给本地领导。</p>
+<p>这导致数据中心之间的耦合非常低，但由于故障检测、连接缓存和多路复用，跨数据中心请求相对快速和可靠。</p>
+<p>通常，不同的 Consul 数据中心之间不会复制数据。当对另一个数据中心中的资源发出请求时，本地 Consul 服务器会将 RPC 请求转发到该资源的远程 Consul 服务器并返回结果。如果远程数据中心不可用，那么这些资源也将不可用，但这不会影响本地数据中心。在某些特殊情况下，可以复制有限的数据子集，例如使用 Consul 的内置 <a target="_blank" rel="noopener" href="https://learn.hashicorp.com/tutorials/consul/access-control-replication-multiple-datacenters">ACL 复制</a>功能，或使用 <a target="_blank" rel="noopener" href="https://github.com/hashicorp/consul-replicate">consul-replicate</a> 等外部工具。</p>
+<p>在某些地方，客户端代理可能会缓存来自服务器的数据，以使其在本地可用以提高性能和可靠性。比如连接证书和意图，它们允许客户端代理对入站连接请求做出本地决策，而无需往返服务器。一些 API 端点还支持可选的结果缓存。这有助于提高可靠性，因为即使与服务器的连接中断或服务器暂时不可用，本地代理也可以继续响应某些查询，如服务发现或缓存中的连接授权。</p>
+<h1>共识协议 - Consensus Protocol</h1>
+<p>Consul 使用共识协议来提供<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/CAP_theorem">一致性（由 CAP 定义）</a>。共识协议基于“<a target="_blank" rel="noopener" href="https://raft.github.io/raft.pdf">Raft：寻找可理解的共识算法</a>”。有关 Raft 的可视化解释，请参阅<a target="_blank" rel="noopener" href="http://thesecretlivesofdata.com/raft/">数据的秘密生活</a>。</p>
+<h2 id="Raft-协议概述">Raft 协议概述</h2>
+<p>Raft 是一种基于 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Paxos_%28computer_science%29">Paxos</a> 的共识算法。与 Paxos 相比，Raft 被设计为具有更少的状态和更简单、更易于理解的算法。</p>
+<p>在讨论 Raft 时，有几个关键术语需要了解：</p>
+<ul>
+<li><strong>Log</strong> - Raft 系统中的主要工作单元是日志条目。一致性问题可以分解为<em>复制日志</em>。日志是有序的条目序列。条目包括任何集群更改：添加节点、添加服务、新的键值对等。如果所有成员都同意条目及其顺序，我们认为日志是一致的。</li>
+<li><strong>FSM</strong> - 有限状态机（<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Finite-state_machine">Finite State Machine</a>）。FSM 是有限状态的集合，它们之间有转换。随着新日志的应用，FSM 被允许在状态之间转换。应用相同的日志序列必须导致相同的状态，这意味着行为必须是确定性的。</li>
+<li><strong>Peer set</strong> - 对等集是所有参与日志复制的成员的集合。出于 Consul 的目的，所有服务器节点都在本地数据中心的对等集中。</li>
+<li><strong>Quorum</strong> - 法定人数是来自对等集合的大多数成员：对于大小为 <code>N</code> 的集合，法定人数至少需要 <code>(N/2)+1</code> 名成员。例如，如果对等集中有 5 个成员，我们将需要 3 个节点来形成法定人数。如果法定节点因任何原因不可用，则集群将不可用且无法提交新日志。</li>
+<li><strong>Committed Entry</strong> - 当条目持久地存储在法定节点上时，该条目被视为已提交。一旦一个条目被提交，它就可以被应用。</li>
+<li><strong>Leader</strong> - 在任何给定时间，peer set 都会选择一个节点作为领导者。领导者负责摄取新的日志条目，复制到追随者，并管理条目何时被视为已提交。</li>
+</ul>
+<p>Raft 是一个复杂的协议，这里不会详细介绍（对于那些想要更全面处理的人，可以在<a target="_blank" rel="noopener" href="https://raft.github.io/raft.pdf">本文</a>中找到完整的规范）。然而，我们将尝试提供可能对构建心智模型有用的高级描述。</p>
+<p>Raft 节点始终处于以下三种状态之一：跟随者（follower）、候选者（candidate）或领导者（leader）。所有节点最初都是从跟随者开始的。在这种状态下，节点可以接受来自领导者的日志条目并投票。如果一段时间内没有收到条目，节点会自我提升到候选状态。在候选状态中，节点向其对等节点请求投票。如果候选人获得法定人数的选票，则将其提升为领导者。领导者必须接受新的日志条目并复制到所有其他追随者。此外，如果陈旧读取是不可接受的，则所有查询也必须在领导者上执行。</p>
+<p>一旦集群有了领导者，它就能够接受新的日志条目。客户端可以请求领导者附加一个新的日志条目（从 Raft 的角度来看，日志条目是一个不透明的二进制 blob）。领导者然后将条目写入持久存储并尝试复制到法定人数的追随者。一旦日志条目被认为已提交，就可以将其应用于有限状态机。这允许 Raft 在某个时间点捕获 FSM 状态，然后删除用于达到该状态的所有日志。这是在没有用户干预的情况下自动执行的，可以防止无限制的磁盘使用，同时最大限度地减少重放日志所花费的时间。使用 MemDB 的优势之一是它允许 Consul 继续接受新事务，即使在对旧状态进行快照时，也可以防止任何可用性问题。</p>
+<p>共识是容错的，直到法定人数可用。如果法定节点不可用，则无法处理日志条目或定位有关对等成员资格的原因。例如，假设只有 2 个对等节点：A 和 B。法定人数大小也是 2，这意味着两个节点都必须同意提交日志条目。如果 A 或 B 失败，则不可能达到法定人数。这意味着集群无法添加或删除节点或提交任何其他日志条目。这将导致系统<em>不可用</em>。此时，需要手动干预以删除 A 或 B 并以引导模式重新启动剩余节点。</p>
+<p>3 个节点的 Raft 集群可以容忍单个节点故障，而 5 个节点的集群可以容忍 2 个节点故障。推荐的配置是每个数据中心运行 3 或 5 个 Consul 服务器。这在不极大地牺牲性能的情况下最大限度地提高了可用性。下面的部署表总结了潜在的集群大小选项和每个选项的容错能力。</p>
+<p>在性能方面，Raft 可以与 Paxos 相媲美。假设领导者稳定，提交日志条目需要一次往返集群的一半。因此，性能受磁盘 I/O 和网络延迟的约束。虽然 Consul 并不是设计成一个高吞吐量的写系统，但也可以每秒处理数百到数千个事务，具体取决于网络和硬件配置。</p>
+<h2 id="Raft-in-Consul">Raft in Consul</h2>
+<p>只有 Consul <strong>服务器节点</strong>参与 Raft 并且是 peer set 的一部分。所有客户端节点将请求转发到服务器。这种设计的部分原因是，随着更多成员添加到对等集中，法定人数的大小也会增加。这会引入性能问题，因为您可能正在等待数百台机器就一个条目而不是少数机器达成一致。</p>
+<p>开始时，单个 Consul 服务器被置于“引导 - bootstrap”模式。这种模式允许它自选为领导者。一旦选举出领导者，其他服务器可以以保持一致性和安全性的方式添加到对等集中。最终，一旦添加了前几台服务器，就可以禁用引导模式。有关更多详细信息，请参阅<a target="_blank" rel="noopener" href="https://www.consul.io/docs/install/bootstrapping">此文档</a>。</p>
+<p>由于所有服务器都作为对等集的一部分参与，因此它们都知道当前的领导者。当 RPC 请求到达非领导服务器时，请求被转发给领导者。如果 RPC 请求是查询类型，意味着它是只读的，则领导者会根据 FSM 的当前状态生成结果。如果 RPC 是事务类型，这意味着它会修改状态，则领导者会生成一个新的日志条目并使用 Raft 应用它。一旦日志条目提交并应用到 FSM，事务就完成了。</p>
+<p>由于 Raft 复制的性质，性能对网络延迟很敏感。出于这个原因，每个数据中心都会选举一个独立的领导者并维护一个不相交的对等集。数据是按数据中心划分的，所以每个领导者只对自己数据中心的数据负责。当收到远程数据中心的请求时，该请求将转发给正确的领导者。这种设计允许在不牺牲一致性的情况下实现更低的延迟事务和更高的可用性。</p>
+<h2 id="一致性模式">一致性模式</h2>
+<p>尽管对复制日志的所有写入都通过 Raft，但读取更加灵活。为了支持开发人员可能想要的各种权衡，Consul 支持 3 种不同的读取一致性模式。</p>
+<p>三种读取模式是：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.consul.io/docs/architecture/consensus#default"><code>default</code></a> - Raft 使用了领导者租期 - <code>leasing</code>，提供了一个时间窗口，领导者在其中扮演稳定的角色。但是，如果领导者与其余对等体分开，则可能会在旧领导者持有租期时选出新领导者。这意味着有 2 个领导节点。不存在脑裂的风险，因为旧的领导者将无法提交新的日志。但是，如果旧的领导者仍然为任何读取提供服务，则这些值可能是陈旧的。默认的一致性模式仅依赖于领导者租期，将会给客户端暴露潜在的陈旧值。我们进行这种权衡是因为读取速度很快，通常具有很强的一致性，并且仅在难以触发的情况下才会失效。过时读取的时间窗口也是有界的，因为领导者将因分区而下台。</li>
+<li><a target="_blank" rel="noopener" href="https://www.consul.io/docs/architecture/consensus#consistent"><code>consistent</code></a> - 这种模式提供强一致性。它要求领导者与法定人数的对等方一起验证它仍然是领导者。这引入了到所有服务器节点的额外往返。权衡的利：总是一致的读取，弊：由于额外的往返行程而增加了延迟。</li>
+<li><a target="_blank" rel="noopener" href="https://www.consul.io/docs/architecture/consensus#stale"><code>stale</code></a> - 这种模式允许任何服务器为读取提供服务，而不管它是否是领导者。这意味着读取可以任意陈旧，但通常在领导者的 50 毫秒内。权衡是非常快速和可扩展的读取，但具有过时的值。这种模式允许在没有领导者的情况下进行读取，这意味着不可用的集群仍然能够响应。</li>
+</ul>
+<p>有关使用这些不同模式的更多文档，请参阅 <a target="_blank" rel="noopener" href="https://www.consul.io/api/features/consistency">HTTP API</a>。</p>
+<h2 id="部署表">部署表</h2>
+<p>下表显示了各种集群大小的法定人数大小和容错能力。推荐的部署是 3 或 5 个服务器。<strong>强烈</strong>建议不要使用单个服务器部署，因为在故障情况下数据丢失是必然的。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Servers - 服务器数量</th>
+<th style="text-align:left">Quorum Size - 法定人数大小</th>
+<th style="text-align:left">容忍故障的服务器数量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left">6</td>
+<td style="text-align:left">4</td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left">7</td>
+<td style="text-align:left">4</td>
+<td style="text-align:left">3</td>
+</tr>
+</tbody>
+</table>
+<h1>Gossip 协议</h1>
+<p>Paxos、Raft、ZAB 等分布式算法经常会被称作是“强一致性”的分布式共识协议，其实这样的描述扣细节概念的话是很别扭的，会有语病嫌疑，但我们都明白它的意思其实是在说“尽管系统内部节点可以存在不一致的状态，但从系统外部看来，不一致的情况并不会被观察到，所以整体上看系统是强一致性的”。与它们相对的，还有另一类被冠以“最终一致性”的分布式共识协议，这表明系统中不一致的状态有可能会在一定时间内被外部直接观察到。一种典型且极为常见的最终一致的分布式系统就是<a target="_blank" rel="noopener" href="http://icyfenix.cn/architect-perspective/general-architecture/diversion-system/dns-lookup.html">DNS 系统</a>，在各节点缓存的 TTL 到期之前，都有可能与真实的域名翻译结果存在不一致。在本节中，笔者将介绍在比特币网络和许多重要分布式框架中都有应用的另一种具有代表性的“最终一致性”的分布式共识协议：Gossip 协议。</p>
+<p>Gossip 最早由<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Xerox">施乐公司</a>（Xerox，现在可能很多人不了解施乐了，或只把施乐当一家复印产品公司看待，这家公司是计算机许多关键技术的鼻祖，图形界面的发明者、以太网的发明者、激光打印机的发明者、MVC 架构的提出者、RPC 的提出者、BMP 格式的提出者……） Palo Alto 研究中心在论文《<a target="_blank" rel="noopener" href="http://bitsavers.trailing-edge.com/pdf/xerox/parc/techReports/CSL-89-1_Epidemic_Algorithms_for_Replicated_Database_Maintenance.pdf">Epidemic Algorithms for Replicated Database Maintenance</a>》中提出的一种用于分布式数据库在多节点间复制同步数据的算法。从论文题目中可以看出，最初它是被称作“流行病算法”（Epidemic Algorithm）的，只是不太雅观，今天 Gossip 这个名字已经用得更为普遍了，除此以外，它还有“流言算法”、“八卦算法”、“瘟疫算法”等别名，这些名字都是很形象化的描述，反应了 Gossip 的特点：要同步的信息如同流言一般传播、病毒一般扩散。</p>
+<p><img data-src="../../images/distributed/gossip.gif" alt="gossip"></p>
+<p>上图是 Gossip 传播过程的示意图，根据示意图和 Gossip 的过程描述，我们很容易发现 Gossip 对网络节点的连通性和稳定性几乎没有任何要求，它一开始就将网络某些节点只能与一部分节点<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Network_topology#Partially_connected_network">部分连通</a>（Partially Connected Network）而不是以<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Network_topology#Fully_connected_network">全连通网络</a>（Fully Connected Network）作为前提；能够容忍网络上节点的随意地增加或者减少，随意地宕机或者重启，新增加或者重启的节点的状态最终会与其他节点同步达成一致。Gossip 把网络上所有节点都视为平等而普通的一员，没有任何中心化节点或者主节点的概念，这些特点使得 Gossip 具有极强的鲁棒性，而且非常适合在公众互联网中应用。</p>
+<p>同时我们也很容易找到 Gossip 的缺点，消息最终是通过多个轮次的散播而到达全网的，因此它必然会存在全网各节点状态不一致的情况，而且由于是随机选取发送消息的节点，所以尽管可以在整体上测算出统计学意义上的传播速率，但对于个体消息来说，无法准确地预计到需要多长时间才能达成全网一致。另外一个缺点是消息的冗余，同样是由于随机选取发送消息的节点，也就不可避免的存在消息重复发送给同一节点的情况，增加了网络的传输的压力，也给消息节点带来额外的处理负载。</p>
+<p>达到一致性耗费的时间与网络传播中消息冗余量这两个缺点存在一定对立，如果要改善其中一个，就会恶化另外一个，由此，Gossip 设计了两种可能的消息传播模式：反熵（Anti-Entropy）和传谣（Rumor-Mongering），这两个名字都挺文艺的。熵（Entropy）是生活中少见但科学中很常用的概念，它代表着事物的混乱程度。反熵的意思就是反混乱，以提升网络各个节点之间的相似度为目标，所以在反熵模式下，会同步节点的全部数据，以消除各节点之间的差异，目标是整个网络各节点完全的一致。但是，在节点本身就会发生变动的前提下，这个目标将使得整个网络中消息的数量非常庞大，给网络带来巨大的传输开销。而传谣模式是以传播消息为目标，仅仅发送新到达节点的数据，即只对外发送变更信息，这样消息数据量将显著缩减，网络开销也相对较小。</p>
+<p>Consul 使用 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Gossip_protocol">gossip 协议</a> 来管理成员并向集群广播消息。所有这些都是通过使用 <a target="_blank" rel="noopener" href="https://www.serf.io/">Serf 库</a>提供的。Serf 使用的 gossip 协议基于“<a target="_blank" rel="noopener" href="http://www.cs.cornell.edu/info/projects/spinglass/public_pdfs/swim.pdf">SWIM: Scalable Weakly-consistent Infection-style Process Group Membership Protocol</a>”，做了一些小的修改。<a target="_blank" rel="noopener" href="https://www.serf.io/docs/internals/gossip.html">这里</a>有关于 Serf 协议的更多细节。</p>
+<h2 id="Gossip-in-Consul">Gossip in Consul</h2>
+<p>Consul 使用了两个不同的 gossip 池。我们将每个池分别称为 LAN 或 WAN 池。每个数据中心 Consul 都有一个 LAN gossip 池，其中包含数据中心的所有成员，包括客户端和服务器。LAN 池有几个用途。其中成员信息允许客户端自动发现服务器，从而减少所需的配置量；分布式故障检测允许故障检测的工作由整个集群共享，而不是集中在少数服务器上；最后，gossip 池允许可靠且快速的事件广播。</p>
+<p>WAN 池是全局唯一的，因为无论数据中心如何，所有服务器都应参与 WAN 池。 WAN 池提供的成员信息允许服务器执行跨数据中心请求。集成的故障检测允许 Consul 优雅地处理丢失连接的整个数据中心，或仅处理远程数据中心中的单个服务器。</p>
+<p>所有这些功能都是通过利用 <a target="_blank" rel="noopener" href="https://www.serf.io/">Serf</a> 提供的。它用作嵌入式库以提供这些功能。从用户的角度来看，这并不重要，因为抽象而被 Consul 屏蔽。然而，作为开发人员，了解如何利用该库是很有用的。</p>
+<h2 id="Lifeguard-增强">Lifeguard 增强</h2>
+<p>SWIM 假设本地节点是健康的，因为可以对数据包进行软实时处理。但是，在本地节点遇到 CPU 或网络耗尽的情况下，可能会违反此假设。结果就是 <code>serfHealth</code> 检查状态偶尔会抖动，导致错误的监控警报，给远程监测增加误判，并会导致整个集群浪费 CPU 和网络资源来诊断可能并不真正存在的故障。</p>
+<p>Lifeguard 通过对 SWIM 的特别增强完全解决了这个问题。</p>
+<p>有关 Lifeguard 的更多详细信息，请参阅 Lifeguard 博客文章<a target="_blank" rel="noopener" href="https://www.hashicorp.com/blog/making-gossip-more-robust-with-lifeguard/">【使 gossip 更健壮】</a>，其中提供了 HashiCorp 研究论文 <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1707.00788">Lifeguard：SWIM-ing with Situational Awareness</a> 的高级概述。<a target="_blank" rel="noopener" href="https://www.serf.io/docs/internals/gossip.html#lifeguard">Serf gossip 协议指南</a>还提供了一些关于 gossip 协议和 Lifeguard 的较低级别的详细信息。</p>
+<h1>反墒 - Anti-Entropy</h1>
+<p>Consul 使用一种先进的方法来维护服务和健康信息。此页面详细介绍了如何注册服务和检查、如何填充目录以及如何在更改时更新健康状态信息。</p>
+<h2 id="组件">组件</h2>
+<p>首先了解服务和健康检查中涉及的移动部分很重要：<a target="_blank" rel="noopener" href="https://www.consul.io/docs/architecture/anti-entropy#agent">agent</a> 和 <a target="_blank" rel="noopener" href="https://www.consul.io/docs/architecture/anti-entropy#catalog">catalog</a>。下面从概念上描述了这些，以使反熵更容易理解。</p>
+<h4 id="Agent-2">Agent</h4>
+<p>每个 Consul 代理维护自己的一组服务并检查注册以及健康信息。代理负责执行自己的健康检查并更新其本地状态。</p>
+<p>代理上下文中的服务和检查具有一组丰富的可用配置选项。这是因为代理负责通过使用<a target="_blank" rel="noopener" href="https://www.consul.io/docs/agent/checks">健康检查</a>生成有关其服务及其健康状况的信息。</p>
+<h4 id="Catalog">Catalog</h4>
+<p>Consul 的服务发现由服务目录支持。该目录由代理提交的信息聚合而成。该目录维护集群的高级视图，包括哪些服务可用、哪些节点运行这些服务、运行状况信息等。该目录用于通过 Consul 提供的各种接口公开此信息，包括 DNS 和 HTTP。</p>
+<p>与代理相比，目录上下文中的服务和检查的字段集更为有限。这是因为目录只负责记录和返回有关服务、节点和健康状况的信息。</p>
+<p>目录仅由<strong>服务器节点</strong>维护。这是因为目录是通过 <a target="_blank" rel="noopener" href="https://www.consul.io/docs/internals/consensus">Raft 日志</a>复制的，以提供集群的统一和一致的视图。</p>
+<h2 id="Anti-Entropy">Anti-Entropy</h2>
+<p>熵是系统变得越来越无序的趋势。 Consul 的反熵机制旨在对抗这种趋势，即使在其组件出现故障时也能保持集群的状态有序。</p>
+<p>如上所述，Consul 在全局服务目录和代理的本地状态之间有明确的分离。反熵机制调和了这两种世界观：反熵是本地代理状态和目录的同步。例如，当用户注册新服务或向代理进行检查时，代理会依次通知目录此新服务存在。同样，当从代理中删除服务时，它也会从目录中删除。</p>
+<p>反熵也用于更新可用性信息。当代理运行他们的健康检查时，他们的状态可能会发生变化，在这种情况下，他们的新状态会同步到目录中。使用此信息，目录可以根据节点和服务的可用性智能地响应有关其节点和服务的查询。</p>
+<p>在此同步过程中，还会检查目录的正确性。如果目录中存在代理不知道的任何服务或检查，它们将被自动删除，以使目录反映该代理的正确服务和健康信息集。 Consul 将代理的状态视为权威；如果代理视图和目录视图之间存在任何差异，将始终使用代理本地视图。</p>
+<h2 id="定期同步">定期同步</h2>
+<p>除了在代理发生更改时运行之外，反熵也是一个长期运行的过程，它会定期唤醒以同步服务并检查目录状态。这可确保目录与代理的真实状态密切匹配。即使在数据完全丢失的情况下，这也允许 Consul 重新填充服务目录。</p>
+<p>为避免饱和，周期性反熵运行之间的时间量将根据集群大小而变化。下表定义了集群大小和同步间隔之间的关系：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">集群大小</th>
+<th style="text-align:left">同步周期间隔</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1 - 128</td>
+<td style="text-align:left">1 minute</td>
+</tr>
+<tr>
+<td style="text-align:left">129 - 256</td>
+<td style="text-align:left">2 minutes</td>
+</tr>
+<tr>
+<td style="text-align:left">257 - 512</td>
+<td style="text-align:left">3 minutes</td>
+</tr>
+<tr>
+<td style="text-align:left">513 - 1024</td>
+<td style="text-align:left">4 minutes</td>
+</tr>
+<tr>
+<td style="text-align:left">…</td>
+<td style="text-align:left">…</td>
+</tr>
+</tbody>
+</table>
+<p>上面的间隔是近似值。每个 Consul 代理将在间隔窗口内选择一个随机交错的开始时间，以避免雷鸣般的羊群。</p>
+<h2 id="最大努力交付">最大努力交付</h2>
+<p>反熵可能会在多种情况下失败，包括代理或其操作环境的错误配置、I/O 问题（磁盘满、文件系统权限等）、网络问题（代理无法与服务器通信）等。因此，代理会尝试以最大努力的方式进行同步。</p>
+<p>如果在反熵运行期间遇到错误，则会记录该错误并继续运行代理。反熵机制会定期运行以自动从这些类型的瞬态故障中恢复。</p>
+<h2 id="启用标签覆盖">启用标签覆盖</h2>
+<p>可以部分修改服务注册的同步，以允许外部代理更改服务的标签。这在需要外部监控服务作为标签信息真实来源的情况下非常有用。比如 Redis 数据库和它的监控服务 Redis Sentinel 就有这种关系。 Redis 实例负责其大部分配置，但哨兵决定 Redis 实例是主实例还是辅助实例。使用 Consul 服务配置项 <code>enable_tag_override</code> 可以指示运行 Redis 数据库的 Consul 代理在反熵同步期间不更新标签。有关更多信息，请参阅<a target="_blank" rel="noopener" href="https://www.consul.io/docs/agent/services#enable-tag-override-and-anti-entropy">服务</a>页面。</p>
+<h1>所需端口</h1>
+<p>Consul 需要多达 6 个不同的端口才能正常工作，其中一些使用 TCP、UDP 或两种协议。下面我们记录了每个端口的要求。</p>
+<h2 id="端口表">端口表</h2>
+<p>在运行 Consul 之前，您应该确保以下绑定端口可以访问。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">用途</th>
+<th style="text-align:left">默认端口号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">DNS: The DNS server (TCP and UDP)</td>
+<td style="text-align:left">8600</td>
+</tr>
+<tr>
+<td style="text-align:left">HTTP: The HTTP API (TCP Only)</td>
+<td style="text-align:left">8500</td>
+</tr>
+<tr>
+<td style="text-align:left">HTTPS: The HTTPs API</td>
+<td style="text-align:left">disabled (8501)*</td>
+</tr>
+<tr>
+<td style="text-align:left">gRPC: The gRPC API</td>
+<td style="text-align:left">disabled (8502)*</td>
+</tr>
+<tr>
+<td style="text-align:left">LAN Serf: The Serf LAN port (TCP and UDP)</td>
+<td style="text-align:left">8301</td>
+</tr>
+<tr>
+<td style="text-align:left">Wan Serf: The Serf WAN port (TCP and UDP)</td>
+<td style="text-align:left">8302</td>
+</tr>
+<tr>
+<td style="text-align:left">server: Server RPC address (TCP Only)</td>
+<td style="text-align:left">8300</td>
+</tr>
+<tr>
+<td style="text-align:left">Sidecar Proxy Min: 用于自动分配的边车服务注册的最小端口号。</td>
+<td style="text-align:left">21000</td>
+</tr>
+<tr>
+<td style="text-align:left">Sidecar Proxy Max: 用于自动分配的边车服务注册的最大端口号。</td>
+<td style="text-align:left">21255</td>
+</tr>
+</tbody>
+</table>
+<p>*对于 HTTPS 和 gRPC，表中指定的端口只是建议。</p>
+<h2 id="端口信息">端口信息</h2>
+<p><strong>DNS 接口</strong> 用于解析 DNS 查询。</p>
+<p><strong>HTTP API</strong> 客户端使用它来与 HTTP API 对话，包括 UI 访问。</p>
+<p><strong>HTTPS API</strong>（可选）默认关闭，但端口 8501 是各种工具使用的默认约定。</p>
+<p><strong>gRPC API</strong>（可选）。目前 gRPC 仅用于向 Envoy 代理公开 xDS API。默认情况下它是关闭的，但端口 8502 是各种工具使用的默认约定。在 -dev 模式下默认为 8502。</p>
+<p><strong>Serf LAN</strong> 用于处理 LAN 中的 gossip。所有 agent 代理都需要该端口。</p>
+<p><strong>Serf WAN</strong> 服务器使用它来通过 WAN 向其他服务器进行 gossip。从 Consul 0.8 开始，WAN 加入泛洪功能要求 Serf WAN 端口（TCP/UDP）同时监听 WAN 和 LAN 接口。另请参阅：<a target="_blank" rel="noopener" href="https://github.com/hashicorp/consul/blob/main/CHANGELOG.md#080-april-5-2017">Consul 0.8.0 CHANGELOG</a> 和 <a target="_blank" rel="noopener" href="https://github.com/hashicorp/consul/issues/3058">GH-3058</a>。</p>
+<p><strong>服务器 RPC</strong> 服务器使用它来处理来自其他代理的传入请求。</p>
+<p>请注意，可以在<a target="_blank" rel="noopener" href="https://www.consul.io/docs/agent/options#ports">代理配置</a>中更改默认端口。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Consul/" rel="tag"># Consul</a>
+              <a href="/tags/Raft/" rel="tag"># Raft</a>
+              <a href="/tags/Gossip/" rel="tag"># Gossip</a>
+              <a href="/tags/Consensus-Protocol/" rel="tag"># Consensus Protocol</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/" rel="prev" title="Kafka-中的恰好一次交付和事物性消息【翻译】">
+                  <i class="fa fa-chevron-left"></i> Kafka-中的恰好一次交付和事物性消息【翻译】
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/devops/WSL2-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="next" title="WSL2 使用指南">
+                  WSL2 使用指南 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"4c1b21b8486aa60a560936ff43246d96"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

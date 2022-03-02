@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="本文为 KIP-98 - Exactly Once Delivery and Transactional Messaging 的部分翻译  动机 本文档概述了增强 Kafka 消息交付语义的提议。这建立在之前已经完成的重要工作的基础上，特别是在幂等生产者和Kafka 中的事务性消息传递。 Kafka 目前提供至少一次（at least once）语义，即。 在针对可靠性进行调整时，用户可以保证每">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka-中的恰好一次交付和事物性消息【翻译】">
+<meta property="og:url" content="https://www.zeral.cn/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="本文为 KIP-98 - Exactly Once Delivery and Transactional Messaging 的部分翻译  动机 本文档概述了增强 Kafka 消息交付语义的提议。这建立在之前已经完成的重要工作的基础上，特别是在幂等生产者和Kafka 中的事务性消息传递。 Kafka 目前提供至少一次（at least once）语义，即。 在针对可靠性进行调整时，用户可以保证每">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/kafka-transaction-workflow.png">
+<meta property="og:image" content="https://www.zeral.cn/images/middleware/kafka/Kafka-Transactions-Data-Flow.png">
+<meta property="article:published_time" content="2021-07-17T22:39:25.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.222Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="Kafka">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/middleware/kafka/kafka-transaction-workflow.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/","path":"middleware/Kafka-中的恰好一次交付和事物性消息/","title":"Kafka-中的恰好一次交付和事物性消息【翻译】"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Kafka-中的恰好一次交付和事物性消息【翻译】 | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">动机</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E4%BA%8B%E7%89%A9%E5%92%8C%E6%B5%81%E7%9A%84%E4%B8%80%E4%BA%9B%E4%B8%9C%E8%A5%BF"><span class="nav-number">1.1.</span> <span class="nav-text">关于事物和流的一些东西</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">公共接口</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.1.</span> <span class="nav-text">生产者接口</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OutOfOrderSequence-%E5%BC%82%E5%B8%B8"><span class="nav-number">2.1.1.</span> <span class="nav-text">OutOfOrderSequence 异常</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">2.2.</span> <span class="nav-text">示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.</span> <span class="nav-text">相关配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.1.</span> <span class="nav-text">代理配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.2.</span> <span class="nav-text">生产者配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.3.</span> <span class="nav-text">消费者配置</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">保证概要</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E5%B9%82%E7%AD%89%E6%80%A7%E4%BF%9D%E8%AF%81"><span class="nav-number">3.1.</span> <span class="nav-text">生产者幂等性保证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E7%89%A9%E4%BF%9D%E8%AF%81"><span class="nav-number">3.2.</span> <span class="nav-text">事物保证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">3.3.</span> <span class="nav-text">核心概念</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">数据流</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%AF%BB%E6%89%BE%E4%BA%8B%E5%8A%A1%E5%8D%8F%E8%B0%83%E5%99%A8-%E2%80%94%E2%80%94-FindCoordinatorRequest"><span class="nav-number">4.1.</span> <span class="nav-text">1. 寻找事务协调器 —— FindCoordinatorRequest</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E8%8E%B7%E5%8F%96%E7%94%9F%E4%BA%A7%E8%80%85-ID-%E2%80%94%E2%80%94-InitProducerIdRequest"><span class="nav-number">4.2.</span> <span class="nav-text">2. 获取生产者 ID —— InitProducerIdRequest</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E5%BD%93%E6%8C%87%E5%AE%9A-TransactionalId-%E6%97%B6"><span class="nav-number">4.2.1.</span> <span class="nav-text">2.1 当指定 TransactionalId 时</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E6%9C%AA%E6%8C%87%E5%AE%9A-TransactionalId-%E6%97%B6"><span class="nav-number">4.2.2.</span> <span class="nav-text">2.2 未指定 TransactionalId 时</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%BC%80%E5%A7%8B%E4%BA%8B%E7%89%A9-%E2%80%93-beginTransaction-API"><span class="nav-number">4.3.</span> <span class="nav-text">3. 开始事物 – beginTransaction() API</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%B6%88%E8%B4%B9-%E8%BD%AC%E6%8D%A2-%E7%94%9F%E4%BA%A7%E5%BE%AA%E7%8E%AF"><span class="nav-number">4.4.</span> <span class="nav-text">4. 消费-转换-生产循环</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-AddPartitionsToTxnRequest"><span class="nav-number">4.4.1.</span> <span class="nav-text">4.1 AddPartitionsToTxnRequest</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-ProduceRequest"><span class="nav-number">4.4.2.</span> <span class="nav-text">4.2 ProduceRequest</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%8F%90%E4%BA%A4%E6%88%96%E4%B8%AD%E6%AD%A2%E4%BA%8B%E7%89%A9"><span class="nav-number">4.5.</span> <span class="nav-text">5. 提交或中止事物</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-EndTxnRequest"><span class="nav-number">4.5.1.</span> <span class="nav-text">5.1 EndTxnRequest</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-WriteTxnMarkerRequest"><span class="nav-number">4.5.2.</span> <span class="nav-text">5.2 WriteTxnMarkerRequest</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E5%86%99%E5%85%A5%E6%9C%80%E5%90%8E%E7%9A%84-Commit-%E6%88%96-Abort-%E6%B6%88%E6%81%AF"><span class="nav-number">4.5.3.</span> <span class="nav-text">5.3 写入最后的 Commit 或 Abort 消息</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/middleware/Kafka-%E4%B8%AD%E7%9A%84%E6%81%B0%E5%A5%BD%E4%B8%80%E6%AC%A1%E4%BA%A4%E4%BB%98%E5%92%8C%E4%BA%8B%E7%89%A9%E6%80%A7%E6%B6%88%E6%81%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kafka-中的恰好一次交付和事物性消息【翻译】
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-18 06:39:25" itemprop="dateCreated datePublished" datetime="2021-07-18T06:39:25+08:00">2021-07-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Middleware/" itemprop="url" rel="index"><span itemprop="name">Middleware</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>本文为 <a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-98+-+Exactly+Once+Delivery+and+Transactional+Messaging">KIP-98 - Exactly Once Delivery and Transactional Messaging</a> 的部分翻译</p>
+</blockquote>
+<h1>动机</h1>
+<p>本文档概述了增强 Kafka 消息交付语义的提议。这建立在之前已经完成的重要工作的基础上，特别是在<a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/Idempotent+Producer">幂等生产者</a>和<a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/KAFKA/Transactional+Messaging+in+Kafka">Kafka 中的事务性消息传递</a>。</p>
+<p>Kafka 目前提供至少一次（<code>at least once</code>）语义，即。 在针对可靠性进行调整时，用户可以保证每次写入的消息将至少持久化一次，而不会丢失数据。 由于生产者重试，流中可能会出现重复。 例如，代理可能会在提交消息和向生产者发送确认之间崩溃，导致生产者重试，从而导致流中出现重复的消息。</p>
+<p>消息传递系统的用户极大地受益于更严格的幂等生产者语义，即。每个消息写入都将被持久化一次，不会重复，也不会丢失数据 - 即使在客户端重试或代理失败的情况下也是如此。这些更强的语义不仅使编写应用程序更容易，而且也让更多的应用程序可以使用给定消息传递系统。<br>
+但是，幂等生产者不为跨多个 <code>TopicPartition</code> 的写入提供保证。为此，人们需要更强的事物保证，即。能够以原子方式写入多个 <code>TopicPartition</code>。原子地，我们的意思是能够将一组消息作为一个单元跨 <code>TopicPartitions</code> 提交：要么提交所有消息，要么都不提交。</p>
+<span id="more"></span>
+<p>流处理应用程序是“消费(consume)-转换(transform)-生产(produce)”任务的管道，当流的重复处理不可接受时，绝对需要事务保证。因此，向 Kafka（一个流处理平台）添加事务保证使其不仅对流处理有用，而且对各种其他应用程序也更有用。</p>
+<h2 id="关于事物和流的一些东西">关于事物和流的一些东西</h2>
+<p>在上一节中，我们提到事务的主要动机是在 Kafka Streams 中启用一次处理。值得深入研究这个用例，因为它激发了我们设计中的许多权衡。<br>
+回想一下，使用 Kafka Streams 的数据转换通常通过多个流处理器进行，每个流处理器都由 Kafka 主题连接。这种设置被称为流拓扑，基本上是一个有向无环图 - DAG，其中流处理器是节点，连接的 Kafka 主题是顶点。这种模式是所有流架构的典型特征。您可以在<a target="_blank" rel="noopener" href="https://kafka.apache.org/documentation/streams">此处</a>阅读有关 Kafka 流架构的更多信息。<br>
+因此，Kafka 流的事务本质上将包含输入消息、本地状态存储的更新和输出消息。在事务中包含输入偏移量会促使将 <code>sendOffsets</code> API 添加到生产者接口，如下所述。更多细节将在单独的 KIP 中提供。<br>
+此外，流拓扑可以变得非常深——10 个阶段并不少见。如果输出消息仅在事务提交时具体化，那么 N 阶段深度的拓扑将需要 N x T 时间来处理其输入，其中 T 是单个事务的平均时间。因此 Kafka Streams 需要推测执行，其中输出消息甚至在提交之前就可以被下游处理器读取。否则，对于严格的流处理应用程序来说，事务将不是一个选项。这激发了稍后描述的“<code>读未提交 - read uncommitted</code>”消费者模式。</p>
+<p>这是我们选择针对流用例进行优化的两个特定实例。当读者阅读本文档时，我们鼓励他/她牢记这个用例，因为它激发了提案的大部分内容。</p>
+<p><img data-src="../../images/middleware/kafka/kafka-transaction-workflow.png" alt="Kafka Transaction Example Workflow"></p>
+<h1>公共接口</h1>
+<h2 id="生产者接口">生产者接口</h2>
+<p>生产者将获得五个新方法（<code>initTransactions</code>、<code>beginTransaction</code>、<code>sendOffsets</code>、<code>commitTransaction</code>、<code>abortTransaction</code>），并更新 <code>send</code> 方法以抛出新异常。详情如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Producer</span>&lt;K,V&gt; <span class="keyword">extends</span> <span class="title class_">Closeable</span> &#123;</span><br><span class="line">   </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 需要在任何其他事务方法之前调用。假设 transactional.id 已经在生产者配置中指定。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * 此方法执行以下操作：</span></span><br><span class="line"><span class="comment">   *   1.  确保由之前的生产者实例发起的任何事务都已完成。如果前一个实例因正在进行的事务而失败，它将被中止。</span></span><br><span class="line"><span class="comment">           如果最后一个事务已开始完成，但尚未完成，则此方法等待其完成。</span></span><br><span class="line"><span class="comment">   *   2. 获取内部生产者 id 和 epoch，用于生产者以后发布的所有事务性消息。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> IllegalStateException 如果没有在配置中设置生产者的 TransactionalId。</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">initTransactions</span><span class="params">()</span> <span class="keyword">throws</span> IllegalStateException;</span><br><span class="line">   </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 应该在每个新事务开始之前调用。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> ProducerFencedException 如果另一个生产者有相同的 transactional.id 处于活动状态。</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">beginTransaction</span><span class="params">()</span> <span class="keyword">throws</span> ProducerFencedException;</span><br><span class="line">   </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 将消耗的偏移量列表发送到消费者组协调器，并将这些偏移量标记为当前事务的一部分。</span></span><br><span class="line"><span class="comment">   * 仅当事务成功提交时，这些偏移量才会被视为已消耗。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * 当您需要将消费和生产的消息一起批处理时，应该使用此方法，通常采用消费-转换-生产模式。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> ProducerFencedException 如果另一个生产者具有相同的 transactional.id 处于活动状态。</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">sendOffsetsToTransaction</span><span class="params">(Map&lt;TopicPartition, OffsetAndMetadata&gt; offsets,</span></span><br><span class="line"><span class="params">                                String consumerGroupId)</span> <span class="keyword">throws</span> ProducerFencedException;</span><br><span class="line">   </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 提交正在进行的事务。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> ProducerFencedException 如果另一个生产者具有相同的 transactional.id 处于活动状态。</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">commitTransaction</span><span class="params">()</span> <span class="keyword">throws</span> ProducerFencedException;</span><br><span class="line">   </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 中止正在进行的事务。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> ProducerFencedException 如果另一个生产者具有相同的 transactional.id 处于活动状态。</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">abortTransaction</span><span class="params">()</span> <span class="keyword">throws</span> ProducerFencedException;</span><br><span class="line"> </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 异步发送给定的记录并返回最终包含响应信息的 Future。</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> record 要发送的记录</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> 最终将包含响应信息的 Future</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">public</span> Future&lt;RecordMetadata&gt; <span class="title function_">send</span><span class="params">(ProducerRecord&lt;K, V&gt; record)</span>;</span><br><span class="line"> </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 发送记录并在服务器确认记录后调用给定的回调</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">public</span> Future&lt;RecordMetadata&gt; <span class="title function_">send</span><span class="params">(ProducerRecord&lt;K, V&gt; record, Callback callback)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="OutOfOrderSequence-异常">OutOfOrderSequence 异常</h3>
+<p>如果代理检测到数据丢失，生产者将引发 <code>OutOfOrderSequenceException</code>。 换句话说，如果代理接收到的序列号大于它预期的序列号。 此异常将在 <code>Future</code> 中返回并传递给回调（如果有）。 这是一个致命的异常，未来对 <code>Producer</code> 方法（如 <code>send</code>、<code>beginTransaction</code>、<code>commitTransaction</code> 等）的调用将引发 <code>IlegalStateException</code>。</p>
+<h2 id="示例">示例</h2>
+<p>这是一个简单的应用程序，它演示了上面介绍的 API 的使用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">KafkaTransactionsExample</span> &#123;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String args[])</span> &#123;</span><br><span class="line">    KafkaConsumer&lt;String, String&gt; consumer = <span class="keyword">new</span> <span class="title class_">KafkaConsumer</span>&lt;&gt;(consumerConfig);</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 请注意，‘transactional.id’ 配置_必须_在生产者中配置以使用事务。</span></span><br><span class="line">    KafkaProducer&lt;String, String&gt; producer = <span class="keyword">new</span> <span class="title class_">KafkaProducer</span>&lt;&gt;(producerConfig);</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 我们需要为每个生产者实例初始化一次事务。要使用交易， </span></span><br><span class="line">    <span class="comment">// 假设应用程序 id 是在配置中使用 transactional.id 键指定的值。</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// 此方法将恢复或中止由具有相同应用程序 ID 的生产者的先前实例发起的事务。</span></span><br><span class="line">    <span class="comment">// 如果未执行初始化，任何其他事务性消息都将报错。</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// 响应指示成功或失败。有些故障是不可恢复的，需要一个新的生产者实例。</span></span><br><span class="line">    <span class="comment">// 有关错误代码列表，请参阅 TransactionMetadata 文档。</span></span><br><span class="line">    producer.initTransactions();</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">      ConsumerRecords&lt;String, String&gt; records = consumer.poll(CONSUMER_POLL_TIMEOUT);</span><br><span class="line">      <span class="keyword">if</span> (!records.isEmpty()) &#123;</span><br><span class="line">        <span class="comment">// 开始一个新的事务。这将开始执行原始记录以及由于处理输入记录而产生的记录的批消费过程。</span></span><br><span class="line">        <span class="comment">//</span></span><br><span class="line">        <span class="comment">// 我们需要检查响应以确保此生产者能够启动一个新的事物。</span></span><br><span class="line">        producer.beginTransaction();</span><br><span class="line">         </span><br><span class="line">        <span class="comment">// 处理输入记录并将它们发送到输出主题。</span></span><br><span class="line">        List&lt;ProducerRecord&lt;String, String&gt;&gt; outputRecords = processRecords(records);</span><br><span class="line">        <span class="keyword">for</span> (ProducerRecord&lt;String, String&gt; outputRecord : outputRecords) &#123;</span><br><span class="line">          producer.send(outputRecord);</span><br><span class="line">        &#125;</span><br><span class="line">         </span><br><span class="line">        <span class="comment">// 为了确保消费和生产的消息是批处理的，我们需要生产者而不是消费者来提交偏移量。</span></span><br><span class="line">        <span class="comment">// </span></span><br><span class="line">        <span class="comment">// 如果这返回错误，我们应该中止事务。</span></span><br><span class="line">         </span><br><span class="line">        sendOffsetsResult = producer.sendOffsetsToTransaction(getUncommittedOffsets());</span><br><span class="line">         </span><br><span class="line">      </span><br><span class="line">        <span class="comment">// 现在我们已经消费、处理和生产了一批消息，让我们提交结果。</span></span><br><span class="line">        <span class="comment">// 如果这没有返回成功，那么事务将被回滚。</span></span><br><span class="line">        producer.endTransaction();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="相关配置">相关配置</h2>
+<h3 id="代理配置">代理配置</h3>
+<table>
+<thead>
+<tr>
+<th>配置 Key</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://transactional.id.timeout.ms">transactional.id.timeout.ms</a></td>
+<td>事务协调器在主动使生产者 TransactionalId 过期而不从其接收任何事务状态更新之前将等待的最长时间（以毫秒为单位）。<br />默认值为 604800000（7 天）。这允许定期的每周生产者作业来维护它们的 ID。</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://max.transaction.timeout.ms">max.transaction.timeout.ms</a></td>
+<td>事务的最大允许超时时间。如果客户端请求事务的时间超过此时间，则代理将在 InitPidRequest 中返回 InvalidTransactionTimeout 错误。这可以防止客户端超时过长，这可能会阻止消费者从事务包含的主题中读取消息。<br />默认值为 900000（15 分钟）。这是需要发送消息事务的时间段的保守上限。</td>
+</tr>
+<tr>
+<td>transaction.state.log.replication.factor</td>
+<td>事务状态主题的副本数。默认: 3</td>
+</tr>
+<tr>
+<td>transaction.state.log.num.partitions</td>
+<td>事务状态主题的分区数。默认: 50</td>
+</tr>
+<tr>
+<td>transaction.state.log.min.isr</td>
+<td>必须考虑联机事务状态主题的每个分区的最小同步中的副本数。默认: 2</td>
+</tr>
+<tr>
+<td>transaction.state.log.segment.bytes</td>
+<td>事务状态主题的段大小。默认: 104857600 bytes.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="生产者配置">生产者配置</h3>
+<table>
+<thead>
+<tr>
+<th>配置 Key</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>enable.idempotence</td>
+<td>是否启用幂等（默认为 false）。如果禁用，生产者将不会在生产请求中设置 PID 字段，并且当前生产者交付语义将生效。请注意，必须启用幂等性才能使用事务。<br />当启用幂等性时，我们强制执行 <code>acks=all</code>、<code>retries &gt; 1</code> 和 <code>max.inflight.requests.per.connection=1</code>。如果没有这些配置的这些值，我们就不能保证幂等性。 如果应用程序未明确覆盖这些设置，则当启用幂等性时，生产者将设置 <code>acks=all</code>、<code>retries=Integer.MAX_VALUE</code> 和 <code>max.inflight.requests.per.connection=1</code>。</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://transaction.timeout.ms">transaction.timeout.ms</a></td>
+<td>事务协调器在主动中止正在进行的事务之前等待来自生产者的事务状态更新的最长时间（以毫秒为单位）。<br />此配置值将与 InitPidRequest 一起发送到事务协调器。如果此值大于代理中的 <code>max.transaction.timeout.ms</code> 设置，则请求将失败并显示“InvalidTransactionTimeout”错误。<br />默认为 60000。这使得事务不会阻塞下游消费超过一分钟，这在实时应用程序中通常是允许的。</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://transactional.id">transactional.id</a></td>
+<td>用于事务性交付的 TransactionalId。 这实现了跨越多个生产者会话的可靠性语义，因为它允许客户端保证使用相同 TransactionalId 的事务在开始任何新事务之前已经完成。如果未提供 TransactionalId，则生产者仅限于幂等交付。<br />请注意，如果配置了 TransactionalId，则必须启用 <code>enable.idempotence</code>。<br />默认为空，表示不能使用事务。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="消费者配置">消费者配置</h3>
+<table>
+<thead>
+<tr>
+<th>配置 Key</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>isolation.level</td>
+<td>以下是可能的值（默认为 read_uncommitted）：<br /><code>read_uncommitted</code>: 以偏移量顺序消费已提交和未提交的消息。<br /><code>read_committed</code>: 仅以偏移顺序消费非事务性消息或已提交的事务性消息。为了保持偏移顺序，此设置意味着我们必须在消费者中缓冲消息，直到我们看到给定事务中的所有消息。</td>
+</tr>
+</tbody>
+</table>
+<h1>保证概要</h1>
+<h2 id="生产者幂等性保证">生产者幂等性保证</h2>
+<p>为了实现幂等生产者语义，我们引入了生产者 ID（以下称为 PID）和 Kafka 消息的序列号的概念。在初始化期间，每个新生产者都将被分配一个唯一的 PID。 PID 分配对用户完全透明，永远不会暴漏给客户端。</p>
+<p>对于给定的 PID，序列号将从零开始并单调递增，每个主题分区（topic partition）产生一个序列号。生产者发送的每条消息的序列号都会增加。类似地，代理将为该主题分区提交的每条消息增加与 PID -&gt; 主题分区对关联的序列号。最后，代理将拒绝来自生产者的消息，除非它的序列号恰好比来自该 PID -&gt; 主题分区对的最后提交的消息序列号大 1。</p>
+<p>这确保了即使生产者必须在失败时重试请求，每条消息也将仅在日志中持久化一次。此外，由于生产者的每个新实例都分配了一个新的、唯一的 PID，<strong>我们只能保证在单个生产者会话中的幂等生产</strong>。这些语义已在本文档之前讨论过。</p>
+<p>这些幂等生产者语义对于无状态应用程序（如指标跟踪和审计）可能很有用。</p>
+<h2 id="事物保证">事物保证</h2>
+<p>其核心，事务保证使应用程序能够以原子方式生成多个 <code>TopicPartition</code>，即。对这些 <code>TopicPartition</code> 的所有写入都将作为一个单元成功或失败。</p>
+<p>此外，由于消费者进度被记录为对 <code>offsets</code> 主题的写入，因此利用上述功能使应用程序能够将消费和生产的消息批处理到单个原子单元中，即。 只有当整个“consume-transform-produce”完整执行时，一组消息才可以被视为已消费。</p>
+<p>此外，有状态应用程序还将能够确保应用程序的多个会话之间的连续性。换句话说，Kafka 可以保证跨应用程序反弹的幂等生产和事务恢复。</p>
+<p>为了实现这一点，我们要求应用程序提供一个在应用程序的所有会话中都稳定的唯一 ID。对于本文档的其余部分，我们将此类 ID 称为 <code>TransactionalId</code>。虽然 TransactionalId 和内部 PID 之间可能存在 1-1 映射，但主要区别在于 <code>TransactionalId</code> 是由用户提供的，并且是下面描述的跨生产者会话的幂等保证。</p>
+<p>当提供这样的 TransactionalId 时，Kafka 将保证：</p>
+<ol>
+<li>恰好只有一个具有给定 TransactionalId 的活动生产者。这是通过在具有相同 TransactionalId 的新实例上线时隔离旧代来实现的。</li>
+<li>跨应用程序会话的事务恢复。如果应用程序实例死亡，下一个实例可以保证任何未完成的事务都已完成（无论是中止还是提交），从而在恢复工作之前使新实例处于干净状态。</li>
+</ol>
+<p>请注意，这里提到的事务保证是从生产者的角度来看的。在消费者方面，保障力度稍弱。特别是，我们不能保证一个提交的事务的所有消息都会被一起消费。这有几个原因：</p>
+<ol>
+<li>对于压缩主题，事务的某些消息可能会被更新的版本覆盖。</li>
+<li>事务可能跨越日志段。因此，当旧段被删除时，我们可能会在事务的第一部分丢失一些消息。</li>
+<li>消费者可能会寻求事物中的任意点，因此会错过一些初始消息。</li>
+<li>消费者可能不会从参与事物的所有分区中消费。因此，他们将永远无法读取包含事物的所有消息。</li>
+</ol>
+<h2 id="核心概念">核心概念</h2>
+<p>为了实现事物，即。确保以原子方式生成和使用一组消息，我们引入了几个新概念：</p>
+<ol>
+<li>我们引入了一个称为<code>事务协调器（Transaction Coordinator）</code>的新实体。与消费者组协调器类似，每个生产者都分配了一个事务协调器，所有分配 PID 和管理事务的逻辑都由事务协调器完成。</li>
+<li>我们引入了一个新的内部 kafka 主题，称为<code>事务日志（Transaction Log）</code>。与 <code>Consumer Offsets 主题</code>类似，事务日志是每个事务的持久和复制记录。事务日志是事务协调器的状态存储，日志最新版本的快照封装了每个活动事务的当前状态。</li>
+<li>我们引入了<code>控制消息（Control Messages）</code>的概念。这些是写入用户主题的特殊消息，由客户端处理，但从未向用户公开。例如，它们用于让代理向消费者指示先前获取的消息是否已被原子提交。之前已经在 <a target="_blank" rel="noopener" href="https://issues.apache.org/jira/browse/KAFKA-1639">Support control messages in Kafka</a> 提出了控制消息。</li>
+<li>我们引入了 <code>TransactionalId</code> 的概念，使用户能够以持久的方式唯一标识生产者。具有相同 <code>TransactionalId</code> 的生产者的不同实例将能够恢复（或中止）由前一个实例实例化的任何事务。</li>
+<li>我们引入了<code>生产者时代（producer epoch）</code>的概念，这使我们能够确保只有一个具有给定 <code>TransactionalId</code> 的生产者的合法活动实例，从而使我们能够在发生故障时维护事务保证。</li>
+</ol>
+<p>除了上述新概念之外，我们还引入了新的请求类型、现有请求的新版本和核心消息格式的新版本，以支持事务。所有这些的细节将推迟到其他文件。</p>
+<h1>数据流</h1>
+<p><img data-src="../../images/middleware/kafka/Kafka-Transactions-Data-Flow.png" alt="Kafka-Transactions-Data-Flow"></p>
+<p>在上图中，矩形边框代表不同的机器。底部的圆角框代表 <code>Kafka TopicPartitions</code>，对角线不同圆角的框代表在 broker 内部运行的逻辑实体。</p>
+<p>每个箭头代表一个 RPC 或对 Kafka 主题的写入。这些操作按每个箭头旁边的数字指示的顺序进行。下面的部分编号以匹配上图中的操作，并描述相关操作。</p>
+<h2 id="1-寻找事务协调器-——-FindCoordinatorRequest">1. 寻找事务协调器 —— FindCoordinatorRequest</h2>
+<p>由于事务协调器处于分配 PID 和管理事务的中心，因此生产者要做的第一件事就是发出 <code>FindCoordinatorRequest</code>到任意的代理以发现其协调器的位置。以前称为 <code>GroupCoordinatorRequest</code>，但为了更简单的用途而重命名。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 Client 的 Producer：KafkaProducer:TransactionManager.lookupCoordinator</span><br></pre></td></tr></table></figure>
+<h2 id="2-获取生产者-ID-——-InitProducerIdRequest">2. 获取生产者 ID —— InitProducerIdRequest</h2>
+<p>在发现其协调器的位置后，下一步是获取生产者的 PID。这是通过向事务协调器发出 <code>InitProducerIdRequest</code> 来实现的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 Client 的 Producer：KafkaProducer:TransactionManager.initializeTransactions</span><br></pre></td></tr></table></figure>
+<h3 id="2-1-当指定-TransactionalId-时">2.1 当指定 TransactionalId 时</h3>
+<p>如果设置了 <code>transactional.id</code> 配置，则此 <code>InitProducerIdRequest</code> 携带 <code>TransactionalId</code> 一起传递，并在步骤 <code>2a</code> 中将相应 PID 的映射记录在事务日志中。这使我们能够将 <code>TransactionalId</code> 的相同 PID 返回给生产者的未来实例，从而能够恢复或中止先前未完成的交易。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 <span class="type">Broker</span> <span class="type">Server</span> 的 <span class="type">TransactionCoordinator</span>：<span class="type">TransactionCoordinator</span>.handleInitProducerId</span><br></pre></td></tr></table></figure>
+<p>除了返回 PID 之外，<code>InitProducerIdRequest</code> 还执行以下任务：</p>
+<ol>
+<li>提升 PID 的时代 - epoch，以便生产者的任何先前僵尸实例都被隔离，并且无法继续其事务。</li>
+<li>恢复（前滚或回滚）生产者的前一个实例留下的任何未完成的事务。</li>
+</ol>
+<p><code>InitProducerIdRequest</code> 的处理是同步的。一旦它返回，生产者就可以发送数据并开始新的事务。</p>
+<h3 id="2-2-未指定-TransactionalId-时">2.2 未指定 TransactionalId 时</h3>
+<p>如果配置中没有指定 <code>TransactionalId</code>，则分配一个新的 PID，生产者在单个会话中只享受幂等语义和事务语义。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 <span class="type">Broker</span> <span class="type">Server</span> 的 <span class="type">TransactionCoordinator</span>：<span class="type">TransactionCoordinator</span>.handleInitProducerId</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>通过 Zookeeper 来保证分布式下产生唯一 ID</p>
+</blockquote>
+<h2 id="3-开始事物-–-beginTransaction-API">3. 开始事物 – beginTransaction() API</h2>
+<p>新的 <code>KafkaProducer</code> 将有一个 <code>beginTransaction()</code> 方法，必须调用该方法来表示新事务的开始。生产者记录本地状态，表明事物已经开始，但从协调者的角度来看，在发送第一条记录之前，事物不会开始。</p>
+<h2 id="4-消费-转换-生产循环">4. 消费-转换-生产循环</h2>
+<p>在这个阶段，生产者开始消费-转换-生产构成事物的消息。这是一个漫长的阶段，可能包含多个请求。</p>
+<h3 id="4-1-AddPartitionsToTxnRequest">4.1 AddPartitionsToTxnRequest</h3>
+<p>第一次将新 <code>TopicPartition</code> 作为事务的一部分写入时，生产者将此请求发送到事务协调器。将此 <code>TopicPartition</code> 添加到事务中由协调器在步骤 <code>4.1a</code> 中记录。我们需要这些信息，以便我们可以将提交或中止标记写入每个 <code>TopicPartition</code>（有关详细信息，请参阅第 5.2 节）。如果这是添加到事务的第一个分区，协调器还将启动事务计时器。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 <span class="type">Broker</span> <span class="type">Server</span> 的 <span class="type">TransactionCoordinator</span>：<span class="type">TransactionCoordinator</span>.handleAddPartitionsToTransaction</span><br></pre></td></tr></table></figure>
+<h3 id="4-2-ProduceRequest">4.2 ProduceRequest</h3>
+<p>生产者通过一个或多个 <code>ProduceRequests</code>（从生产者的 <code>send</code> 方法触发）向用户的 <code>TopicPartitions</code> 写入一堆消息。这些请求包括 PID 、纪元和序列号，如 <code>4.2a</code> 中所示。</p>
+<p>在提交事务之前，消费的偏移量在外部是不可见的，我们现在将讨论这个过程。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 Client 的 Producer：KafkaProducer.send</span><br></pre></td></tr></table></figure>
+<h2 id="5-提交或中止事物">5. 提交或中止事物</h2>
+<p>写入数据后，用户必须调用 <code>KafkaProducer</code> 的新 <code>commitTransaction</code> 或 <code>abortTransaction</code> 方法。这些方法将分别开始提交或中止事务的过程。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 Client 的 Producer：KafkaProducer:commitTransaction|abortTransaction</span><br></pre></td></tr></table></figure>
+<h3 id="5-1-EndTxnRequest">5.1 EndTxnRequest</h3>
+<p>当生产者完成事物时，必须调用新引入的 <code>KafkaProducer.endTransaction</code> 或 <code>KafkaProducer.abortTransaction</code>。前者使下游消费者可以使用 4 中产生的数据。后者有效地从日志中删除了生成的数据：用户永远无法访问它，即。下游消费者将读取并丢弃中止的消息。</p>
+<p>无论调用哪个生产者方法，生产者都会向事务协调器发出 <code>EndTxnRequest</code>，并带有指示事务是提交还是中止的附加数据。收到此请求后，协调器：</p>
+<ol>
+<li>将 <code>PREPARE_COMMIT</code> 或 <code>PREPARE_ABORT</code> 消息写入<strong>事务日志</strong>。 （步骤 <code>5.1a</code>）</li>
+<li>开始通过 <code>WriteTxnMarkerRequest</code> 将称为 <code>COMMIT</code>（或 <code>ABORT</code>）标记的命令消息写入<strong>用户日志</strong>的过程。 （见下文第 5.2 节）。</li>
+<li>最后将 <code>COMMITTED</code>（或 <code>ABORTED</code>）消息写入<strong>事务日志</strong>。 （见下文 5.3）。</li>
+</ol>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发生在 <span class="type">Broker</span> <span class="type">Server</span> 的 <span class="type">TransactionCoordinator</span>：<span class="type">TransactionCoordinator</span>.handleEndTransaction</span><br></pre></td></tr></table></figure>
+<h3 id="5-2-WriteTxnMarkerRequest">5.2 WriteTxnMarkerRequest</h3>
+<p>该请求由事务协调器向作为事务一部分的每个 <code>TopicPartition</code> 的领导者发出。收到此请求后，每个代理都会将 <code>COMMIT(PID)</code> 或 <code>ABORT(PID)</code> 控制消息写入<strong>用户日志</strong>。 （步骤 <code>5.2a</code>）</p>
+<p>此消息向消费者指示具有给定 PID 的消息是必须交付给用户还是丢弃。因此，消费者将缓冲具有 PID 的消息，直到它读取相应的 <code>COMMIT</code> 或 <code>ABORT</code> 消息，此时它将分别交付或丢弃消息。</p>
+<p>请注意，如果 <code>__consumer-offsets</code> 主题是事务中的 <code>TopicPartitions</code> 之一，则提交（或中止）标记也会写入消费者偏移主题日志，并通知消费者协调器它需要在以下情况下实现这些偏移量：在中止的情况下提交或忽略它们（左侧的步骤 5.2a）。</p>
+<h3 id="5-3-写入最后的-Commit-或-Abort-消息">5.3 写入最后的 Commit 或 Abort 消息</h3>
+<p>在所有提交或中止标记写入数据日志后，事务协调器将最终的 <code>COMMITTED</code> 或 <code>ABORTED</code> 消息写入<strong>事务日志</strong>，表明事务已完成（图中的步骤 5.3）。此时，事务日志中与事务有关的大部分消息都可以删除。</p>
+<p>我们只需要保留已完成交易的 PID 和时间戳，因此我们最终可以删除生产者的 TransactionalId-&gt;PID 映射。请参阅下面的过期 PID 部分。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Kafka/" rel="tag"># Kafka</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/persistence/db/InnoDB-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/" rel="prev" title="InnoDB 存储引擎【翻译】">
+                  <i class="fa fa-chevron-left"></i> InnoDB 存储引擎【翻译】
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/middleware/Consul-%E5%85%A5%E9%97%A8/" rel="next" title="Consul 入门">
+                  Consul 入门 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"f29ed427011a4fbd5d6b5499d323719d"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

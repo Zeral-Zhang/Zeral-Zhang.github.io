@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.0.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo_transparent.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.zeral.cn","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+  <meta name="description" content="OAuth 是什么 OAuth 2.0 是一个授权协议，它允许软件应用代表（而不是充当）资源拥有者去访问资源拥有者的资源。应用向资源拥有者请求授权，然后取得令牌（token），并用它来访问资源。 虽然 OAuth 基本上不关心它所保护的资源类型，但它确实很适合当今的 RESTful Web 服务，也适用于 Web 应用和原生应用。 OAtuth 协议规范是这样定义的：  OAuth 2.0 框架能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OAuth2 和 OpenID Connect">
+<meta property="og:url" content="https://www.zeral.cn/security/OAuth2-%E5%92%8C-OpenID/index.html">
+<meta property="og:site_name" content="Zeral&#39;s Blog">
+<meta property="og:description" content="OAuth 是什么 OAuth 2.0 是一个授权协议，它允许软件应用代表（而不是充当）资源拥有者去访问资源拥有者的资源。应用向资源拥有者请求授权，然后取得令牌（token），并用它来访问资源。 虽然 OAuth 基本上不关心它所保护的资源类型，但它确实很适合当今的 RESTful Web 服务，也适用于 Web 应用和原生应用。 OAtuth 协议规范是这样定义的：  OAuth 2.0 框架能">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-components.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-code-flow.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-client-redirect.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-owner-authenticate.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-owner-authorization.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-redirect-to-client.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-client-request-token.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-server-response-token.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-client-request-resource-server.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-implicit-flow.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-client-credentials.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-password.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-assertion.png">
+<meta property="og:image" content="https://www.zeral.cn/images/security/oauth-choose-flow.png">
+<meta property="article:published_time" content="2021-08-15T05:11:00.000Z">
+<meta property="article:modified_time" content="2022-02-24T08:00:02.243Z">
+<meta property="article:author" content="Zeral">
+<meta property="article:tag" content="OAuth2">
+<meta property="article:tag" content="OpenID">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.zeral.cn/images/security/oauth-components.png">
+
+
+<link rel="canonical" href="https://www.zeral.cn/security/OAuth2-%E5%92%8C-OpenID/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.zeral.cn/security/OAuth2-%E5%92%8C-OpenID/","path":"security/OAuth2-和-OpenID/","title":"OAuth2 和 OpenID Connect"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>OAuth2 和 OpenID Connect | Zeral's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GKSQDWDL4H"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-GKSQDWDL4H","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?ed1432ed7e87263f4f09c4f477533743"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Zeral's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">我思故我在</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">OAuth 是什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">OAuth 的优缺点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">OAuth 不能做什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">OAuth 2.0 授权许可的完整过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">授权许可类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%88%E6%9D%83%E7%A0%81%E8%AE%B8%E5%8F%AF%E6%9C%BA%E5%88%B6-authorization-code"><span class="nav-number">5.1.</span> <span class="nav-text">授权码许可机制 - authorization_code</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%90%E5%BC%8F%E8%AE%B8%E5%8F%AF%E7%B1%BB%E5%9E%8B-implicit"><span class="nav-number">5.2.</span> <span class="nav-text">隐式许可类型 - implicit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%87%AD%E6%8D%AE%E8%AE%B8%E5%8F%AF%E7%B1%BB%E5%9E%8B-client-credentials"><span class="nav-number">5.3.</span> <span class="nav-text">客户端凭据许可类型 - client_credentials</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E6%8B%A5%E6%9C%89%E8%80%85%E5%87%AD%E6%8D%AE%E8%AE%B8%E5%8F%AF%E7%B1%BB%E5%9E%8B-password"><span class="nav-number">5.4.</span> <span class="nav-text">资源拥有者凭据许可类型 - password</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%AD%E8%A8%80%E8%AE%B8%E5%8F%AF%E7%B1%BB%E5%9E%8B-assertion"><span class="nav-number">5.5.</span> <span class="nav-text">断言许可类型 - assertion</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E8%AE%B8%E5%8F%AF%E7%B1%BB%E5%9E%8B"><span class="nav-number">5.6.</span> <span class="nav-text">选择合适的许可类型</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">OAuth 令牌</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%8C%96%E4%BB%A4%E7%89%8C%EF%BC%9AJWT"><span class="nav-number">6.1.</span> <span class="nav-text">结构化令牌：JWT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JWT-%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">6.1.1.</span> <span class="nav-text">JWT 的结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JWT-%E5%A3%B0%E6%98%8E-JWT-Claims"><span class="nav-number">6.1.2.</span> <span class="nav-text">JWT 声明 - JWT Claims</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A4%E7%89%8C%E7%9A%84%E5%8A%A0%E5%AF%86%E4%BF%9D%E6%8A%A4"><span class="nav-number">6.2.</span> <span class="nav-text">令牌的加密保护</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D"><span class="nav-number">6.2.1.</span> <span class="nav-text">签名</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-HS256-%E7%9A%84%E5%AF%B9%E7%A7%B0%E7%AD%BE%E5%90%8D"><span class="nav-number">6.2.1.1.</span> <span class="nav-text">使用 HS256 的对称签名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-RS256-%E7%9A%84%E9%9D%9E%E5%AF%B9%E7%A7%B0%E7%AD%BE%E5%90%8D"><span class="nav-number">6.2.1.2.</span> <span class="nav-text">使用 RS256 的非对称签名</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E5%AF%86"><span class="nav-number">6.2.2.</span> <span class="nav-text">加密</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">OpenID Connect</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zeral"
+      src="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+  <p class="site-author-name" itemprop="name">Zeral</p>
+  <div class="site-description" itemprop="description">Zeral, 全栈工程师一枚。</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">65</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zeral-zhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zeral-zhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="zeral:zeralzhang@gmail.com" title="E-Mail → zeral:zeralzhang@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/ZeralZhang" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;ZeralZhang" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.zeral.cn/security/OAuth2-%E5%92%8C-OpenID/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/15558347?s=460&v=4">
+      <meta itemprop="name" content="Zeral">
+      <meta itemprop="description" content="Zeral, 全栈工程师一枚。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeral's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OAuth2 和 OpenID Connect
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-08-15 13:11:00" itemprop="dateCreated datePublished" datetime="2021-08-15T13:11:00+08:00">2021-08-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-02-24 16:00:02" itemprop="dateModified" datetime="2022-02-24T16:00:02+08:00">2022-02-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1>OAuth 是什么</h1>
+<p>OAuth 2.0 是一个授权协议，它允许软件应用代表（而不是充当）资源拥有者去访问资源拥有者的资源。应用向资源拥有者请求授权，然后取得<strong>令牌（token）</strong>，并用它来访问资源。</p>
+<p>虽然 OAuth 基本上不关心它所保护的资源类型，但它确实很适合当今的 RESTful Web 服务，也适用于 Web 应用和原生应用。</p>
+<p>OAtuth <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc6749">协议规范</a>是这样定义的：</p>
+<blockquote>
+<p>OAuth 2.0 框架能让第三方应用以有限的权限访问 HTTP 服务，可以通过构建资源拥有者与 HTTP 服务间的许可交互机制，让第三方应用代表资源拥有者访问服务，或者授予权限给第三方应用，让其代表自己访问服务。</p>
+</blockquote>
+<p>其中需要关心的组件角色如下：</p>
+<ul>
+<li><strong>资源拥有者</strong>有权访问受保护资源，并能将受保护资源的访问权限委托出去。与 OAuth 系统中的其他组件不同，资源拥有者不是软件。在<em>大多数</em>情况下，资源拥有者是一个人，他使用客户端软件访问受他控制的资源。至少在部分过程中，资源拥有者要使用 Web 浏览器（通常称为用户代理）与授权服务器 交互。资源拥有者可能还会使用浏览器与客户端交互。</li>
+<li><strong>受保护资源</strong>是资源拥有者有权访问的组件，在访问时需要 OAuth 访问令牌。这样的组件有多种形式，但大多数情况下是某种形式的 Web API。受保护资源需要验证收到的令牌，并决定是否响应以及如何响应请求。在 OAuth 架构中，受保护资源对是否认可令牌拥有最终决定权。</li>
+<li><strong>客户端</strong>是代表资源拥有者访问受保护资源的软件。在 OAuth 中，只要软件使用了受保护资源上的 API，他就是客户端。它使用 OAuth 来获取访问权限。得益于 OAuth 的设计，客户端通常是 OAuth 系统中最简单的组件，它的职责主要是从授权服务器获取令牌以及在受保护资源上使用令牌。客户端不需要理解令牌，也不需要查看令牌的内容。相 反，客户端只需要将令牌视为一个不透明的字符串即可。OAuth 客户端可以是 Web 应用、原生应用，甚至浏览器内的 JavaScript 应用。</li>
+<li><strong>授权服务器</strong>是一个 HTTP 服务器，它在 OAuth 系统中充当中央组件。提供了一种机制来弥补客户端与受保护资源之间的间隙。授权服务器对资源拥有者和客户端进行身份认证，让资源拥有者向客户端授权、为客户端颁发令牌。某些授权服务器还会提供额外的功能，例如令牌内省、记忆授权决策。</li>
+</ul>
+<p>整个系统的目标是：让客户端代表资源拥有者访问受保护资源。</p>
+<span id="more"></span>
+<p><img data-src="../../images/security/oauth-components.png" alt="OAuth Components"></p>
+<h1>OAuth 的优缺点</h1>
+<p>OAuth 中假设不受控的客户端总是比授权服务器或者受保护资源多出好几个数量级。这样架构决策导致的结果就是，尽可能将复杂性从客户端转移到服务端。对于客户端开发人员是好事，因为客户端成了系统中最简单的部分。客户端开发人员不需要和别的安全协议那样，处理签名规范化以及解析复杂的安全策略文档，也不需要担心处理敏感的用户凭据。OAuth 令牌提供了一种比密码略复杂的机制，比旧时代的凭据共享和凭据盗用更加细粒度，安全和可控，使用得当，其安全性比密码高得多。</p>
+<p>另一方面，授权服务器和受保护资源要承担更多的复杂性和安全性方面的责任。即使单个客户端被攻破，也不会泄漏受保护资源的凭据，因为客户端根本没有机会接触受保护资源的凭据。然而，授权服务器则需要管理和保护系统中所有客户端和用户的凭据和令牌。虽然这确实使它更容易成为攻击目标，但是保护单个授权服务器要比保护上千台由不同开发人员开发的客户端要容器得多。</p>
+<p>OAuth 2.0 的可扩展性和模块化是其最大的优势之一，因为这使得该协议适用于各种环境。这种灵活性也导致不同的实现之间存在的兼容性问题。当开发人员想在不同的系统上实现 OAuth 时，它提供的众多自定义选项容易使人困惑。</p>
+<p>更糟糕的是，OAuth 的某些自定义选项可能会被用在错误的地方或者实施不当，进而导致不安全的实现。这些漏洞在 <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc6819">OAuth 威胁模型文档 - RFC 6819</a> 有详细的讨论。</p>
+<h1>OAuth 不能做什么</h1>
+<ul>
+<li><strong>OAuth 没有定义 HTTP 协议之外的情形</strong>。由于使用 bearer 令牌的 OAuth 2.0 并不提供消息签名，因此不应脱离 <code>HTTPS</code>（TLS 上的 HTTP）使用。</li>
+<li><strong>OAuth 不是身份认证协议</strong>。虽然可以用它构建一个，比如 <code>OpenID Connect</code>。但 OAuth 事物本事并不透露关于用户的信息。</li>
+<li><strong>OAuth 没有定义用户对用户的授权机制</strong>，尽管它在根本上是一个用户向软件授权的协议。OAuth 假设资源拥有者能够控制客户端。要使资源拥有者向另一个用户授权，仅使用 OAuth 是不行的。但这种授权并不罕见，<code>User Mananged Access</code> 协议就是为此而生的，它规定了如何使用 OAuth 构建一个支持用户对用户授权的系统。</li>
+<li><strong>OAuth 没有定义授权处理机制</strong>，OAuth 提供了一种方法来传达授权委托已发生这一事实，但是它并不定义授权的内容。相反，由服务 API 定义使用权限范围、令牌之类的 OAuth 组件来定义一个给定的令牌适用于哪些操作。</li>
+<li><strong>OAuth 没有定义令牌格式</strong>。实际上，OAuth 协议明确声明了令牌的内容对客户端是完全不透明的。但是，颁发令牌的授权服务器和接收令牌的受保护资源仍然需要理解令牌。这个层面的互操作性要求催生了 <code>JSON Web Token（JWT）</code> 格式和令牌内省协议。</li>
+<li><strong>OAuth 2.0 没有定义加密方法</strong>。OAuth 2.0 没有定义新的加密机制，而是允许借用通用的加密机制，这种加密机制不止适用于 OAuth。这种有意的遗漏催生了 JSON 对象签名和加密（<code>JOSE</code>）规范套件。该套件提供了一系列通用的加密机制，可以配合 OAuth 使用，也可以脱离 OAuth 使用。该套件也可以用于一种消息级的加密协议，该协议使用了 <code>OAuth PoP</code> 令牌。</li>
+<li><strong>OAuth 2.0 不是单体协议</strong>。该规范被分成了多个定义和流程，每个定义和流程都有各自的使用场景。</li>
+</ul>
+<h1>OAuth 2.0 授权许可的完整过程</h1>
+<p>我们将展示一个基于 Web 的客户端应用的<strong>授权码许可机制</strong>。该客户端将以交互方式得到资源拥有者的直接授权。</p>
+<p><strong>授权码许可</strong>中用到了一个临时凭据 —— 授权码，来表示资源拥有者同意向客户端授权，如图所示。</p>
+<img data-src="../../images/security/oauth-code-flow.png" alt="OAuth Code Flow" style="zoom:33%;" />
+<p>首先，资源拥有者访问客户端应用，并表明他希望客户端代表自己去使用某一受保护资源。</p>
+<p>当客户端发现需要获取一个新的的 OAuth 访问令牌时，它会将资源拥有者重定向至授权服务器，并附带一个授权请求，表示它要向资源拥有者请求一些权限。</p>
+<img data-src="../../images/security/oauth-client-redirect.png" alt="image-028" style="zoom: 33%;" />
+<p>由于我们使用的是 Web 客户端，因此采用 HTTP 重定向的方式将用户代理重定向至授权服务器的授权端点。客户端应用的响应如下所示：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">HTTP/1.1</span> <span class="number">302</span> Moved Temporarily </span><br><span class="line"><span class="attribute">x-powered-by</span><span class="punctuation">: </span>Express </span><br><span class="line"><span class="attribute">Location</span><span class="punctuation">: </span>http://localhost:9001/authorize?response_type=code&amp;scope=foo&amp;client _id=oauth-client-1&amp;redirect_uri=http%3A%2F%2Flocalhost%3A9000%2Fcallback&amp;state=Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1 </span><br><span class="line"><span class="attribute">Vary</span><span class="punctuation">: </span>Accept</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>text/html; charset=utf-8</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>444</span><br><span class="line"><span class="attribute">Date</span><span class="punctuation">: </span>Fri, 31 Jul 2015 20:50:19 GMT</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>keep-alive</span><br></pre></td></tr></table></figure>
+<p>这个重定向响应导致浏览器向授权服务器发送一个 <code>GET</code> 请求。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">GET /authorize?response_type=code&amp;scope=foo&amp;client_id=oauth-client -1&amp;redirect_uri=http%3A%2F%2Flocalhost%3A9000%2Fcallback&amp;state=Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1 HTTP/1.1 </span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:9001 </span><br><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:39.0) Gecko/20100101 Firefox/39.0 </span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8 </span><br><span class="line"><span class="attribute">Referer</span><span class="punctuation">: </span>http://localhost:9000/ </span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>keep-alive </span><br></pre></td></tr></table></figure>
+<p>客户端通过在发送给用户的 URL 中包含查询参数，来标识自己的身份和要请求的授权详情，如授权范围等。</p>
+<p>然后，授权服务器会要求用户进行身份认证。这一步对确认资源拥有者的身份已经能向客户端授予哪些权限来说至关重要。</p>
+<img data-src="../../images/security/oauth-owner-authenticate.png" alt="OAuth Owner Authenticate"  />
+<p>用户身份认证直接在用户（和用户的浏览器）与授权服务器之间进行，这个过程对客户端应用不可见。这一重要特性避免了用户将自己的凭据透露给客户端应用，对抗这种反模式正是发明 OAuth 的原因。</p>
+<p>另外，因为资源拥有者通过浏览器与授权端点交互，所以也要通过浏览器来完成身份认证。 因此，有很多身份认证技术可以用于用户身份认证流程。OAuth 没有规定应该使用哪种身份认证 技术，授权服务器可以自由选择，例如用户名/密码、加密证书、安全令牌、联合单点登录或者 其他方式。在此我们不得不在一定程度上信任 Web 浏览器，特别是当资源拥有者使用像用户名 和密码这样的简单身份认证方式时。但是 OAuth 的设计已经考虑了如何防止多种基于浏览器的攻击。</p>
+<p>这种隔离方案还使得客户端不会因用户身份认证方式发生变化而受到影响, 让简单的客户端应用也能受益于授权服务器使用的一些新兴技术，例如基于风险的启发式认证(risk-based heuristic authentication)技术。然而，这种做法并没有向客户端传递任何有关认证用户的信息，在将 OAuth 2.0 用于用户身份认证一章将深入讨论这个话题。</p>
+<p>然后，用户向客户端应用授权。在这一步，资源拥有者选择将一部分权限授予客户端应用，授权服务器提供了许多不同的选项来实现这一点。 客户端可以在授权请求中指明其想要获得哪些权限(称为 OAuth 权限范围) 。授权服务器可以允许用户拒绝一部分或者全部权限范围，也可以让用户批准或者拒绝整个授权请求。</p>
+<img data-src="../../images/security/oauth-owner-authorization.png" alt="OAuth Owner Authorization" style="zoom:33%;" />
+<p>此外，很多授权服务器允许将授权决策保存下来，以便以后使用。如果使用了这种方式，那么未来同一个客户端请求同样的授权时，用户将不会得到提示。 用户仍然会被重定向到授权端点，并且仍然需要登录，但是会跳过批准授权环节而沿用前一次的授权决策。 授权服务器甚至可以通过像客户端白名单或黑名单这样的内部策略来否决用户的决策。</p>
+<p>然后，授权服务器将用户重定向回客户端应用。</p>
+<img data-src="../../images/security/oauth-redirect-to-client.png" alt="OAuth Server Redirect To Client" style="zoom: 33%;" />
+<p>这一步采用 <code>HTTP</code> 重定向的方式，回到客户端的 <code>redirect_uri</code>。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">HTTP 302 Found </span><br><span class="line"><span class="attribute">Location</span><span class="punctuation">: </span>http://localhost:9000/oauth_callback?code=8V1pr0rJ&amp;state=Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1 </span><br></pre></td></tr></table></figure>
+<p>这又会导致浏览器向客户端发出如下请求。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GET /callback?code=8V1pr0rJ&amp;state=Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1 HTTP/1.1 </span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:9000 </span><br></pre></td></tr></table></figure>
+<p>请注意，这个 HTTP 请求是发送给<strong>客户端</strong>而不是<strong>授权服务器</strong>的。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:39.0) Gecko/20100101 Firefox/39.0 </span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8 </span><br><span class="line"><span class="attribute">Referer</span><span class="punctuation">: </span>http://localhost:9001/authorize?response_type=code&amp;scope=foo&amp;client_id=oauth-client-1&amp;redirect_uri=http%3A%2F%2Flocalhost%3A9000%2Fcallback&amp;state=Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1 </span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>keep-alive</span><br></pre></td></tr></table></figure>
+<p>由于使用的是<strong>授权码</strong>许可类型，因此该重定向链接中包含一个特殊的查询参数 <code>code</code>。这个参数的值被称为<strong>授权码</strong>，<strong>它是一次性的凭据，表示用户授权决策的结果</strong>。客户端会在接收到请求之后解析该参数以获取授权码，并在下一步使用该授权码。客户端还会检查 state 参数值是否与它在前一个步骤中发送的值匹配。</p>
+<p>现在客户端已经得到授权码，它可以将其发送给授权服务器的令牌端点。</p>
+<img data-src="../../images/security/oauth-client-request-token.png" alt="OAuth Request Token By Code" style="zoom: 33%;" />
+<p>客户端发送一个 <strong>POST</strong> 请求，在 HTTP 主体中以表单格式传递参数，并在 HTTP 基本认证头部中设置 <code>client_id</code> 和 <code>client_secret</code>。这个 HTTP 请求由客户端直接发送给授权服务器，浏览器或者资源拥有者不参与此过程。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">POST /token</span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:9001</span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>application/json</span><br><span class="line"><span class="attribute">Content-type</span><span class="punctuation">: </span>application/x-www-form-encoded</span><br><span class="line"><span class="attribute">Authorization</span><span class="punctuation">: </span>Basic b2F1dGgtY2xpZW50LTE6b2F1dGgtY2xpZW50LXNlY3JldC0xgrant_type=authorization_code&amp;redirect_uri=http%3A%2F%2Flocalhost%3A9000%2Fcallback&amp;code=8V1pr0rJ</span><br></pre></td></tr></table></figure>
+<p>这种将不同的 HTTP 连接分开的做法保证了客户端能够直接进行身份认证，让其他组件无法查看或者操作令牌请求。</p>
+<p>授权服务器接收该请求，如果请求有效，则颁发令牌。授权服务器需要执行多个步骤以确保请求是合法的。首先，它要验证客户端凭据（通过 Authorization 头部传递）以确定是哪个客户端请求授权。然后，从请求主体中读取 code 参数的值，并从中获取关于该授权码的信息，包括发起初始授权请求的是哪个客户端，执行授权的是哪个用户，授权的内容是什么。如果授权码有效且尚未使用过，而且发起该请求的客户端与最初发起授权请求的客户端相同，则授权服务器会生成一个新的访问令牌并返回给客户端。</p>
+<img data-src="../../images/security/oauth-server-response-token.png" alt="Server Response Token" style="zoom:33%;" />
+<p>该令牌以 JSON 对象的格式通过 HTTP 响应返回给客户端。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HTTP 200 OK Date: Fri, 31 Jul 2015 21:19:03 GMT </span><br><span class="line"><span class="attribute">Content-type</span><span class="punctuation">: </span>application/json </span><br><span class="line"></span><br><span class="line">&#123; </span><br><span class="line">  &quot;access_token&quot;: &quot;987tghjkiu6trfghjuytrghj&quot;, </span><br><span class="line">  &quot;token_type&quot;: &quot;Bearer&quot; </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+<p>然后客户端可以解析令牌响应并从中获取令牌的值来访问受保护资源。在这个案例中，我们使用了 OAuth bearer 令牌，这是通过响应中的 token_type 字段描述的。令牌响应中还可以包含一个刷新令牌（用于获取新的访问令牌而不必重新请求授权），以及一些关于访问令牌的附加信息，比如令牌的权限范围和过期时间。客户端可以将访问令牌存储在一个安全的地方，以便以后在用户不在场时也能够随时使用。</p>
+<p>有了令牌，客户端就可以在访问受保护资源时出示令牌。</p>
+<img data-src="../../images/security/oauth-client-request-resource-server.png" alt="OAuth request OAuth Resource Server" style="zoom: 50%;" />
+<p>客户端出示令牌的方式有多种，本例中将使用备受推荐的方式：使用 Authorization 头部。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /resource HTTP/1.1 </span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:9002 </span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>application/json </span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>keep-alive </span><br><span class="line"><span class="attribute">Authorization</span><span class="punctuation">: </span>Bearer 987tghjkiu6trfghjuytrghj</span><br></pre></td></tr></table></figure>
+<p>受保护资源可以从头部中解析出令牌，判断它是否有效，从中得知授权者是谁以及授权内容，然后返回响应。受保护资源检查令牌的方式有多种。最简单的方式是让授权服务器和资源服务器共享存储令牌信息的数据库。授权服务器在生成新的令牌时将其写入数据库，资源服务器在收到令牌时从数据库中读取它们。</p>
+<h1>授权许可类型</h1>
+<p><strong>授权许可</strong>是 OAuth 协议中的权限获取方法，OAuth 客户端用它来获取受保护资源的访问权限，成功之后客户端会得到一个令牌。这可能是 OAuth 2.0 中最令人困惑的术语之一，因为它既表示用户授权所用的特定方式，也表示授权这个行为本身。前面详细介绍过的授权码许可类型加剧了这种困惑，因为开发人员有时候会看见传回给客户端的授权码，并误以为这个授权码（仅授权码）就是授权许可。虽然授权码确实代表用户的授权决策，但它不是授权许可本身。相反，整个 OAuth 流程才是授权许可：客户端将用户重定向至授权端点，然后接收授权码，最后用授权码换取令牌。</p>
+<p>换句话说，<strong>授权许可就是获取令牌的方式</strong>。就像在 OAuth 社区中一样，会偶尔将其称为 OAuth 协议的一个流程（<strong>OAuth flow</strong>）。OAuth 协议中有多种授权许可方法，并且各有特点。</p>
+<h2 id="授权码许可机制-authorization-code">授权码许可机制 - authorization_code</h2>
+<p>授权码许可机制在上一节已经详细描述过，它是最复杂也是最安全的授权许可类型。</p>
+<h2 id="隐式许可类型-implicit">隐式许可类型 - implicit</h2>
+<p>授权码许可流程中各个步骤的关键是不同组件之间保持信息隔离。通过这种方式，浏览器接触不到只应由客户端掌握的信息，客户端也无法得知浏览器的状态。但是如果把客户端放在浏览器<strong>内部</strong>运行，会怎么样呢？</p>
+<img data-src="../../images/security/oauth-implicit-flow.png" alt="OAuth Implicit Flow" style="zoom:33%;" />
+<p>完全运行在浏览器中的 JavaScript 应用就属于这种情况。客户端无法对浏览器隐藏任何秘密， 因为浏览器对客户端的任何动作都了如指掌。在这种情况下，通过浏览器向客户端传递仅用于换 取令牌的授权码就没有任何实际意义了，因为这个额外的保密层没有起到任何作用。</p>
+<p><strong>隐式许可类型</strong>没有使用这个额外的保密层，而是直接从授权端点返回令牌。</p>
+<p>在使用隐式许可类型时需要对它严苛的局限性有所认识。首先，使用这种许可流程的客户端 无法持有客户端密钥，因为无法对浏览器隐藏密钥。但由于这种许可流程只使用授权端点而不使 用令牌端点，因此这个限制不会影响其功能，因为不要求客户端在授权端点上进行身份认证。然 而，由于缺少对客户端进行身份认证的手段，确实会影响这种许可类型的安全等级，因此要谨慎 使用。另外，隐式许可流程不可用于获取刷新令牌。因为浏览器内的应用具有短暂运行的特点，只会在被加载到浏览器的期间保持会话，所以刷新令牌在这里的作用非常有限。而且，和其他许 可类型不同，这种许可类型会假设资源拥有者一直在场，必要时可以对客户端重新授权。</p>
+<p>客户端向授权服务器的授权端点发送请求时，使用的方式与授权码流程相同，只不过 <code>response_type</code> 参数的值为 <code>token</code>，而不是 <code>code</code>。这样会通知授权服务器直接生成令牌，而不是生成一个用于换取令牌的授权码。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">HTTP/1.1</span> <span class="number">302</span> Moved Temporarily</span><br><span class="line"><span class="attribute">Location</span><span class="punctuation">: </span>http://localhost:9001/authorize?response_type=token&amp;scope=foo&amp;client_id=oauth-client-1&amp;redirect_uri=http%3A%2F%2Flocalhost%3A9000%2Fcallback&amp;state=Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1</span><br><span class="line"><span class="attribute">Vary</span><span class="punctuation">: </span>Accept</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>text/html; charset=utf-8</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>444</span><br><span class="line"><span class="attribute">Date</span><span class="punctuation">: </span>Fri, 31 Jul 2015 20:50:19 GMT</span><br></pre></td></tr></table></figure>
+<p>客户端通过页面跳转或者在页面内使用内联框架（iframe）来执行这个请求。无论使用哪种方式，浏览器都会向授权服务器的授权端点发送请求。和授权码许可流程一样，资源拥有者自行进行身份认证，然后对客户端授权。但是，这一次授权服务器会直接生成令牌，并在授权端点响应中将令牌附在 URI 片段中。不要忘了，由于这是前端信道，对客户端的响应是通过重定向来完成的，重定向地址是客户端的重定向 URI。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">GET /callback#access_token=987tghjkiu6trfghjuytrghj&amp;token_type=Bearer</span><br><span class="line">HTTP/1.1</span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:9000</span><br><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:39.0) Gecko/20100101 Firefox/39.0</span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line"><span class="attribute">Referer</span><span class="punctuation">: </span>http://localhost:9001/authorize?response_type=code&amp;scope=foo&amp;client_id=oauth-client-1&amp;redirect_uri=http%3A%2F%2Flocalhost%3A9000%2Fcallback&amp;state=Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1</span><br></pre></td></tr></table></figure>
+<p>URI 中的片段部分通常不会发送至服务器，这样令牌就只能在浏览器内使用。但请注意，这一行为会因浏览器的实现和版本而异。</p>
+<h2 id="客户端凭据许可类型-client-credentials">客户端凭据许可类型 - client_credentials</h2>
+<p>如果没有明确的资源拥有者，或对于客户端软件来说资源拥有者不可区分，该怎么办？这是 一种相当常见的场景，比如后端系统之间需要直接通信，但是它们并不一定代表某个特定用户。 没有用户对客户端授权，还能使用 OAuth 吗？</p>
+<img data-src="../../images/security/oauth-client-credentials.png" alt="OAuth Client Credentials" style="zoom:33%;" />
+<p>OAuth 2.0 增加了<strong>客户端凭据许可类型</strong>，可用于这种场景。在隐式许可流程中，客户端被置于浏览器中，也就是在前端信道上；而在这种许可流程中，资源拥有者被塞进客户端，也就没有用户代理存在了。因此，这种许可流程只使用后端信道，客户端代表自己（它自己就是资源拥有者）从令牌端点获取令牌。</p>
+<p>客户端向授权服务器的令牌端点发出令牌请求，这与授权码流程是一样的，只不过这一次使用 <code>client_credentials</code> 作为 <code>grant_type</code> 参数的值，而且没有授权码或者其他用于换取令牌的临时凭据。相反，客户端直接向授权服务器进行身份认证，而授权服务器给客户端颁发访问令牌。客户端也可以使用 <code>scope</code> 参数指定请求的权限范围，其用法与授权码和隐式许可流程中在授权端点上使用的 <code>scope</code> 参数一样。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">POST /token</span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:9001</span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>application/json</span><br><span class="line"><span class="attribute">Content-type</span><span class="punctuation">: </span>application/x-www-form-encoded</span><br><span class="line"><span class="attribute">Authorization</span><span class="punctuation">: </span>Basic b2F1dGgtY2xpZW50LTE6b2F1dGgtY2xpZW50LXNlY3JldC0x</span><br><span class="line">grant_type=client_credentials&amp;scope=foo%20bar</span><br></pre></td></tr></table></figure>
+<p>授权服务器返回的响应就是一个普通的 OAuth 令牌端点响应：一个包含令牌信息的 JSON 对象。在客户端凭据许可流程中不会颁发刷新令牌，因为我们认为客户端能够随时获取新令牌，无须单独的资源拥有者参与，因此在这种情况下没有必要使用刷新令牌。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">HTTP 200 OK</span><br><span class="line"><span class="attribute">Date</span><span class="punctuation">: </span>Fri, 31 Jul 2015 21:19:03 GMT</span><br><span class="line"><span class="attribute">Content-type</span><span class="punctuation">: </span>application/json</span><br><span class="line">&#123;</span><br><span class="line"> &quot;access_token&quot;: &quot;987tghjkiu6trfghjuytrghj&quot;,</span><br><span class="line"> &quot;scope&quot;: &quot;foo bar&quot;,</span><br><span class="line"> &quot;token_type&quot;: &quot;Bearer&quot;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+<h2 id="资源拥有者凭据许可类型-password">资源拥有者凭据许可类型 - password</h2>
+<p>如果资源拥有者在授权服务器上有纯文本的用户名和密码，那么客户端可以向用户索取用户的凭据，然后用这个凭据换取令牌。支持客户端这样做的是<strong>资源拥有者凭据许可类型</strong>，也叫作<strong>密码流程</strong>。资源拥有者与之直接交互的是客户端，而不是授权服务器。这种许可类型只使用令牌端点，并且只通过后端信道通信。</p>
+<img data-src="../../images/security/oauth-password.png" alt="image-20210816104833232" style="zoom:33%;" />
+<blockquote>
+<p>为什么将这一反模式编入规范？</p>
+<p>当有其他选择的时候，这种许可类型确实是一个坏主意，但并不总是有其他选择。这种许可类型是为那些通常要求资源拥有者输入 用户名和密码，然后向所有受保护资源使用这些凭据的客户端而准备的。</p>
+<p>一方面，受保护资源无须再查看用户密码，而只需要处理 OAuth 令牌。 这立马缩小了用户凭据在网络上的暴露面，也减少了需要查看用户凭据的组件数量。另一方面， 对这一许可类型运用得当的客户端应用不再需要存储用户密码，也无须向资源服务器发送密 码。客户端使用用户凭据换取访问令牌，用于访问不同的受保护资源。结合刷新令牌的使用， 用户体验没有变化，但安全等级相对于之前的方案有了很大提高。虽然授权码许可类型是首选， 但这种许可类型有时也比在每个请求中使用用户密码好得多。</p>
+</blockquote>
+<p>这种许可类型的工作方式很简单。客户端收集用户的用户名和密码（使用什么样的交互接口 由客户端决定），然后将它们发送至授权服务器。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">POST /token</span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:9001 </span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>application/json </span><br><span class="line"><span class="attribute">Content-type</span><span class="punctuation">: </span>application/x-www-form-encoded </span><br><span class="line"><span class="attribute">Authorization</span><span class="punctuation">: </span>Basic b2F1dGgtY2xpZW50LTE6b2F1dGgtY2xpZW50LXNlY3JldC0x grant_type=password&amp;scope=foo%20bar&amp;username=alice&amp;password=secret</span><br></pre></td></tr></table></figure>
+<p>授权服务器从收到的请求中取出用户名和密码，并与本地存储的用户信息对比。如果匹配， 则授权服务器向客户端颁发令牌。</p>
+<h2 id="断言许可类型-assertion">断言许可类型 - assertion</h2>
+<p>断言许可类型是由 OAuth 工作组发布的第一个官方扩展许可类型<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>。在这种许可类型下，客 户端会得到一条结构化的且被加密保护的信息，叫作断言，使用断言向授权服务器换取令牌。可以把断言想象为某种经过认证的文档，例如文凭或者许可证。只要你信任认证机构能确保声明的真实性，就可以相信文档中的内容也是真实的。</p>
+<p><img data-src="../../images/security/oauth-assertion.png" alt="OAuth Assertion"></p>
+<p>目前有两种标准化的断言格式：一种使用安全断言标记语言（SAML）<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>，另一种使用 JSON Web Token（JWT<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup>）。这种许可类型只使用后端信道，与客户端凭据许可类型很相似，没有明确的资源拥有者参与。与客户端凭据流程不同的是，由此颁发的令牌所关联的权限取决于所出示的断言，而不仅仅取决于客户端本身。由于断言一般来自于客户端之外的第三方， 因此客户端可以不知道断言本身的含义。 与其他后端信道流程类似，客户端要向授权服务器的令牌端点发送一个 HTTP POST 请求。 客户端需要像往常一样进行身份认证，还要将断言作为参数传递给授权服务器。客户端获取断言的方式多种多样，而且很多关联协议没有涵盖这方面的内容。客户端可以从用户那里获得断言， 也可以从某个配置系统或者通过其他非 OAuth 协议获得断言。与访问令牌一样，最终只要客户端能向授权服务器出示断言即可，至于客户端如何获得断言则不是该许可类型所关心的。</p>
+<p>这种许可类型在实现上与其他只使用后端信道的流程类似，都是由客户端向令牌端点出示信息，然后授权服务器直接颁发令牌。在现实世界中，你可能会发现断言许可类型仅用于有限的环境中，通常是企业。</p>
+<h2 id="选择合适的许可类型">选择合适的许可类型</h2>
+<p>有这么多的许可类型，似乎很难判定到底哪一个才最合适。所幸，有一些好用的基本法则能 够指导你做出正确的选择。</p>
+<p>**客户端是否代表特定的资源拥有者？**你是否可以通过用户的 Web 浏览器将其引导至一个网页？如果可以，就使用基于重定向的许可流程：授权码或者隐式许可流程。至于使用哪个，取决于客户端。</p>
+<p>**客户端是否完全运行在浏览器内？**这不包括在服务器上运行但用户界面需要通过浏览器访问的应用，只有从启动到消亡都完全在浏览器内执行的应用才算。如果是这样，则应该使用隐式许可类型，因为它就是专门针对此情况而做的优化。如果不是，则要么运行在 Web 服务器上， 要么原生运行在用户的计算机上，这种情况下应该使用授权码许可类型，因为这种类型具有最强的安全性和灵活性。</p>
+<p>**客户端是原生应用吗？**你应该已经在使用授权码许可流程了，还应该在授权码许可类型的基础上使用特定的安全扩展，比如动态注册 （DynReg）或者代码交换证明密钥（PKCE）。</p>
+<p>**客户端代表自身吗？**这种情况包括不针对单个用户的 API 访问，比如大批量数据传输。如果是这样，则应该使用客户端凭据许可流程。如果你使用的 API 需要通过参数指定作用于哪个用户， 则应该考虑使用基于重定向的许可流程，因为这样才能实现个性化的审核和同意。 **客户端是否在权威性第三方的指示下运行？**这个第三方是否能直接提供一些证明，让你能够代表它执行任务？如果是这样，则应该使用断言许可流程。使用哪种断言许可则取决于授权服务 器和颁发断言的第三方。客户端是否无法在浏览器中对用户重定向？用户是否具有能够提供给你的简单用户凭据？ 是否没有其他选择？如果是这样，那么可以使用资源拥有者凭据许可流程，但要注意它的局限性。 别说我们没提醒过你。</p>
+<p><img data-src="../../images/security/oauth-choose-flow.png" alt="OAuth Choose Flow"></p>
+<h1>OAuth 令牌</h1>
+<p>令牌是所有 OAuth 事务的核心。客户端从授权服务器获取令牌，然后出示给受保护资源。 授权服务器生成令牌并发送给客户端，将资源拥有者的授权与客户端权限信息一起关联到令牌。 受保护资源从客户端接收令牌并对其进行验证，将其关联的权限与客户端发出的请求进行匹配。</p>
+<p>令牌表示的是授权行为的结果：一个信息元组，包括资源拥有者、客户端、授权服务器、受 保护资源、权限范围以及其他与授权决策有关的信息。如果客户端需要更新访问令牌却不想再次 打扰资源拥有者，则要使用另一种令牌：刷新令牌。令牌是位于 OAuth 生态系统中心的关键机制， 可以说没有令牌就没有 OAuth。所以，OAuth 的非官方标志很像一枚公共汽车乘车币（bus token）。</p>
+<p>一切聚焦于令牌，然而 OAuth 规范完全没有提及令牌所包含的内容。之前已经讨论过，OAuth 系统中的客户端无须了解令牌本身的任何信息。客户端需要知道的就是如何从授权 服务器获取令牌以及如何在资源服务器上使用令牌。但是，授权服务器和资源服务器需要了解令牌的内容。授权服务器要知道如何生成令牌来颁发给客户端，资源服务器要知道如何识别并验证客户端发送过来的令牌。</p>
+<p>为什么 OAuth 核心规范会将如此重要的内容省略呢？<strong>不对令牌本身做出规定，使得 OAuth 能够广泛适用于各种部署场景，它们的特性、风险状况以及要求各不相同</strong>。OAuth 令牌可以具有有效期，可以支持撤回，也可以永久有效，或者根据情况将这些特性组合。令牌可以代表特定的用户或者系统中所有的用户，也可以不代表任何用户。令牌可以具有内部结构，可以是随机的无意义字符串，也可以被加密保护，甚至可以将这几项结合起来。这种灵活性和模块化特性使 OAuth 具备了良好的适应性，而这是那些更全面的安全协议（比如 WS-*、SAML 和 Kerberos）无法做到的，它们都对令牌格式做出了规定，并且要求系统的所有部件都能理解令牌格式。</p>
+<p>不过，还有几种常用的创建和验证令牌的技术，它们都有各自的优缺点，能够适用于不同的场景。</p>
+<p>授权服务器生成令牌之后，会将令牌值存储在磁盘上的共享数据库中。当受保护资源从客户 端收到令牌之后，它会在同一个数据库中查找令牌值，以确定令牌有效。这种令牌不携带任何信息，只是充当数据库查询的检索值。这种创建和管理令牌的方法非常有效且常见，而且它的优势是在保持令牌本身短小的同时满足较大的信息熵。 在授权服务器和受保护资源间共享数据库并不总是实际可行，特别是在一个授权服务器需要保护下游的多个资源服务器的情况下。该如何解决这个问题呢？本章将讨论另外两种常见的方案：结构化令牌和令牌内省。</p>
+<h2 id="结构化令牌：JWT">结构化令牌：JWT</h2>
+<p>如果不向共享数据库查询，是否可以将所有必要的信息放在令牌内部？这种方式使授权服务器可以通过令牌本身间接地与受保护资源沟通，而不需要调用任何网络 API。 通过这种方式，授权服务器可以将受保护资源需要知道的信息全部打包，比如令牌的过期时间戳以及授权用户是谁。这些信息都会被发送给客户端，但是客户端并不关心，因为令牌在所有 OAuth 2.0 系统中对客户端都不透明。只要客户端得到令牌，就可以将其当作一个随机字符串发送给受保护资源。受保护资源需要理解令牌，并解析令牌内包含的信息，然后基于这些信息做出授权决策。</p>
+<h3 id="JWT-的结构">JWT 的结构</h3>
+<p>完整的 JSON Web 令牌的紧凑形式由三个部分组成，由点（<code>.</code>）分隔，它们是：</p>
+<ul>
+<li>Header - 头部</li>
+<li>Payload - 荷载</li>
+<li>Signature - 签名</li>
+</ul>
+<p>整个 JWT 都是经过 Base64URL 编码过的字符串，便于传输。</p>
+<p>为了构建这样的令牌，需要一种方法来组织并序列化所要携带的信息。JSON Web Token 令牌格式， 或者叫作 JWT，提供了一种在令牌中携带信息的简单方法。JWT 的核心是将一个 JSON 对象封装为一种用于网络传输的格式。JWT 最简单的形式是一个未签名的令牌，如下所示。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9. </span><br></pre></td></tr></table></figure>
+<p>这种令牌看起来与之前使用的随机字符串令牌很相似，但事实并非如此。首先，请注意其中有一个句点符号将字符串分割成了两部分。以句点符号将令牌字符串分解，让我们可以对令牌的不同部分分别进行处理理（示例中最后一个句点符号后面还有隐含的第三部分，在令牌加密保护会进行讨论）。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0 </span><br><span class="line">. </span><br><span class="line">eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9 </span><br><span class="line">. </span><br></pre></td></tr></table></figure>
+<p>句点符号之间的值并不是随机的，而是一个经过 <strong>Base64URL 编码</strong>的 JSON 对象。如果对第一部分进行 Base64 解码并解析出 JSON 对象，会得到一个简单的对象。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span> </span><br><span class="line">  <span class="attr">&quot;typ&quot;</span><span class="punctuation">:</span> <span class="string">&quot;JWT&quot;</span><span class="punctuation">,</span> </span><br><span class="line">  <span class="attr">&quot;alg&quot;</span><span class="punctuation">:</span> <span class="string">&quot;none&quot;</span> </span><br><span class="line"><span class="punctuation">&#125;</span> </span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>为什么选择 Base64？</p>
+<p>看一下 JWT 通常会出现在什么环境中就能得出部分答案，它一般会出现在 HTTP 头部、Query 参数、表单参数、各种数据库的字符串以及编程语言中。若无须进行额外的编码处理，这些环境中可用的字符集都有所限制。</p>
+<p>采用 Base64URL 编码方案是顺理成章的，它可以让 JWT 安全地出现在任何环节而无须额外的编码处理。</p>
+</blockquote>
+<p>这是 JWT 的头部，它是一个 JSON 对象，用于描述与令牌剩余部分有关的信息。其中的 <code>typ</code> 头告诉处理程序令牌的第二部分（载荷）是何种类型。在我们的示例中，它是一个 JWT。虽然 还有其他的数据容器可以使用与此相同的结构，但是无疑 JWT 是最常用的，并且也最适合作为 OAuth 令牌使用。还有一个 <code>alg</code> 头，它的值是 none，表示这是一个未签名的令牌。</p>
+<p>第二部分是令牌的载荷，它的序列化方式与 JWT 头部相同：对 JSON 对象进行 Base64URL 编码。由于它是 JWT，因此其载荷可以是任意的 JSON 对象，在前面的示例中，它是一组简单的用户数据。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line"> <span class="attr">&quot;sub&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1234567890&quot;</span><span class="punctuation">,</span></span><br><span class="line"> <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;John Doe&quot;</span><span class="punctuation">,</span></span><br><span class="line"> <span class="attr">&quot;admin&quot;</span><span class="punctuation">:</span> <span class="keyword">true</span></span><br><span class="line"><span class="punctuation">&#125;</span> </span><br></pre></td></tr></table></figure>
+<h3 id="JWT-声明-JWT-Claims">JWT 声明 - JWT Claims</h3>
+<p>除了一般的数据结构之外，JWT 还提供了一组声明，可以在不同的应用中通用。虽然 JWT 内可以包含任何合法的 JSON 数据，但这些声明支持应用的常规操作。所有这些字段在 JWT 中都是可选的，但允许特定服务定义自己的内部标准。</p>
+<table>
+<thead>
+<tr>
+<th>声明名称</th>
+<th>声明描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iss</td>
+<td>Issuer - 令牌颁发者。它表示该令牌是由谁创建的，在很多 OAuth 部署中会将它设为授权服务器的 URL。该声明是一个字符串</td>
+</tr>
+<tr>
+<td>sub</td>
+<td>Subject - 令牌的主体。它表示该令牌是关于谁的，在很多 OAuth 部署中会将它设为资源拥有者的唯一标识。在大多数情况下，主体在同一个颁发者的范围内必须是唯一的。该声明是一个字符串</td>
+</tr>
+<tr>
+<td>aud</td>
+<td>Audience - 令牌的受众。它表示令牌的接收者，在很多 OAuth 部署中，它包含受保护资源的 URI 或者能够接收该 令牌的受保护资源。该声明可以是一个字符串数组，如果只有一个值，也可以是一个不用数组包装的单个字符串</td>
+</tr>
+<tr>
+<td>exp</td>
+<td>Expiration Time - 令牌的过期时间戳。它表示令牌将在何时过期，以便部署应用让令牌自行失效。该声明是一个整数，表 示自 UNIX 新纪元（即格林威治标准时间 GMT，1970 年 1 月 1 日零点）以来的秒数</td>
+</tr>
+<tr>
+<td>nbf</td>
+<td>Not Before - 令牌生效时的时间戳。它表示令牌从什么时候开始生效，以便部署应用可以在令牌生效之前颁发令牌。 该声明是一个整数，表示自 UNIX 新纪元（即格林威治标准时间 GMT，1970 年 1 月 1 日零点）以来的秒数</td>
+</tr>
+<tr>
+<td>iat</td>
+<td>Issued At - 令牌颁发时的时间戳。它表示令牌是何时被创建的，它通常是颁发者在生成令牌时的系统时间戳。该声 明是一个整数，表示自 UNIX 新纪元（即格林尼治时间 GMT，1970 年 1 月 1 日零点）以来的秒数</td>
+</tr>
+<tr>
+<td>jti</td>
+<td>JWT ID - 令牌的唯一标识符。该声明的值在令牌颁发者创建的每一个令牌中都是唯一的，为了防止冲突，它通常 是一个密码学随机值。这个值相当于向结构化令牌中加入了一个攻击者无法获得的随机熵组件，有利于防止令牌猜测攻击和重放攻击</td>
+</tr>
+</tbody>
+</table>
+<p>仍然可以为特定的应用新增其他所需的字段。这些字段的字段名可以是任何有效的 JSON 字符串，这对于其他 JSON 对象也是一样，但尽 管如此，为避免不同的实现之间不兼容，JWT 规范在这一点上给出了一些指导意见。</p>
+<h2 id="令牌的加密保护">令牌的加密保护</h2>
+<p>如果授权服务器发出的令牌是不经过任何保护的，并且受保护资源不进行任何其他检查就相信令牌中的内容，那么对于以明文形式接收令牌的客户端来说，很容易就能在向受保护资源出示令牌之前篡改令牌内容。客户端甚至可以在不与授权服务器通信的情况下就自行伪造一个令牌出来，而资源服务器还是会天真地接受并处理。</p>
+<p>所幸，恰好有一套规范可以解决这个问题：JSON 对象的签名和加密标准 <a target="_blank" rel="noopener" href="https://jose.readthedocs.io/en/latest/">Javascript Object Signing and Encryption (JOSE)</a>。这套规范以 JSON 为基础数据模型，提供了签名（JSON Web Signing 签名，或称 JWS）、加密（JSON Web Encryption 加密，或称 JWE）以及密钥存储格式（JSON Web Key 密钥，或称 JWK）的标准。上一节手动创建的未签名的 JWT，只不过是一个带有 JSON 载荷的未签名 JWS 对象的特例。</p>
+<h3 id="签名">签名</h3>
+<p>签名的目的是用于验证消息的数据完整性和真实性，它生成 JWT 的“Signature”部分，令牌的接收者可以验证该签名，以确保令牌没有被篡改。</p>
+<p>虽然将 JOSE 的细节展开来讲可以单独写一本书，但我们着眼于它的两项内容：使用 HMAC 签名方案的对称签名和验证，以及使用 RSA 签名方案的非对称签名和验证。</p>
+<h4 id="使用-HS256-的对称签名">使用 HS256 的对称签名</h4>
+<p>HS256（使用 SHA-256 的 HMAC）是一种对称算法，双方之间共享一个密钥。由于同一密钥用于生成签名和验证签名，因此必须注意确保密钥不会被盗用。</p>
+<p>HS256 为令牌签名计算 256 字节的散列，JOSE 还定义了 HS384 和 HS512，它们计算的散列长度更长，从而换取更高的安全性。</p>
+<p>如果您将开发使用 JWT 的应用程序，您可以安全地使用 HS256，因为您将控制谁使用密钥。另一方面，如果您无法控制客户端，或者您无法保护密钥，RS256 将更合适，因为消费者只需要知道共享的公钥。</p>
+<blockquote>
+<p>在加密技术中，HMAC（ <strong>hash-based message authentication code - 基于散列的消息认证码</strong>）是一种特定类型的消息认证码（message authentication code - MAC），包含加密散列函数和密钥两部分。与任何 MAC 一样，它可用于同时验证消息的数据完整性和真实性。</p>
+<p>HMAC 可以使用共享密钥提供消息身份验证，而不是使用非对称加密的数字签名。它通过将密钥交换委托给通信各方来权衡对复杂公钥基础设施的需求，通信各方负责在通信前建立和使用受信任的渠道就密钥达成一致。</p>
+<p>HMAC 可以包含任意的加密散列函数算法，比如常见的 MD5、SHA256、SHA512 等。</p>
+</blockquote>
+<h4 id="使用-RS256-的非对称签名">使用 RS256 的非对称签名</h4>
+<p>RS256 签名方法，它在底层使用 RSA 非对称加密算法。它对 RSA 签名结果计算 256 字节的散列。 JOSE 同样也定义了 RS384 和 RS512，与对应的对称签名方法一样，它们提供不同的折中选择。JOSE 还定义了 PS256、PS384 和 PS512，它们都基于另一种 RSA 签名和散列机制。</p>
+<p>使用公钥加密的话，授权服务器拥有公钥和私钥，可用于生成令牌，而受保护资源则只能访问授权服务器的公钥，用于验证令牌。与使用共享密钥不同的是，受保护资源虽然能够很容易地验证令牌，但它无法自己生成有效的令牌。</p>
+<h3 id="加密">加密</h3>
+<p>然而，有时候仅签名是不够的。对于仅被签名的令牌，客户端还是可以偷窥令牌本身，从中获取它本无权知道的信息，比如 sub 字段中的用户标识符。令人欣慰的是，除了签名之外，JOSE 还提供了一个叫作 JWE 的加密机制，包含几种不同的选项和算法。经过 JWE 加密的 JWT 不再只由 3 部分组成，而是由 5 部分组成的结构。各个部分仍然使用 Base64URL 编码，只是载荷现在变成了一个经过加密的对象，没有正确的密钥无法读取其内容。</p>
+<p>首先，为资源服务器设置一个密钥对，并将密钥对中的公钥提供给授权服务器。然后，授权服务器使用 JWE 以及密钥对中的公钥对令牌内容加密。最后，资源服务器使用它自己的私钥解密令牌内容，并将令牌载荷交给应用。</p>
+<h1>OpenID Connect</h1>
+<p>OAuth 2.0 规范定义了一个授权协议，用于在 Web 应用以及 API 之间传递授权决策。因为 OAuth 2.0 用于获取已通过身份认证的最终用户的许可，所以很多开发人员和 API 服务商认为 OAuth 2.0 是一种让用户安全登录的身份认证协议。然而，尽管 OAuth 2.0 是一个需要用户交互的安全协议，<strong>但并不是身份认证协议</strong>。</p>
+<p>但是在 OAuth 之上构建身份认证协议是可行的。</p>
+<p>OpenID Connect 是一个开放标准，由 OpenID 基金会于 2014 年 2 月发布。它定义了一种使用 OAuth 2.0 执行用户身份认证的互通方式。由于该协议的设计具有互通性，一个 OpenID 客户端应用可以使用同一套协议语言与不同的身份提供者交互，而不需要为每一个身份提供者实现一套有细微差别的协议。</p>
+<p>OpenID Connect 直接基于 OAuth 2.0 构建，并保持与它兼容。</p>
+<hr>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>RFC 7521：<a target="_blank" rel="noopener" href="https://tools.ietf.org/html/rfc7521">https://tools.ietf.org/html/rfc7521</a> <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>RFC 7522：<a target="_blank" rel="noopener" href="https://tools.ietf.org/html/rfc7522">https://tools.ietf.org/html/rfc7522</a> <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn3" class="footnote-item"><p>RFC 7523：<a target="_blank" rel="noopener" href="https://tools.ietf.org/html/rfc7523">https://tools.ietf.org/html/rfc7523</a> <a href="#fnref3" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/ZeralZhang">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/uploads/wechat-qcode.jpg">
+          <span class="icon">
+            <i class="fab fa-weixin"></i>
+          </span>
+
+          <span class="label">WeChat</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/OAuth2/" rel="tag"># OAuth2</a>
+              <a href="/tags/OpenID/" rel="tag"># OpenID</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/devops/WSL2-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="prev" title="WSL2 使用指南">
+                  <i class="fa fa-chevron-left"></i> WSL2 使用指南
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/persistence/%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BA%20Spring%20Data%20JPA/" rel="next" title="深入浅出 Spring Data JPA">
+                  深入浅出 Spring Data JPA <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zeral</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Zeral-Zhang","repo":"Zeral.github.io","client_id":"b6f41cb44d3ba22c9361","client_secret":"5867ad133bff941fada16af0e4bc81f939640f59","admin_user":"Zeral-Zhang","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"693a4088aa286ad186c7400a3e54b844"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>
